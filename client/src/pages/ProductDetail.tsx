@@ -230,8 +230,8 @@ const ProductDetail = () => {
 
                                 {/* Floating Badges */}
                                 {discountPercent > 0 && (
-                                    <Badge className="absolute top-4 left-4 bg-pink-500 text-white font-bold px-3 py-1.5 z-50">
-                                        {discountPercent}% OFF
+                                    <Badge className="absolute top-4 left-4 bg-cyan-500 text-white font-bold px-3 py-1.5 z-50 shadow-md">
+                                        SALE {discountPercent}% OFF
                                     </Badge>
                                 )}
                                 <button

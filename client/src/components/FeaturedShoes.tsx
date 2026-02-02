@@ -26,9 +26,9 @@ const FeaturedShoes = () => {
   });
 
   const tags = [
-    { tag: 'Best Seller', tagColor: 'bg-cyan' },
-    { tag: 'New', tagColor: 'bg-cyan' },
-    { tag: 'Sale', tagColor: 'bg-cyan-300' },
+    { tag: 'Best Seller', tagColor: 'bg-orange-500' },
+    { tag: 'New', tagColor: 'bg-pink-500' },
+    { tag: 'Sale', tagColor: 'bg-cyan-500' },
   ];
 
   const { data: products, isLoading } = useQuery({
@@ -256,8 +256,7 @@ const ShoeCard = ({
           </div>
         </div>
 
-        {/* Floating Badges */}
-        <span className={`absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-primary-foreground text-[10px] md:text-xs font-nunito font-bold rounded-full z-50 shadow-sm pointer-events-none`}>
+        <span className={`absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full z-50 shadow-md pointer-events-none`}>
           {tag.tag}
         </span>
 
