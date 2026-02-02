@@ -98,8 +98,9 @@ app.listen(PORT, async () => {
     try {
         const count = await prisma.product.count();
         console.log(`📦 Database connection verified. Total products: ${count}`);
-        if (process.env.DATABASE_URL) {
-            console.log(`🔗 DB Host: ${new URL(process.env.DATABASE_URL).hostname}`);
+        const dbUrl = process.env.PROD_DATABASE_URL || process.env.DATABASE_URL;
+        if (dbUrl) {
+            console.log(`🔗 DB Host: ${new URL(dbUrl).hostname}`);
         }
     } catch (error) {
         console.error('❌ Database connection failed at startup:', error);

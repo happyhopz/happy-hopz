@@ -5,6 +5,10 @@ const prisma = new PrismaClient();
 
 async function main() {
     console.log('🌱 Seeding database...');
+    if (process.env.DATABASE_URL) {
+        console.log(`🔗 Connecting to: ${new URL(process.env.DATABASE_URL).hostname}`);
+        console.log(`📡 Database Name: ${new URL(process.env.DATABASE_URL).pathname}`);
+    }
 
     // Create admin user
     const adminPassword = await bcrypt.hash('gudduhopz@22', 10);
