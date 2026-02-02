@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
+import { sendOrderConfirmationEmail } from '../utils/email';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -80,6 +81,17 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             await tx.cartItem.deleteMany({
                 where: { userId: req.user!.id }
             });
+
+            // 4. Fetch full order for email
+            const fullOrder = await tx.order.findUnique({
+                where: { id: order.id },
+                include: { items: true, address: true }
+            });
+
+            // 5. Send confirmation email (don't await to avoid slowing down response)
+            sendOrderConfirmationEmail(req.user!.email, fullOrder).catch(err =>
+                console.error('Email sending failed:', err)
+            );
 
             return order;
         });

@@ -39,3 +39,58 @@ export const sendVerificationEmail = async (email: string, code: string) => {
 
     return transporter.sendMail(mailOptions);
 };
+
+export const sendOrderConfirmationEmail = async (email: string, order: any) => {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log(`📠 ORDER CONFIRMATION LOGGED FOR ${email} (Order #${order.id.slice(0, 8)})`);
+        return;
+    }
+
+    const itemsHtml = order.items.map((item: any) => `
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name} (x${item.quantity})</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price * item.quantity}</td>
+        </tr>
+    `).join('');
+
+    const mailOptions = {
+        from: '"Happy Hopz" <orders@happyhopz.com>',
+        to: email,
+        subject: `Your Happy Hopz Order #${order.id.slice(0, 8)} 👟`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                <h2 style="color: #ff6b6b; text-align: center;">Order Confirmed! 🎊</h2>
+                <p>Hi there,</p>
+                <p>Thank you for shopping with Happy Hopz! Your order has been placed successfully and is being processed.</p>
+                
+                <h3 style="border-bottom: 2px solid #ff6b6b; padding-bottom: 5px;">Order Summary</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    ${itemsHtml}
+                    <tr>
+                        <td style="padding: 10px; font-weight: bold;">Total Paid</td>
+                        <td style="padding: 10px; font-weight: bold; text-align: right;">₹${order.total}</td>
+                    </tr>
+                </table>
+
+                <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+                    <p style="margin: 0; font-weight: bold;">Shipping To:</p>
+                    <p style="margin: 5px 0; font-size: 14px; color: #666;">
+                        ${order.address?.name || 'Customer'}<br>
+                        ${order.address?.line1}<br>
+                        ${order.address?.city}, ${order.address?.state} - ${order.address?.pincode}
+                    </p>
+                </div>
+
+                <p style="text-align: center; margin-top: 30px;">
+                    <a href="https://happy-hopz.vercel.app/orders/${order.id}" style="background: #ff6b6b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold;">Track Your Order</a>
+                </p>
+
+                <p style="color: #888; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
+                    Questions? Reply to this email or visit our <a href="https://happy-hopz.vercel.app/contact">Contact Us</a> page.
+                </p>
+            </div>
+        `
+    };
+
+    return transporter.sendMail(mailOptions);
+};
