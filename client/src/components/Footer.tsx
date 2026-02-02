@@ -31,9 +31,16 @@ const Footer = () => {
                 href="https://www.facebook.com/share/18Hz57kKZa/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-card flex items-center justify-center hover:bg-blue-600 hover:text-white hover:scale-110 transition-all shadow-sm"
+                className="w-10 h-10 rounded-full bg-card flex items-center justify-center hover:bg-blue-600 hover:text-white hover:scale-110 transition-all shadow-sm border border-border/40"
               >
                 <Facebook className="w-5 h-5" />
+              </a>
+              <a
+                href="mailto:happyhopz308@gmail.com?subject=Enquiry from Happy Hopz Website"
+                className="w-10 h-10 rounded-full bg-card flex items-center justify-center hover:bg-primary hover:text-white hover:scale-110 transition-all shadow-sm border border-border/40"
+                title="Email Us"
+              >
+                <Mail className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -71,7 +78,7 @@ const Footer = () => {
             </h4>
             <div className="flex flex-col gap-4">
               <a
-                href="mailto:happyhopz308@gmail.com"
+                href="mailto:happyhopz308@gmail.com?subject=Enquiry from Happy Hopz Website"
                 className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
               >
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm border border-border/40">

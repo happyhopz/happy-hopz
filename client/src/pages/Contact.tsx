@@ -124,7 +124,7 @@ const Contact = () => {
                                             icon={<Mail className="w-5 h-5" />}
                                             label="Email"
                                             value="happyhopz308@gmail.com"
-                                            href="mailto:happyhopz308@gmail.com"
+                                            href="mailto:happyhopz308@gmail.com?subject=Enquiry from Happy Hopz Website"
                                         />
                                         <ContactItem
                                             icon={<Phone className="w-5 h-5" />}
