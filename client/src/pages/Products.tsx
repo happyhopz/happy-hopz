@@ -1,0 +1,359 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { productsAPI, cartAPI } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import BackButton from '@/components/BackButton';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Heart, ShoppingCart, Search, SlidersHorizontal, Edit } from 'lucide-react';
+import { toast } from 'sonner';
+
+const Products = () => {
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'ADMIN';
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [search, setSearch] = useState(searchParams.get('search') || '');
+    const [category, setCategory] = useState(searchParams.get('category') || '');
+    const [ageGroup, setAgeGroup] = useState(searchParams.get('ageGroup') || '');
+    const [priceRange, setPriceRange] = useState([0, 10000]);
+    const queryClient = useQueryClient();
+    const navigate = useNavigate();
+
+    const addToCartMutation = useMutation({
+        mutationFn: (data: { productId: string; quantity: number; size: string; color: string }) =>
+            cartAPI.add(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            toast.success('Added to bag!');
+        },
+        onError: () => {
+            toast.error('Failed to add to bag');
+        }
+    });
+
+    const handleAddToCart = async (product: any) => {
+        if (!user) {
+            toast.info('Please login to add items to cart');
+            navigate('/login');
+            return;
+        }
+        addToCartMutation.mutate({
+            productId: product.id,
+            quantity: 1,
+            size: product.sizes[0] || 'M',
+            color: product.colors[0] || 'Default'
+        });
+    };
+
+    const handleBuyNow = async (product: any) => {
+        if (!user) {
+            toast.info('Please login to continue');
+            navigate('/login');
+            return;
+        }
+        try {
+            await cartAPI.add({
+                productId: product.id,
+                quantity: 1,
+                size: product.sizes[0] || 'M',
+                color: product.colors[0] || 'Default'
+            });
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            navigate('/checkout');
+        } catch (error) {
+            toast.error('Failed to proceed to checkout');
+        }
+    };
+
+    const [showFilters, setShowFilters] = useState(false);
+
+    const { data: products, isLoading } = useQuery({
+        queryKey: ['products', search, category, ageGroup],
+        queryFn: async () => {
+            const params: any = {};
+            if (search) params.search = search;
+            if (category) params.category = category;
+            if (ageGroup) params.ageGroup = ageGroup;
+            const response = await productsAPI.getAll(params);
+            return response.data;
+        }
+    });
+
+    useEffect(() => {
+        setSearch(searchParams.get('search') || '');
+        setCategory(searchParams.get('category') || '');
+        setAgeGroup(searchParams.get('ageGroup') || '');
+    }, [searchParams]);
+
+    const handleSearch = () => {
+        const params: any = {};
+        if (search) params.search = search;
+        if (category) params.category = category;
+        if (ageGroup) params.ageGroup = ageGroup;
+        setSearchParams(params);
+    };
+
+    const filteredProducts = products?.filter((p: any) =>
+        p.price >= priceRange[0] && p.price <= priceRange[1]
+    );
+
+    return (
+        <div className="min-h-screen bg-background">
+            <Navbar />
+
+            <main className="container mx-auto px-4 py-8">
+                {/* Back Button */}
+                <BackButton label="Back to Home" to="/" />
+
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-4xl font-fredoka font-bold text-foreground mb-2">
+                        Shop All Shoes
+                    </h1>
+                    <p className="text-muted-foreground font-nunito">
+                        Find the perfect pair for your little one
+                    </p>
+                </div>
+
+                {/* Search & Filters */}
+                <div className="mb-8 space-y-4">
+                    <div className="flex gap-4 flex-wrap">
+                        <div className="flex-1 min-w-[300px]">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search shoes..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                    className="pl-10"
+                                />
+                            </div>
+                        </div>
+
+                        <Button onClick={handleSearch} variant="hopz">
+                            Search
+                        </Button>
+
+                        <Button
+                            onClick={() => setShowFilters(!showFilters)}
+                            variant="outline"
+                            className="gap-2"
+                        >
+                            <SlidersHorizontal className="w-4 h-4" />
+                            Filters
+                        </Button>
+                    </div>
+
+                    {/* Filter Panel */}
+                    {showFilters && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-card rounded-xl shadow-card">
+                            <div>
+                                <label className="text-sm font-nunito font-semibold mb-2 block">Category</label>
+                                <Select value={category} onValueChange={setCategory}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Categories" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">All Categories</SelectItem>
+                                        <SelectItem value="Sneakers">Sneakers</SelectItem>
+                                        <SelectItem value="Sandals">Sandals</SelectItem>
+                                        <SelectItem value="Boots">Boots</SelectItem>
+                                        <SelectItem value="Party Wear">Party Wear</SelectItem>
+                                        <SelectItem value="Sports Shoes">Sports Shoes</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-nunito font-semibold mb-2 block">Age Group</label>
+                                <Select value={ageGroup} onValueChange={setAgeGroup}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Ages" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">All Ages</SelectItem>
+                                        <SelectItem value="3-6 years">3-6 years</SelectItem>
+                                        <SelectItem value="6-9 years">6-9 years</SelectItem>
+                                        <SelectItem value="9-12 years">9-12 years</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-nunito font-semibold mb-2 block">
+                                    Price: ₹{priceRange[0]} - ₹{priceRange[1]}
+                                </label>
+                                <Slider
+                                    value={priceRange}
+                                    onValueChange={setPriceRange}
+                                    max={10000}
+                                    step={100}
+                                    className="mt-2"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Products Grid */}
+                {isLoading ? (
+                    <div className="text-center py-20">
+                        <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                        <p className="mt-4 text-muted-foreground">Loading products...</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="mb-4 text-sm text-muted-foreground">
+                            {filteredProducts?.length || 0} products found
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                            {filteredProducts?.map((product: any, index: number) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                    delay={index * 50}
+                                    isAdmin={isAdmin}
+                                    onAddToCart={() => handleAddToCart(product)}
+                                    onBuyNow={() => handleBuyNow(product)}
+                                />
+                            ))}
+                        </div>
+
+                        {filteredProducts?.length === 0 && (
+                            <div className="text-center py-20">
+                                <p className="text-2xl font-fredoka text-muted-foreground">
+                                    No products found
+                                </p>
+                                <p className="text-sm text-muted-foreground mt-2">
+                                    Try adjusting your filters
+                                </p>
+                            </div>
+                        )}
+                    </>
+                )}
+            </main>
+
+            <Footer />
+        </div>
+    );
+};
+
+const ProductCard = ({
+    product,
+    delay,
+    isAdmin,
+    onAddToCart,
+    onBuyNow
+}: {
+    product: any;
+    delay: number;
+    isAdmin: boolean;
+    onAddToCart: () => void;
+    onBuyNow: () => void;
+}) => {
+    return (
+        <div className="relative">
+            {/* Admin Edit Button */}
+            {isAdmin && (
+                <Link
+                    to={`/admin/products?edit=${product.id}`}
+                    className="absolute top-4 right-16 w-10 h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center transition-transform hover:scale-110 z-20"
+                    title="Edit Product"
+                >
+                    <Edit className="w-5 h-5 text-white" />
+                </Link>
+            )}
+
+            <Link to={`/products/${product.id}`}>
+                <div
+                    className="group relative bg-card rounded-3xl shadow-card p-3 md:p-6 transition-all duration-300 hover:shadow-float hover:-translate-y-2 animate-fade-up opacity-0"
+                    style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
+                >
+                    {/* Discount Badge */}
+                    {product.discountPrice && (
+                        <span className="absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 bg-cyan text-white text-[10px] md:text-xs font-nunito font-bold rounded-full">
+                            Sale
+                        </span>
+                    )}
+
+                    {/* Wishlist Button */}
+                    <button
+                        className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-background shadow-soft flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink/20"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            toast.success('Added to wishlist!');
+                        }}
+                    >
+                        <Heart className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-pink transition-colors" />
+                    </button>
+
+                    {/* Product Image */}
+                    <div className="relative h-32 md:h-48 flex items-center justify-center mb-3 md:mb-6">
+                        <div className="absolute inset-0 bg-white rounded-2xl border border-muted/30" />
+                        <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className="relative h-28 w-28 md:h-40 md:w-40 object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                        />
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="space-y-2 md:space-y-3">
+                        <h3 className="font-fredoka font-semibold text-sm md:text-xl text-foreground line-clamp-2">
+                            {product.name}
+                        </h3>
+
+                        <div className="flex items-center gap-1 md:gap-2">
+                            <span className="text-lg md:text-2xl font-fredoka font-bold text-cyan-600">
+                                ₹{product.discountPrice || product.price}
+                            </span>
+                            {product.discountPrice && (
+                                <span className="text-xs md:text-sm text-muted-foreground line-through">
+                                    ₹{product.price}
+                                </span>
+                            )}
+                        </div>
+
+
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col gap-1.5 md:gap-2 mt-2 md:mt-4">
+                            <Button
+                                variant="hopz"
+                                className="w-full group/btn text-xs md:text-sm bg-cyan border-2 border-cyan-500 text-black hover:bg-cyan/90 font-bold shadow-sm py-1.5 md:py-2 h-8 md:h-10"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onAddToCart();
+                                }}
+                            >
+                                <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 text-black transition-transform group-hover/btn:scale-110" />
+                                Add to Bag
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="w-full border-2 border-cyan-700 bg-cyan-400 text-black hover:bg-cyan-500 hover:border-cyan-800 font-bold text-xs md:text-sm shadow-sm py-1.5 md:py-2 h-8 md:h-10"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onBuyNow();
+                                }}
+                            >
+                                Buy Now
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        </div>
+    );
+};
+
+export default Products;

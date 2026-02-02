@@ -1,0 +1,414 @@
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminAPI } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { Navigate, Link } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ShoppingBag, Eye, Package, IndianRupee, Search, Download, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+const AdminOrders = () => {
+    useEffect(() => {
+        console.log('AdminOrders component mounted');
+    }, []);
+
+    const { user, isAdmin, loading } = useAuth();
+    const queryClient = useQueryClient();
+    const [statusFilter, setStatusFilter] = useState<string>('');
+    const [paymentFilter, setPaymentFilter] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+    const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+
+    const deleteOrderMutation = useMutation({
+        mutationFn: (id: string) => adminAPI.deleteOrder(id),
+        onSuccess: (_, id) => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            setSelectedOrders(prev => prev.filter(orderId => orderId !== id));
+            toast.success('Order deleted successfully');
+        },
+        onError: (err: any) => {
+            console.error('Delete order error:', err);
+            toast.error(err.response?.data?.error || 'Failed to delete order');
+        }
+    });
+
+    const bulkDeleteMutation = useMutation({
+        mutationFn: (ids: string[]) => adminAPI.bulkDeleteOrders(ids),
+        onSuccess: (data: any) => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            setSelectedOrders([]);
+            toast.success(data?.data?.message || 'Orders deleted successfully');
+        },
+        onError: (err: any) => {
+            console.error('Bulk delete error:', err);
+            toast.error(err.response?.data?.error || 'Failed to delete orders');
+        }
+    });
+
+    const { data: orders, isLoading, error } = useQuery({
+        queryKey: ['admin-orders', statusFilter, paymentFilter, searchTerm, startDate, endDate],
+        queryFn: async () => {
+            try {
+                const params: any = {};
+                if (statusFilter) params.status = statusFilter;
+                if (paymentFilter) params.paymentStatus = paymentFilter;
+                if (searchTerm) params.search = searchTerm;
+                if (startDate) params.startDate = startDate;
+                if (endDate) params.endDate = endDate;
+                const response = await adminAPI.getOrders(params);
+                console.log('Orders fetch response:', response.data);
+                return Array.isArray(response?.data) ? response.data : [];
+            } catch (err) {
+                console.error('Failed to fetch orders:', err);
+                return [];
+            }
+        },
+        enabled: !!isAdmin
+    });
+
+    if (error) {
+        console.error('React Query error in AdminOrders:', error);
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center p-8">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-muted-foreground font-nunito">Initializing admin session...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!user || !isAdmin) {
+        console.warn('Access denied: User not authenticated or not an admin');
+        return <Navigate to="/" />;
+    }
+
+    const getStatusColor = (status: string) => {
+        const colors: any = {
+            PLACED: 'bg-yellow-500',
+            PACKED: 'bg-blue-500',
+            SHIPPED: 'bg-purple-500',
+            DELIVERED: 'bg-green-500',
+            CANCELLED: 'bg-red-500'
+        };
+        return colors[status] || 'bg-gray-500';
+    };
+
+    const getPaymentColor = (status: string) => {
+        const colors: any = {
+            PENDING: 'bg-yellow-500',
+            COMPLETED: 'bg-green-500',
+            FAILED: 'bg-red-500'
+        };
+        return colors[status] || 'bg-gray-500';
+    };
+
+    const exportToCSV = () => {
+        try {
+            if (!orders || orders.length === 0) {
+                toast.error('No orders to export');
+                return;
+            }
+
+            const headers = ['Order ID', 'Date', 'Customer Email', 'Customer Name', 'Total', 'Status', 'Payment Status', 'Items Count'];
+            const csvContent = orders.filter(Boolean).map((o: any) => [
+                o?.id || 'N/A',
+                o?.createdAt ? new Date(o.createdAt).toLocaleString() : 'N/A',
+                o?.user?.email || 'N/A',
+                o?.user?.name || 'N/A',
+                (o?.total || 0).toFixed(2),
+                o?.status || 'N/A',
+                o?.paymentStatus || 'N/A',
+                o?.items?.length || 0
+            ].map(val => `"${val}"`).join(','));
+
+            const csvString = [headers.join(','), ...csvContent].join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `happy-hopz-orders-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast.success('Orders exported successfully');
+        } catch (err) {
+            console.error('Export failed:', err);
+            toast.error('Failed to export orders');
+        }
+    };
+
+    return (
+        <div className="animate-in fade-in duration-500">
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-4xl font-fredoka font-bold text-foreground">
+                    Order Management
+                </h1>
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={exportToCSV}
+                        disabled={!orders || orders.length === 0}
+                        className="flex items-center gap-2 border-primary/20 hover:border-primary transition-all"
+                    >
+                        <Download className="w-4 h-4 text-primary" />
+                        Export CSV
+                    </Button>
+                    <div className="flex items-center gap-4 text-muted-foreground bg-muted/50 px-4 py-1 rounded-full">
+                        <div className="flex items-center gap-2">
+                            <ShoppingBag className="w-5 h-5 text-primary" />
+                            <span className="font-nunito font-semibold">{orders?.length || 0} Orders</span>
+                        </div>
+                        {orders && orders.length > 0 && (
+                            <div className="flex items-center gap-2 border-l pl-4 border-primary/10">
+                                <input
+                                    type="checkbox"
+                                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                                    checked={orders.length > 0 && selectedOrders.length === orders.length}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setSelectedOrders(orders.map((o: any) => o.id));
+                                        } else {
+                                            setSelectedOrders([]);
+                                        }
+                                    }}
+                                />
+                                <span className="text-xs font-bold uppercase tracking-wider">Select All</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Bulk Action Bar */}
+            {selectedOrders.length > 0 && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-8 duration-300">
+                    <Card className="bg-primary text-primary-foreground p-4 shadow-float border-none flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-white text-primary rounded-full px-3">
+                                {selectedOrders.length}
+                            </Badge>
+                            <span className="font-nunito font-bold">Orders Selected</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                className="bg-white text-destructive hover:bg-gray-100 font-bold"
+                                onClick={() => {
+                                    if (confirm(`Are you sure you want to delete ${selectedOrders.length} orders? This cannot be undone.`)) {
+                                        bulkDeleteMutation.mutate(selectedOrders);
+                                    }
+                                }}
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Selected
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-white hover:bg-primary/20"
+                                onClick={() => setSelectedOrders([])}
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* Search and Filters */}
+            <Card className="p-6 mb-8 border-primary/10 shadow-sm">
+                <div className="space-y-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search by Order ID or Customer Email..."
+                            className="pl-10 border-primary/20 focus-visible:ring-primary"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Order Status</label>
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="border-primary/20">
+                                    <SelectValue placeholder="All Statuses" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ALL">All Statuses</SelectItem>
+                                    <SelectItem value="PLACED">Placed</SelectItem>
+                                    <SelectItem value="PACKED">Packed</SelectItem>
+                                    <SelectItem value="SHIPPED">Shipped</SelectItem>
+                                    <SelectItem value="DELIVERED">Delivered</SelectItem>
+                                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Status</label>
+                            <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                                <SelectTrigger className="border-primary/20">
+                                    <SelectValue placeholder="All Payment Statuses" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ALL">All Payment Statuses</SelectItem>
+                                    <SelectItem value="PENDING">Pending</SelectItem>
+                                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                                    <SelectItem value="FAILED">Failed</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">From Date</label>
+                            <Input
+                                type="date"
+                                className="border-primary/20"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">To Date</label>
+                            <Input
+                                type="date"
+                                className="border-primary/20"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </Card>
+
+            {isLoading ? (
+                <div className="text-center py-20">
+                    <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="mt-4 text-muted-foreground font-nunito">Loading orders...</p>
+                </div>
+            ) : !orders || !Array.isArray(orders) || orders.length === 0 ? (
+                <Card className="p-12 text-center border-dashed border-2">
+                    <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                    <h3 className="text-xl font-fredoka font-bold mb-2">No orders found</h3>
+                    <p className="text-muted-foreground font-nunito">
+                        {statusFilter || paymentFilter || searchTerm ? 'Try adjusting your filters' : 'No orders have been placed yet.'}
+                    </p>
+                    {(statusFilter || paymentFilter || searchTerm) && (
+                        <Button
+                            variant="link"
+                            className="mt-4 text-primary"
+                            onClick={() => {
+                                setStatusFilter('');
+                                setPaymentFilter('');
+                                setSearchTerm('');
+                                setStartDate('');
+                                setEndDate('');
+                            }}
+                        >
+                            Clear all filters
+                        </Button>
+                    )}
+                </Card>
+            ) : (
+                <div className="grid grid-cols-1 gap-4">
+                    {orders.filter(Boolean).map((order: any) => (
+                        <Card key={order.id} className={`p-6 hover:shadow-float transition-all border-primary/5 ${selectedOrders.includes(order.id) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
+                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <input
+                                        type="checkbox"
+                                        className="w-5 h-5 rounded-md border-primary/20 text-primary focus:ring-primary cursor-pointer"
+                                        checked={selectedOrders.includes(order.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedOrders(prev => [...prev, order.id]);
+                                            } else {
+                                                setSelectedOrders(prev => prev.filter(id => id !== order.id));
+                                            }
+                                        }}
+                                    />
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-hopz flex items-center justify-center shadow-sm">
+                                        <Package className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-fredoka font-bold">
+                                            Order #{String(order.id || 'N/A').slice(0, 8)}
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground font-nunito">
+                                            {order.user?.email || 'Guest User'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex-1 ml-0 md:ml-12 mt-4 md:mt-0">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Amount</p>
+                                            <p className="font-nunito font-bold text-lg text-primary flex items-center gap-1">
+                                                <IndianRupee className="w-4 h-4" />
+                                                {(order.total || 0).toFixed(2)}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Items</p>
+                                            <p className="font-nunito font-bold text-lg">{order.items?.length || 0}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Status</p>
+                                            <Badge className={`${getStatusColor(order.status)} text-white border-none px-3 py-1`}>
+                                                {order.status || 'UNKNOWN'}
+                                            </Badge>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Payment</p>
+                                            <Badge className={`${getPaymentColor(order.paymentStatus)} text-white border-none px-3 py-1`}>
+                                                {order.paymentStatus || 'UNKNOWN'}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-primary/5 flex items-center justify-between">
+                                        <p className="text-xs text-muted-foreground font-nunito">
+                                            Placed on {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <Link to={`/admin/orders/${order.id}`}>
+                                                <Button variant="outline" size="sm" className="font-bold border-primary/20 text-primary hover:bg-primary/5">
+                                                    <Eye className="w-4 h-4 mr-2" />
+                                                    View Details
+                                                </Button>
+                                            </Link>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => {
+                                                    if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+                                                        deleteOrderMutation.mutate(order.id);
+                                                    }
+                                                }}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AdminOrders;

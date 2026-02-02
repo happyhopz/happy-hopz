@@ -1,0 +1,44 @@
+import { Router, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
+
+const router = Router();
+const prisma = new PrismaClient();
+
+// Get content by key
+router.get('/:key', async (req, res) => {
+    try {
+        const content = await prisma.siteContent.findUnique({
+            where: { key: req.params.key }
+        });
+        if (!content) {
+            return res.status(404).json({ error: 'Content not found' });
+        }
+        res.json(JSON.parse(content.content));
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch content' });
+    }
+});
+
+// Update content by key (Admin only)
+router.put('/:key', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+    try {
+        const { key } = req.params;
+        const { content } = req.body;
+
+        const updated = await prisma.siteContent.upsert({
+            where: { key },
+            update: { content: JSON.stringify(content) },
+            create: {
+                key,
+                content: JSON.stringify(content)
+            }
+        });
+
+        res.json(JSON.parse(updated.content));
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update content' });
+    }
+});
+
+export default router;

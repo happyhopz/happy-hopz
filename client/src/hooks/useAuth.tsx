@@ -1,0 +1,95 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authAPI } from '@/lib/api';
+
+interface User {
+    id: string;
+    email: string;
+    name?: string;
+    phone?: string;
+    role: string;
+    isVerified: boolean;
+}
+
+interface AuthContextType {
+    user: User | null;
+    token: string | null;
+    loading: boolean;
+    login: (email: string, password: string) => Promise<void>;
+    signup: (data: { email: string; password: string; name?: string; phone?: string }) => Promise<void>;
+    googleLogin: (credential: string) => Promise<void>;
+    logout: () => void;
+    isAdmin: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadUser = async () => {
+            const storedToken = localStorage.getItem('token');
+            if (storedToken) {
+                try {
+                    const response = await authAPI.getMe();
+                    setUser(response.data);
+                    setToken(storedToken);
+                } catch (error) {
+                    localStorage.removeItem('token');
+                    setToken(null);
+                }
+            }
+            setLoading(false);
+        };
+
+        loadUser();
+    }, []);
+
+    const login = async (email: string, password: string) => {
+        const response = await authAPI.login({ email, password });
+        const { user: userData, token: userToken } = response.data;
+        setUser(userData);
+        setToken(userToken);
+        localStorage.setItem('token', userToken);
+    };
+
+    const signup = async (data: { email: string; password: string; name?: string; phone?: string }) => {
+        const response = await authAPI.signup(data);
+        const { user: userData, token: userToken } = response.data;
+        setUser(userData);
+        setToken(userToken);
+        localStorage.setItem('token', userToken);
+    };
+
+    const googleLogin = async (credential: string) => {
+        const response = await authAPI.googleLogin(credential);
+        const { user: userData, token: userToken } = response.data;
+        setUser(userData);
+        setToken(userToken);
+        localStorage.setItem('token', userToken);
+    };
+
+    const logout = () => {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('token');
+    };
+
+    const isAdmin = user?.role === 'ADMIN';
+
+    return (
+        <AuthContext.Provider value={{ user, token, loading, login, signup, googleLogin, logout, isAdmin }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
