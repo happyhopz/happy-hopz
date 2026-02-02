@@ -35,7 +35,7 @@ const FeaturedShoes = () => {
     queryKey: ['featured-products'],
     queryFn: async () => {
       const response = await productsAPI.getAll();
-      return response.data.slice(0, 3);
+      return response.data.slice(0, 6);
     }
   });
 
@@ -83,7 +83,7 @@ const FeaturedShoes = () => {
             <div className="h-6 w-96 bg-muted rounded mx-auto animate-pulse" />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="bg-background rounded-3xl p-6 animate-pulse">
                 <div className="h-48 bg-muted rounded-2xl mb-6" />
                 <div className="h-6 bg-muted rounded mb-3" />
