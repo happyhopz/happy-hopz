@@ -45,11 +45,11 @@ const HeroSection = () => {
 
           {/* Title & Tagline section */}
           <div className="text-center px-4">
-            <h1 className="text-2xl md:text-3xl font-fredoka font-black text-foreground leading-tight animate-fade-up opacity-0 delay-100 tracking-tight whitespace-nowrap">
+            <h1 className="text-4xl md:text-5xl font-fredoka font-black text-foreground leading-tight animate-fade-up opacity-0 delay-100 tracking-tight whitespace-nowrap">
               Little Feet, <span className="text-cyan-600 drop-shadow-md font-fredoka">Big Adventures</span>
             </h1>
 
-            <p className="mt-2 text-sm text-muted-foreground font-nunito animate-fade-up opacity-0 delay-200 italic">
+            <p className="mt-4 text-base text-muted-foreground font-nunito animate-fade-up opacity-0 delay-200 italic">
               Where Every Step Is a Happy Hopz – Growing With Your Little Ones 🐼
             </p>
           </div>
@@ -98,12 +98,12 @@ const HeroSection = () => {
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-fredoka font-black text-foreground leading-tight animate-fade-up opacity-0 delay-100 tracking-tight">
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-fredoka font-black text-foreground leading-tight animate-fade-up opacity-0 delay-100 tracking-tight">
               Little Feet,{' '}
               <span className="text-cyan-600 drop-shadow-md font-fredoka">Big Adventures</span>
             </h1>
 
-            <p className="mt-6 text-base md:text-lg text-muted-foreground font-nunito max-w-lg animate-fade-up opacity-0 delay-200 italic">
+            <p className="mt-8 text-xl md:text-2xl text-muted-foreground font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic">
               Where Every Step Is a Happy Hopz – Growing With Your Little Ones 🐼
             </p>
 
