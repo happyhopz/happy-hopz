@@ -144,9 +144,6 @@ const Login = () => {
                                         >
                                             {loading ? 'Logging in...' : 'Login'}
                                         </Button>
-                                        <p className="text-sm text-muted-foreground text-center">
-                                            Test: user@test.com / user123
-                                        </p>
 
                                         <div className="relative my-2">
                                             <div className="absolute inset-0 flex items-center">

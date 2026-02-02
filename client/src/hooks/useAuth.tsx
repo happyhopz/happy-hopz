@@ -8,6 +8,8 @@ interface User {
     phone?: string;
     role: string;
     isVerified: boolean;
+    emailNotifications?: boolean;
+    promoNotifications?: boolean;
 }
 
 interface AuthContextType {

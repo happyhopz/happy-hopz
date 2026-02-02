@@ -42,6 +42,8 @@ export const authAPI = {
     resendOTP: () => api.post('/auth/resend-otp'),
     googleLogin: (credential: string) => api.post('/auth/google', { credential }),
     updateProfile: (data: { name?: string; phone?: string }) => api.put('/auth/profile', data),
+    changePassword: (data: any) => api.post('/auth/change-password', data),
+    updateEmailPrefs: (data: any) => api.put('/auth/email-preferences', data),
 };
 
 // Products API
