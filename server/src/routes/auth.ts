@@ -327,4 +327,82 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => 
     }
 });
 
+// Change password
+router.post('/change-password', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const passwordSchema = z.object({
+            oldPassword: z.string(),
+            newPassword: z.string().min(6)
+        });
+
+        const { oldPassword, newPassword } = passwordSchema.parse(req.body);
+
+        const user = await prisma.user.findUnique({
+            where: { id: req.user!.id }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Check old password
+        const isValidPassword = await bcrypt.compare(oldPassword, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ error: 'Incorrect current password' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { password: hashedPassword }
+        });
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
+        res.status(500).json({ error: 'Failed to update password' });
+    }
+});
+
+// Update email preferences
+router.put('/email-preferences', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const prefsSchema = z.object({
+            emailNotifications: z.boolean(),
+            promoNotifications: z.boolean()
+        });
+
+        const { emailNotifications, promoNotifications } = prefsSchema.parse(req.body);
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user!.id },
+            data: {
+                emailNotifications,
+                promoNotifications
+            } as any,
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                phone: true,
+                role: true,
+                isVerified: true,
+                emailNotifications: true,
+                promoNotifications: true
+            }
+        });
+
+        res.json(updatedUser);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
+        res.status(500).json({ error: 'Failed to update preferences' });
+    }
+});
+
 export default router;
