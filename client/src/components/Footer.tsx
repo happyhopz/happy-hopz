@@ -64,21 +64,21 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact */}
-          <div>
+          {/* Contact - Full width on mobile for better email visibility */}
+          <div className="col-span-2 lg:col-span-1">
             <h4 className="font-fredoka font-semibold text-foreground mb-4">
               Contact Us
             </h4>
-            <ul className="space-y-3">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
               <li>
                 <a
                   href="mailto:happyhopz308@gmail.com"
                   className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
                     <Mail className="w-4 h-4" />
                   </div>
-                  happyhopz308@gmail.com
+                  <span className="truncate">happyhopz308@gmail.com</span>
                 </a>
               </li>
               <li>
@@ -88,7 +88,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-purple-500 group-hover:to-pink-500 group-hover:text-white transition-colors shadow-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-purple-500 group-hover:to-pink-500 group-hover:text-white transition-colors shadow-sm">
                     <Instagram className="w-4 h-4" />
                   </div>
                   @happyhopzz
@@ -101,7 +101,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
                     <Facebook className="w-4 h-4" />
                   </div>
                   Happy Hopz
