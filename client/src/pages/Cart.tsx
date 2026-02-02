@@ -106,41 +106,42 @@ const Cart = () => {
                         {/* Cart Items */}
                         <div className="lg:col-span-2 space-y-4">
                             {cartItems.map((item: any) => (
-                                <Card key={item.id} className="p-6">
-                                    <div className="flex gap-6">
+                                <Card key={item.id} className="p-4 md:p-6 relative overflow-hidden group">
+                                    <div className="flex gap-4 md:gap-6 items-center">
                                         {/* Product Image */}
-                                        <div className="w-32 h-32 bg-gradient-soft rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <div className="w-24 h-24 md:w-40 md:h-40 bg-gradient-soft rounded-2xl flex items-center justify-center flex-shrink-0 border border-muted/20">
                                             <img
                                                 src={item.product?.images?.[0]}
                                                 alt={item.product?.name}
-                                                className="w-24 h-24 object-contain"
+                                                className="w-20 h-20 md:w-36 md:h-36 object-contain transition-transform duration-300 group-hover:scale-110"
                                             />
                                         </div>
 
                                         {/* Product Info */}
-                                        <div className="flex-1">
-                                            <h3 className="text-xl font-fredoka font-bold mb-1">
+                                        <div className="flex-1 pr-8">
+                                            <h3 className="text-base md:text-xl font-fredoka font-bold mb-1 line-clamp-2">
                                                 {item.product?.name}
                                             </h3>
-                                            <p className="text-sm text-muted-foreground mb-2">
+                                            <p className="text-xs md:text-sm text-muted-foreground mb-2">
                                                 Size: {item.size} | Color: {item.color}
                                             </p>
-                                            <div className="flex items-center gap-3 mb-3">
-                                                <span className="text-2xl font-fredoka font-bold text-primary">
+                                            <div className="flex items-center gap-2 md:gap-3 mb-3">
+                                                <span className="text-lg md:text-2xl font-fredoka font-bold text-cyan-600">
                                                     ₹{item.product?.discountPrice || item.product?.price}
                                                 </span>
                                                 {item.product?.discountPrice && (
-                                                    <span className="text-sm text-muted-foreground line-through">
+                                                    <span className="text-xs md:text-sm text-muted-foreground line-through">
                                                         ₹{item.product?.price}
                                                     </span>
                                                 )}
                                             </div>
 
                                             {/* Quantity Controls */}
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-2 md:gap-3">
                                                 <Button
                                                     variant="outline"
                                                     size="icon"
+                                                    className="w-8 h-8 md:w-10 md:h-10 rounded-full"
                                                     onClick={() => {
                                                         if (item.quantity > 1) {
                                                             updateMutation.mutate({
@@ -152,32 +153,33 @@ const Cart = () => {
                                                         }
                                                     }}
                                                 >
-                                                    <Minus className="w-4 h-4" />
+                                                    <Minus className="w-3 h-3 md:w-4 md:h-4" />
                                                 </Button>
-                                                <span className="text-lg font-fredoka font-bold w-12 text-center">
+                                                <span className="text-sm md:text-lg font-fredoka font-bold w-6 md:w-12 text-center text-foreground">
                                                     {item.quantity}
                                                 </span>
                                                 <Button
                                                     variant="outline"
                                                     size="icon"
+                                                    className="w-8 h-8 md:w-10 md:h-10 rounded-full"
                                                     onClick={() => updateMutation.mutate({
                                                         id: item.id,
                                                         quantity: item.quantity + 1
                                                     })}
                                                 >
-                                                    <Plus className="w-4 h-4" />
+                                                    <Plus className="w-3 h-3 md:w-4 md:h-4" />
                                                 </Button>
                                             </div>
                                         </div>
 
-                                        {/* Remove Button */}
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
+                                        {/* Remove Button - Fixed Absolute Positioning */}
+                                        <button
                                             onClick={() => removeMutation.mutate(item.id)}
+                                            className="absolute top-2 right-2 md:top-4 md:right-4 p-2 text-muted-foreground hover:text-destructive transition-colors rounded-full hover:bg-destructive/10"
+                                            title="Remove from cart"
                                         >
-                                            <Trash2 className="w-5 h-5 text-destructive" />
-                                        </Button>
+                                            <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+                                        </button>
                                     </div>
                                 </Card>
                             ))}
