@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all products with filters
 router.get('/', async (req: Request, res: Response) => {

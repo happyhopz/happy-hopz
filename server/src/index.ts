@@ -17,9 +17,9 @@ import contentRoutes from './routes/content';
 import notificationRoutes from './routes/notifications';
 import addressRoutes from './routes/addresses';
 import { PrismaClient } from '@prisma/client';
+import { prisma } from './lib/prisma';
 
 const app: Express = express();
-const prisma = new PrismaClient();
 
 // Trust proxy for Render/Vercel
 app.set('trust proxy', 1);

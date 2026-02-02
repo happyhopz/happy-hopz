@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { sendVerificationEmail } from '../utils/email';
@@ -9,7 +10,6 @@ import { OAuth2Client } from 'google-auth-library';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const router = Router();
-const prisma = new PrismaClient();
 
 // Validation schemas
 const signupSchema = z.object({

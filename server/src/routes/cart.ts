@@ -1,10 +1,10 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get user cart
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {

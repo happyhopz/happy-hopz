@@ -1,11 +1,11 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 import { sendOrderConfirmationEmail } from '../utils/email';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Create order
 const createOrderSchema = z.object({

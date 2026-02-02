@@ -27,7 +27,7 @@ const FeaturedShoes = () => {
 
   const tags = [
     { tag: 'Best Seller', tagColor: 'bg-orange-500' },
-    { tag: 'New', tagColor: 'bg-pink-500' },
+    { tag: 'New', tagColor: 'bg-[#06b6d4]' },
     { tag: 'Sale', tagColor: 'bg-[#06b6d4]' },
   ];
 
@@ -258,7 +258,7 @@ const ShoeCard = ({
 
         {/* Floating Badges */}
         <span
-          style={tag.tag.toLowerCase().includes('sale') ? { backgroundColor: '#06b6d4' } : {}}
+          style={tag.tag.toLowerCase().includes('sale') || tag.tag.toLowerCase().includes('new') ? { backgroundColor: '#06b6d4' } : {}}
           className={`absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full z-50 shadow-md pointer-events-none`}
         >
           {tag.tag}
