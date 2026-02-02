@@ -64,50 +64,46 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact - Full width on mobile for better email visibility */}
+          {/* Contact - Clean & Polished */}
           <div className="col-span-2 lg:col-span-1">
-            <h4 className="font-fredoka font-semibold text-foreground mb-4">
+            <h4 className="font-fredoka font-semibold text-foreground mb-6">
               Contact Us
             </h4>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
-              <li>
-                <a
-                  href="mailto:happyhopz308@gmail.com"
-                  className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
-                >
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <span className="truncate">happyhopz308@gmail.com</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.instagram.com/happyhopzz?igsh=czMyaW1zYTY5ZWtz"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
-                >
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-purple-500 group-hover:to-pink-500 group-hover:text-white transition-colors shadow-sm">
-                    <Instagram className="w-4 h-4" />
-                  </div>
-                  @happyhopzz
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.facebook.com/share/18Hz57kKZa/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
-                >
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
-                    <Facebook className="w-4 h-4" />
-                  </div>
-                  Happy Hopz
-                </a>
-              </li>
-            </ul>
+            <div className="flex flex-col gap-4">
+              <a
+                href="mailto:happyhopz308@gmail.com"
+                className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm border border-border/40">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <span className="font-medium truncate">happyhopz308@gmail.com</span>
+              </a>
+
+              <a
+                href="https://www.instagram.com/happyhopzz?igsh=czMyaW1zYTY5ZWtz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-purple-500 group-hover:via-pink-500 group-hover:to-orange-400 group-hover:text-white transition-all shadow-sm border border-border/40">
+                  <Instagram className="w-5 h-5" />
+                </div>
+                <span className="font-medium">@happyhopzz</span>
+              </a>
+
+              <a
+                href="https://www.facebook.com/share/18Hz57kKZa/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm border border-border/40">
+                  <Facebook className="w-5 h-5" />
+                </div>
+                <span className="font-medium">Happy Hopz</span>
+              </a>
+            </div>
           </div>
         </div>
 
