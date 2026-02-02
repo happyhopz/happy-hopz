@@ -63,10 +63,10 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         // Happy Hopz custom colors - pink to cyan theme
-        'hopz-pink': "hsl(var(--pink))",
+        pink: "hsl(var(--pink))",
         magenta: "hsl(var(--magenta))",
         lavender: "hsl(var(--lavender))",
-        'hopz-cyan': "hsl(var(--cyan))",
+        cyan: "hsl(var(--cyan))",
         turquoise: "hsl(var(--turquoise))",
         sky: "hsl(var(--sky))",
         mint: "hsl(var(--mint))",

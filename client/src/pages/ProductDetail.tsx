@@ -230,7 +230,10 @@ const ProductDetail = () => {
 
                                 {/* Floating Badges */}
                                 {discountPercent > 0 && (
-                                    <Badge className="absolute top-4 left-4 bg-cyan-500 text-white font-bold px-3 py-1.5 z-50 shadow-md">
+                                    <Badge
+                                        style={{ backgroundColor: '#06b6d4' }}
+                                        className="absolute top-4 left-4 text-white font-bold px-3 py-1.5 z-50 shadow-md"
+                                    >
                                         SALE {discountPercent}% OFF
                                     </Badge>
                                 )}

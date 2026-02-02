@@ -309,7 +309,7 @@ const ProductCard = ({
                     <div className="flex flex-col gap-1.5 md:gap-2 mt-2 md:mt-4">
                         <Button
                             variant="hopz"
-                            className="w-full group/btn text-xs md:text-sm bg-hopz-cyan border-2 border-cyan-500 text-black hover:bg-hopz-cyan/90 font-bold shadow-sm py-1.5 md:py-2 h-8 md:h-10"
+                            className="w-full group/btn text-xs md:text-sm bg-cyan border-2 border-cyan-500 text-black hover:bg-cyan/90 font-bold shadow-sm py-1.5 md:py-2 h-8 md:h-10"
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -351,18 +351,18 @@ const ProductCard = ({
                             <span
                                 key={idx}
                                 style={isSale ? { backgroundColor: '#06b6d4' } : {}}
-                                className={`px-2 py-0.5 md:px-3 md:py-1 ${getTagColor(tag)} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-md pointer-events-none uppercase tracking-wider`}
+                                className={`px-2 py-0.5 md:px-3 md:py-1 ${getTagColor(tag)} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none`}
                             >
-                                {isSale ? 'SALE!' : tag}
+                                {tag}
                             </span>
                         );
                     })}
                     {product.discountPrice && (!product.tags || product.tags.length === 0) && (
                         <span
                             style={{ backgroundColor: '#06b6d4' }}
-                            className="px-2 py-0.5 md:px-3 md:py-1 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-md z-50 pointer-events-none uppercase tracking-wider"
+                            className="px-2 py-0.5 md:px-3 md:py-1 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm z-50 pointer-events-none"
                         >
-                            SALE!
+                            Sale
                         </span>
                     )}
                 </div>
