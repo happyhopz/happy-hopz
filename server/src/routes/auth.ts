@@ -292,4 +292,39 @@ router.post('/google', async (req: Request, res: Response) => {
     }
 });
 
+// Update profile
+router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const profileSchema = z.object({
+            name: z.string().optional(),
+            phone: z.string().optional()
+        });
+
+        const { name, phone } = profileSchema.parse(req.body);
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user!.id },
+            data: {
+                name,
+                phone
+            } as any,
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                phone: true,
+                role: true,
+                isVerified: true
+            }
+        });
+
+        res.json(updatedUser);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+
 export default router;
