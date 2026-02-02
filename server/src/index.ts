@@ -98,7 +98,7 @@ app.listen(PORT, async () => {
     try {
         const count = await prisma.product.count();
         console.log(`📦 Database connection verified. Total products: ${count}`);
-        const dbUrl = process.env.PROD_DATABASE_URL || process.env.DATABASE_URL;
+        const dbUrl = process.env.SUPABASE_DATABASE_URL || process.env.PROD_DATABASE_URL || process.env.DATABASE_URL;
         if (dbUrl) {
             console.log(`🔗 DB Host: ${new URL(dbUrl).hostname}`);
         }
