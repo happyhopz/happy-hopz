@@ -92,7 +92,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
         const { quantity } = z.object({ quantity: z.number().int().positive() }).parse(req.body);
 
         const cartItem = await prisma.cartItem.update({
-            where: { id: req.params.id },
+            where: { id: req.params.id as string },
             data: { quantity }
         });
 
@@ -109,7 +109,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         await prisma.cartItem.delete({
-            where: { id: req.params.id }
+            where: { id: req.params.id as string }
         });
 
         res.json({ message: 'Item removed from cart' });
