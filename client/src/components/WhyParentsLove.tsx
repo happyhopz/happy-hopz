@@ -49,7 +49,7 @@ const WhyParentsLove = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           {features.map((feature, index) => (
             <FeatureCard key={index} feature={feature} index={index} />
           ))}
@@ -80,16 +80,16 @@ const FeatureCard = ({ feature, index }: { feature: Feature; index: number }) =>
 
   return (
     <div
-      className="bg-card rounded-3xl p-6 shadow-card hover:shadow-float transition-all duration-300 hover:-translate-y-1 animate-fade-up opacity-0"
+      className="bg-card rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-card hover:shadow-float transition-all duration-300 hover:-translate-y-1 animate-fade-up opacity-0"
       style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
     >
-      <div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center mb-4`}>
-        <Icon className={`w-7 h-7 ${feature.iconColor}`} />
+      <div className={`w-10 h-10 md:w-14 md:h-14 ${feature.color} rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4`}>
+        <Icon className={`w-5 h-5 md:w-7 md:h-7 ${feature.iconColor}`} />
       </div>
-      <h3 className="font-fredoka font-semibold text-lg text-foreground mb-2">
+      <h3 className="font-fredoka font-semibold text-sm md:text-lg text-foreground mb-1 md:mb-2">
         {feature.title}
       </h3>
-      <p className="text-sm text-muted-foreground font-nunito leading-relaxed">
+      <p className="text-[10px] md:text-sm text-muted-foreground font-nunito leading-tight md:leading-relaxed">
         {feature.description}
       </p>
     </div>

@@ -4,18 +4,18 @@ import pandaLogo from '@/assets/happy-hopz-logo.png';
 
 const Footer = () => {
   return (
-    <footer className="bg-secondary py-12">
+    <footer className="bg-secondary py-8 md:py-12">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
-          <div>
-            <Link to="/" className="flex items-center gap-3 mb-4">
-              <img src={pandaLogo} alt="Happy Hopz" className="w-16 h-16 object-contain" />
-              <span className="text-2xl font-fredoka font-bold text-foreground">
+          <div className="col-span-2 lg:col-span-1">
+            <Link to="/" className="flex items-center gap-2 md:gap-3 mb-4">
+              <img src={pandaLogo} alt="Happy Hopz" className="w-12 h-12 md:w-16 md:h-16 object-contain" />
+              <span className="text-xl md:text-2xl font-fredoka font-bold text-foreground">
                 Happy Hopz
               </span>
             </Link>
-            <p className="text-muted-foreground font-nunito text-sm mb-6">
+            <p className="text-muted-foreground font-nunito text-xs md:text-sm mb-6">
               Where Every Step Is a Happy Hopz – Growing With Your Little Ones. 🐼
             </p>
             <div className="flex gap-3">
