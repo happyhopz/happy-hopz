@@ -256,7 +256,11 @@ const ShoeCard = ({
           </div>
         </div>
 
-        <span className={`absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full z-50 shadow-md pointer-events-none`}>
+        {/* Floating Badges */}
+        <span
+          style={tag.tag.toLowerCase().includes('sale') ? { backgroundColor: '#06b6d4' } : {}}
+          className={`absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full z-50 shadow-md pointer-events-none uppercase tracking-wider`}
+        >
           {tag.tag}
         </span>
 
