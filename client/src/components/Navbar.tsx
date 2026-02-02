@@ -168,6 +168,12 @@ const Navbar = () => {
                         My Orders
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="cursor-pointer">
+                        <User className="w-4 h-4 mr-2" />
+                        Account Settings
+                      </Link>
+                    </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin/dashboard" className="cursor-pointer">
@@ -358,9 +364,25 @@ const Navbar = () => {
                   </Button>
                 </Link>
                 {user ? (
-                  <Button variant="hopz" size="sm" className="flex-1" onClick={logout}>
-                    Logout
-                  </Button>
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex gap-2 w-full">
+                      <Link to="/orders" className="flex-1" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" size="sm" className="w-full rounded-full gap-2">
+                          <ShoppingBag className="w-4 h-4" />
+                          Orders
+                        </Button>
+                      </Link>
+                      <Link to="/settings" className="flex-1" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" size="sm" className="w-full rounded-full gap-2">
+                          <User className="w-4 h-4" />
+                          Settings
+                        </Button>
+                      </Link>
+                    </div>
+                    <Button variant="hopz" size="sm" className="w-full" onClick={logout}>
+                      Logout
+                    </Button>
+                  </div>
                 ) : (
                   <Link to="/login" className="flex-1">
                     <Button variant="hopz" size="sm" className="w-full">

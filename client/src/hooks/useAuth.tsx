@@ -18,6 +18,7 @@ interface AuthContextType {
     signup: (data: { email: string; password: string; name?: string; phone?: string }) => Promise<void>;
     googleLogin: (credential: string) => Promise<void>;
     logout: () => void;
+    setUser: (user: User | null) => void;
     isAdmin: boolean;
 }
 
@@ -84,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isAdmin = user?.role === 'ADMIN';
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, signup, googleLogin, logout, isAdmin }}>
+        <AuthContext.Provider value={{ user, setUser, token, loading, login, signup, googleLogin, logout, isAdmin }}>
             {children}
         </AuthContext.Provider>
     );

@@ -31,6 +31,7 @@ import AdminOrderDetail from "./pages/admin/OrderDetail";
 import AdminCoupons from "./pages/admin/Coupons";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminSettings from "./pages/admin/Settings";
+import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/orders" element={<Orders />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />
