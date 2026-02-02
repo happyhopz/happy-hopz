@@ -36,16 +36,25 @@ const PORT = process.env.PORT || 5000;
 // Security middleware
 app.use(helmet());
 app.use(cors({
-    origin: [
-        'http://localhost:8080',
-        'http://localhost:8081',
-        'http://localhost:5173',
-        'http://127.0.0.1:8080',
-        'http://127.0.0.1:8081',
-        'http://127.0.0.1:5173',
-        process.env.CLIENT_URL || 'http://localhost:8081'
-    ],
-    credentials: true
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://localhost:8080',
+            'https://happy-hopz.vercel.app',
+            process.env.CLIENT_URL
+        ].filter(Boolean);
+
+        // Allow requests with no origin (like mobile apps or curl) or matching origins
+        if (!origin || allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
+            callback(null, true);
+        } else {
+            console.log('Blocked by CORS:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Rate limiting
