@@ -344,7 +344,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
             <div>
                 <Label>Product Tags</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2 p-4 border rounded-lg">
-                    {['New Arrivals', 'Trending', 'Boys', 'Girls', 'Best Seller', 'Sale'].map((tag) => (
+                    {['New Arrivals', 'Trending', 'Boys', 'Girls', 'Best Seller', 'Sale', 'Hampers'].map((tag) => (
                         <label key={tag} className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="checkbox"

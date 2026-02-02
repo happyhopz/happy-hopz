@@ -53,10 +53,10 @@ const menuItems = [
     label: 'Trending',
     href: '/products',
     dropdown: [
-      { label: 'Top Picks', href: '/products' },
-      { label: 'Best Sellers', href: '/products' },
-      { label: 'Customer Favorites', href: '/products' },
-      { label: 'Editor\'s Choice', href: '/products' }
+      { label: 'Top Picks', href: '/products?search=Trending' },
+      { label: 'Best Sellers', href: '/products?search=Best Seller' },
+      { label: 'Customer Favorites', href: '/products?search=Favourite' },
+      { label: 'Hampers', href: '/products?search=Hampers' }
     ],
   },
 ];

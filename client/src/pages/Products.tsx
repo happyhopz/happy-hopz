@@ -343,6 +343,8 @@ const ProductCard = ({
                             if (isCyanTag) return 'bg-[#06b6d4]';
                             if (lowT.includes('best')) return 'bg-orange-500';
                             if (lowT.includes('trending')) return 'bg-purple-500';
+                            if (lowT.includes('hampers')) return 'bg-pink-500';
+                            if (lowT.includes('favourite')) return 'bg-indigo-500';
                             return 'bg-cyan-500';
                         };
 
