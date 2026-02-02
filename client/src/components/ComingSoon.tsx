@@ -34,14 +34,14 @@ const ComingSoon = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-magenta/30 rounded-full mb-4 animate-wiggle">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-nunito font-bold text-foreground">
-              More Magic Coming!
+              More Magic for Every Step
             </span>
           </div>
           <h2 className="text-3xl md:text-4xl font-fredoka font-bold text-foreground">
-            Coming Soon to Happy Hopz
+            Happy Hopz
           </h2>
           <p className="mt-4 text-muted-foreground font-nunito max-w-md mx-auto">
-            We're expanding our family! Get ready for even more ways to make your little ones smile.
+            Making every step magical for your little ones with our curated collections.
           </p>
         </div>
 
@@ -114,10 +114,10 @@ const ComingSoonCard = ({ category, index }: { category: Category; index: number
         {category.description}
       </p>
 
-      {/* Coming Soon Badge */}
-      <div className="mt-4 inline-block px-4 py-1 bg-muted rounded-full">
-        <span className="text-xs font-nunito font-semibold text-muted-foreground">
-          Coming 2026
+      {/* Featured Badge */}
+      <div className="mt-4 inline-block px-4 py-1 bg-magenta/10 rounded-full">
+        <span className="text-xs font-nunito font-semibold text-magenta">
+          Premium Quality
         </span>
       </div>
     </div>
