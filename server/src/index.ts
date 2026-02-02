@@ -23,9 +23,15 @@ const prisma = new PrismaClient();
 // Trust proxy for Render/Vercel
 app.set('trust proxy', 1);
 
-// Request logging for debug
+// Request logging & Auto-fix for common route errors
 app.use((req, res, next) => {
-    console.log(`[${req.method}] ${req.url} - Origin: ${req.headers.origin}`);
+    // 1. Log the incoming request
+    console.log(`📡 [${req.method}] ${req.url} (Origin: ${req.headers.origin})`);
+
+    // 2. Fix double slashes or doubled /api prefix
+    if (req.url.includes('//')) req.url = req.url.replace(/\/\//g, '/');
+    if (req.url.startsWith('/api/api')) req.url = req.url.replace('/api/api', '/api');
+
     next();
 });
 
@@ -67,9 +73,13 @@ app.use('/api/', limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
+// Health check (Versioned to verify deployment)
 app.get('/health', (req: Request, res: Response) => {
-    res.json({ status: 'ok', message: 'Happy Hopz API is running!' });
+    res.json({
+        status: 'ok',
+        version: '2.1-RESILIENT',
+        message: 'Happy Hopz API is LIVE and RESILIENT!'
+    });
 });
 
 // Resilient Routes - Works with and without /api prefix
