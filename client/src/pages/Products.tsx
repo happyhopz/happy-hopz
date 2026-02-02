@@ -271,86 +271,102 @@ const ProductCard = ({
                 </Link>
             )}
 
-            <Link to={`/products/${product.id}`}>
-                <div
-                    className="group relative bg-card rounded-3xl shadow-card p-3 md:p-6 transition-all duration-300 hover:shadow-float hover:-translate-y-2 animate-fade-up opacity-0"
-                    style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
-                >
-                    {/* Discount Badge */}
-                    {product.discountPrice && (
-                        <span className="absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 bg-cyan text-white text-[10px] md:text-xs font-nunito font-bold rounded-full">
+            <Link
+                to={`/products/${product.id}`}
+                className="group relative bg-card rounded-3xl shadow-card p-3 md:p-6 transition-all duration-300 hover:shadow-float hover:-translate-y-2 animate-fade-up opacity-0 block"
+                style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
+            >
+                {/* Product Image */}
+                <div className="relative h-32 md:h-48 flex items-center justify-center mb-3 md:mb-6">
+                    <div className="absolute inset-0 bg-white rounded-2xl border border-muted/30" />
+                    <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="relative h-28 w-28 md:h-40 md:w-40 object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                    />
+                </div>
+
+                {/* Product Info */}
+                <div className="space-y-2 md:space-y-3">
+                    <h3 className="font-fredoka font-semibold text-sm md:text-xl text-foreground line-clamp-2">
+                        {product.name}
+                    </h3>
+
+                    <div className="flex items-center gap-1 md:gap-2">
+                        <span className="text-lg md:text-2xl font-fredoka font-bold text-cyan-600">
+                            ₹{product.discountPrice || product.price}
+                        </span>
+                        {product.discountPrice && (
+                            <span className="text-xs md:text-sm text-muted-foreground line-through">
+                                ₹{product.price}
+                            </span>
+                        )}
+                    </div>
+
+
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-1.5 md:gap-2 mt-2 md:mt-4">
+                        <Button
+                            variant="hopz"
+                            className="w-full group/btn text-xs md:text-sm bg-cyan border-2 border-cyan-500 text-black hover:bg-cyan/90 font-bold shadow-sm py-1.5 md:py-2 h-8 md:h-10"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onAddToCart();
+                            }}
+                        >
+                            <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 text-black transition-transform group-hover/btn:scale-110" />
+                            Add to Bag
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="w-full border-2 border-cyan-700 bg-cyan-400 text-black hover:bg-cyan-500 hover:border-cyan-800 font-bold text-xs md:text-sm shadow-sm py-1.5 md:py-2 h-8 md:h-10"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onBuyNow();
+                            }}
+                        >
+                            Buy Now
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Floating Badges */}
+                <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1 z-50">
+                    {product.tags && product.tags.map((tag: string, idx: number) => {
+                        const getTagColor = (t: string) => {
+                            const lowT = t.toLowerCase();
+                            if (lowT.includes('sale')) return 'bg-cyan-500';
+                            if (lowT.includes('best')) return 'bg-orange-500';
+                            if (lowT.includes('new')) return 'bg-pink-500';
+                            if (lowT.includes('trending')) return 'bg-purple-500';
+                            return 'bg-cyan-500';
+                        };
+                        return (
+                            <span key={idx} className={`px-2 py-0.5 md:px-3 md:py-1 ${getTagColor(tag)} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none`}>
+                                {tag}
+                            </span>
+                        );
+                    })}
+                    {product.discountPrice && (!product.tags || product.tags.length === 0) && (
+                        <span className="px-2 py-0.5 md:px-3 md:py-1 bg-cyan-500 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none">
                             Sale
                         </span>
                     )}
-
-                    {/* Wishlist Button */}
-                    <button
-                        className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-background shadow-soft flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink/20"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            toast.success('Added to wishlist!');
-                        }}
-                    >
-                        <Heart className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-pink transition-colors" />
-                    </button>
-
-                    {/* Product Image */}
-                    <div className="relative h-32 md:h-48 flex items-center justify-center mb-3 md:mb-6">
-                        <div className="absolute inset-0 bg-white rounded-2xl border border-muted/30" />
-                        <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="relative h-28 w-28 md:h-40 md:w-40 object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
-                        />
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="space-y-2 md:space-y-3">
-                        <h3 className="font-fredoka font-semibold text-sm md:text-xl text-foreground line-clamp-2">
-                            {product.name}
-                        </h3>
-
-                        <div className="flex items-center gap-1 md:gap-2">
-                            <span className="text-lg md:text-2xl font-fredoka font-bold text-cyan-600">
-                                ₹{product.discountPrice || product.price}
-                            </span>
-                            {product.discountPrice && (
-                                <span className="text-xs md:text-sm text-muted-foreground line-through">
-                                    ₹{product.price}
-                                </span>
-                            )}
-                        </div>
-
-
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col gap-1.5 md:gap-2 mt-2 md:mt-4">
-                            <Button
-                                variant="hopz"
-                                className="w-full group/btn text-xs md:text-sm bg-cyan border-2 border-cyan-500 text-black hover:bg-cyan/90 font-bold shadow-sm py-1.5 md:py-2 h-8 md:h-10"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    onAddToCart();
-                                }}
-                            >
-                                <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 text-black transition-transform group-hover/btn:scale-110" />
-                                Add to Bag
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="w-full border-2 border-cyan-700 bg-cyan-400 text-black hover:bg-cyan-500 hover:border-cyan-800 font-bold text-xs md:text-sm shadow-sm py-1.5 md:py-2 h-8 md:h-10"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    onBuyNow();
-                                }}
-                            >
-                                Buy Now
-                            </Button>
-                        </div>
-                    </div>
                 </div>
+
+                <button
+                    className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink-50 z-50"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toast.success('Added to wishlist!');
+                    }}
+                >
+                    <Heart className="w-4 h-4 md:w-5 md:h-5 text-gray-500 hover:text-pink-500 transition-colors" />
+                </button>
             </Link>
         </div>
     );

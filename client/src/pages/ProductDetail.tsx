@@ -227,14 +227,16 @@ const ProductDetail = () => {
                                     alt={product.name}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
+
+                                {/* Floating Badges */}
                                 {discountPercent > 0 && (
-                                    <Badge className="absolute top-4 left-4 bg-pink-500 text-white font-bold px-3 py-1.5">
+                                    <Badge className="absolute top-4 left-4 bg-pink-500 text-white font-bold px-3 py-1.5 z-50">
                                         {discountPercent}% OFF
                                     </Badge>
                                 )}
                                 <button
                                     onClick={handleWishlist}
-                                    className={`absolute top-4 right-4 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 ${isWishlisted ? 'text-pink-500' : 'text-gray-400'
+                                    className={`absolute top-4 right-4 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 z-50 ${isWishlisted ? 'text-pink-500' : 'text-gray-400'
                                         }`}
                                 >
                                     <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />

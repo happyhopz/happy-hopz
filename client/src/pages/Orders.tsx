@@ -9,9 +9,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Package, Calendar, IndianRupee } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 const Orders = () => {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
 
     const { data: orders, isLoading } = useQuery({
         queryKey: ['orders'],
@@ -44,7 +45,20 @@ const Orders = () => {
                     My Orders
                 </h1>
 
-                {isLoading ? (
+                {loading ? (
+                    <div className="text-center py-20">
+                        <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                ) : !user ? (
+                    <div className="text-center py-20">
+                        <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">Please Login</h2>
+                        <p className="text-muted-foreground mb-6">You need to be logged in to view your orders.</p>
+                        <Link to="/login">
+                            <Button variant="hopz">Login Now</Button>
+                        </Link>
+                    </div>
+                ) : isLoading ? (
                     <div className="text-center py-20">
                         <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>

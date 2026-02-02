@@ -199,19 +199,6 @@ const ShoeCard = ({
         className="group relative bg-background rounded-3xl shadow-card p-3 md:p-6 transition-all duration-300 hover:shadow-float hover:-translate-y-2 animate-fade-up opacity-0 block"
         style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
       >
-        {/* Tag */}
-        <span className={`absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-primary-foreground text-[10px] md:text-xs font-nunito font-bold rounded-full z-10`}>
-          {tag.tag}
-        </span>
-
-        {/* Wishlist Button - prevent link navigation */}
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-card shadow-soft flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink/20 z-10"
-        >
-          <Heart className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-pink transition-colors" />
-        </button>
-
         {/* Product Image */}
         <div className="relative h-32 md:h-48 flex items-center justify-center mb-3 md:mb-6">
           <div className="absolute inset-0 bg-white rounded-2xl border border-muted/30" />
@@ -268,6 +255,18 @@ const ShoeCard = ({
             </Button>
           </div>
         </div>
+
+        {/* Floating Badges */}
+        <span className={`absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-primary-foreground text-[10px] md:text-xs font-nunito font-bold rounded-full z-50 shadow-sm pointer-events-none`}>
+          {tag.tag}
+        </span>
+
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-card shadow-soft flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink/20 z-50"
+        >
+          <Heart className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-pink transition-colors" />
+        </button>
       </Link>
     </div>
   );

@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 const OrderDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, isAdmin } = useAuth();
+    const { user, isAdmin, loading } = useAuth();
     const queryClient = useQueryClient();
 
     const { data: order, isLoading } = useQuery({
@@ -64,6 +64,17 @@ const OrderDetail = () => {
     };
 
     const statusSteps = ['PLACED', 'PACKED', 'SHIPPED', 'DELIVERED'];
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background">
+                <Navbar />
+                <div className="container mx-auto px-4 py-20 text-center">
+                    <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+            </div>
+        );
+    }
 
     if (!user) {
         navigate('/login');

@@ -21,7 +21,7 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
     const location = useLocation();
-    const { user, logout } = useAuth();
+    const { user, loading, logout } = useAuth();
 
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
@@ -32,6 +32,28 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         { icon: MessageSquare, label: 'Reviews', path: '/admin/reviews' },
         { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ];
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (!user || user.role !== 'ADMIN') {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center p-8 bg-white rounded-xl shadow-lg border">
+                    <h1 className="text-2xl font-bold text-destructive mb-2">Access Denied</h1>
+                    <p className="text-muted-foreground mb-6">You do not have permission to view the admin panel.</p>
+                    <Link to="/login">
+                        <Button variant="default">Login as Admin</Button>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background">

@@ -25,7 +25,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
-            window.location.href = '/login';
+            // Remove hard redirect to let React state handle it
         }
         return Promise.reject(error);
     }
@@ -114,4 +114,10 @@ export const notificationsAPI = {
     getAll: () => api.get('/notifications'),
     markAsRead: (id: string) => api.put(`/notifications/${id}/read`),
     markAllAsRead: () => api.put('/notifications/read-all')
+};
+
+export const addressAPI = {
+    getAll: () => api.get('/addresses'),
+    create: (data: any) => api.post('/addresses', data),
+    delete: (id: string) => api.delete(`/addresses/${id}`)
 };

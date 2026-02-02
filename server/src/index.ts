@@ -15,6 +15,7 @@ import couponRoutes from './routes/coupons';
 import reviewRoutes from './routes/reviews';
 import contentRoutes from './routes/content';
 import notificationRoutes from './routes/notifications';
+import addressRoutes from './routes/addresses';
 import { PrismaClient } from '@prisma/client';
 
 const app: Express = express();
@@ -94,6 +95,7 @@ const registerRoutes = (prefix: string) => {
     app.use(`${prefix}/reviews`, reviewRoutes);
     app.use(`${prefix}/content`, contentRoutes);
     app.use(`${prefix}/notifications`, notificationRoutes);
+    app.use(`${prefix}/addresses`, addressRoutes);
 };
 
 registerRoutes('/api');

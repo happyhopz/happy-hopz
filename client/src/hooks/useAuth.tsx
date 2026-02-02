@@ -36,9 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     const response = await authAPI.getMe();
                     setUser(response.data);
                     setToken(storedToken);
-                } catch (error) {
-                    localStorage.removeItem('token');
-                    setToken(null);
+                } catch (error: any) {
+                    // Only remove token if it's explicitly an auth error (401)
+                    if (error.response?.status === 401) {
+                        localStorage.removeItem('token');
+                        setToken(null);
+                    }
+                    console.error('Auth check failed:', error.message);
                 }
             }
             setLoading(false);
