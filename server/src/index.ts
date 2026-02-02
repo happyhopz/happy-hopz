@@ -67,35 +67,45 @@ app.use('/api/', limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/coupons', couponRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/content', contentRoutes);
-app.use('/api/notifications', notificationRoutes);
-
 // Health check
 app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', message: 'Happy Hopz API is running!' });
 });
 
+// Resilient Routes - Works with and without /api prefix
+const registerRoutes = (prefix: string) => {
+    app.use(`${prefix}/auth`, authRoutes);
+    app.use(`${prefix}/products`, productRoutes);
+    app.use(`${prefix}/cart`, cartRoutes);
+    app.use(`${prefix}/orders`, orderRoutes);
+    app.use(`${prefix}/payment`, paymentRoutes);
+    app.use(`${prefix}/admin`, adminRoutes);
+    app.use(`${prefix}/coupons`, couponRoutes);
+    app.use(`${prefix}/reviews`, reviewRoutes);
+    app.use(`${prefix}/content`, contentRoutes);
+    app.use(`${prefix}/notifications`, notificationRoutes);
+};
+
+registerRoutes('/api');
+registerRoutes(''); // Fallback for direct calls
+
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err.stack);
+    console.error(`🔴 SERVER ERROR [${req.method}] ${req.url}:`, err.stack);
     res.status(500).json({
         error: 'Something went wrong!',
         message: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
-// 404 handler
+// 404 handler with detailed logging
 app.use((req: Request, res: Response) => {
-    res.status(404).json({ error: 'Route not found' });
+    console.warn(`⚠️ 404 - Route not found: [${req.method}] ${req.url} (Origin: ${req.headers.origin})`);
+    res.status(404).json({
+        error: 'Route not found',
+        path: req.url,
+        method: req.method
+    });
 });
 
 app.listen(PORT, async () => {
