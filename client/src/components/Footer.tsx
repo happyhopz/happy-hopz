@@ -73,9 +73,11 @@ const Footer = () => {
               <li>
                 <a
                   href="mailto:happyhopz308@gmail.com"
-                  className="flex items-center gap-2 text-muted-foreground text-sm font-nunito hover:text-primary transition-colors"
+                  className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
                 >
-                  <Mail className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                    <Mail className="w-4 h-4" />
+                  </div>
                   happyhopz308@gmail.com
                 </a>
               </li>
@@ -84,9 +86,11 @@ const Footer = () => {
                   href="https://www.instagram.com/happyhopzz?igsh=czMyaW1zYTY5ZWtz"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-muted-foreground text-sm font-nunito hover:text-primary transition-colors"
+                  className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
                 >
-                  <Instagram className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-purple-500 group-hover:to-pink-500 group-hover:text-white transition-colors shadow-sm">
+                    <Instagram className="w-4 h-4" />
+                  </div>
                   @happyhopzz
                 </a>
               </li>
@@ -95,9 +99,11 @@ const Footer = () => {
                   href="https://www.facebook.com/share/18Hz57kKZa/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-muted-foreground text-sm font-nunito hover:text-primary transition-colors"
+                  className="flex items-center gap-3 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
                 >
-                  <Facebook className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-lg bg-card flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
+                    <Facebook className="w-4 h-4" />
+                  </div>
                   Happy Hopz
                 </a>
               </li>
