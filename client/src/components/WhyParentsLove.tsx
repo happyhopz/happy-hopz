@@ -13,7 +13,7 @@ const WhyParentsLove = () => {
       icon: Shield,
       title: 'Quality Guaranteed',
       description: 'Built to last through playground adventures, puddle jumping, and endless playtime.',
-      color: 'bg-cyan',
+      color: 'bg-hopz-cyan',
       iconColor: 'text-foreground',
     },
     {
@@ -77,9 +77,9 @@ interface Feature {
 
 const FeatureCard = ({ feature, index }: { feature: Feature; index: number }) => {
   const Icon = feature.icon;
-  
+
   return (
-    <div 
+    <div
       className="bg-card rounded-3xl p-6 shadow-card hover:shadow-float transition-all duration-300 hover:-translate-y-1 animate-fade-up opacity-0"
       style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
     >

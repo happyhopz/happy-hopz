@@ -14,7 +14,7 @@ const ComingSoon = () => {
       icon: Shirt,
       title: 'Clothes',
       description: 'Adorable outfits that are as comfy as they are cute.',
-      color: 'bg-cyan',
+      color: 'bg-hopz-cyan',
       emoji: '👕',
     },
     {
@@ -88,25 +88,25 @@ interface Category {
 
 const ComingSoonCard = ({ category, index }: { category: Category; index: number }) => {
   const Icon = category.icon;
-  
+
   return (
-    <div 
+    <div
       className="relative group bg-background rounded-3xl p-8 shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-1 text-center animate-fade-up opacity-0 overflow-hidden"
       style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'forwards' }}
     >
       {/* Background decoration */}
       <div className={`absolute -top-10 -right-10 w-32 h-32 ${category.color}/30 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500`} />
-      
+
       {/* Emoji */}
       <span className="text-5xl mb-4 block animate-bounce-gentle" style={{ animationDelay: `${index * 200}ms` }}>
         {category.emoji}
       </span>
-      
+
       {/* Icon */}
       <div className={`w-12 h-12 ${category.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
         <Icon className="w-6 h-6 text-foreground" />
       </div>
-      
+
       <h3 className="font-fredoka font-semibold text-xl text-foreground mb-2">
         {category.title}
       </h3>

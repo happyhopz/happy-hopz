@@ -50,7 +50,7 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
       <div className="mt-8 flex gap-2">
         <span className="w-3 h-3 rounded-full bg-primary animate-bounce-gentle" style={{ animationDelay: '0ms' }} />
         <span className="w-3 h-3 rounded-full bg-secondary animate-bounce-gentle" style={{ animationDelay: '150ms' }} />
-        <span className="w-3 h-3 rounded-full bg-cyan animate-bounce-gentle" style={{ animationDelay: '300ms' }} />
+        <span className="w-3 h-3 rounded-full bg-hopz-cyan animate-bounce-gentle" style={{ animationDelay: '300ms' }} />
       </div>
     </div>
   );
