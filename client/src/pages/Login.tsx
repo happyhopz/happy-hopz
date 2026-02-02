@@ -72,7 +72,7 @@ const Login = () => {
     };
 
     return (
-        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE"}>
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "912680393961-8o09ir0atdaa61cki2ij18ub7kqvfre1.apps.googleusercontent.com"}>
             <div className="min-h-screen gradient-hopz flex items-center justify-center p-4">
                 <div className="absolute top-4 left-4">
                     <BackButton label="Back to Home" to="/" />
