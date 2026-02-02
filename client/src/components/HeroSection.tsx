@@ -44,8 +44,8 @@ const HeroSection = () => {
           </div>
 
           {/* Title & Tagline section */}
-          <div className="text-center px-4">
-            <h1 className="text-4xl md:text-5xl font-fredoka font-black text-foreground leading-tight animate-fade-up opacity-0 delay-100 tracking-tight whitespace-nowrap">
+          <div className="text-center px-6">
+            <h1 className="text-4xl md:text-5xl font-fredoka font-black text-foreground leading-snug animate-fade-up opacity-0 delay-100 tracking-tight">
               Little Feet, <span className="text-cyan-600 drop-shadow-md font-fredoka">Big Adventures</span>
             </h1>
 
