@@ -46,12 +46,7 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
         />
       </div>
 
-      {/* Loading dots */}
-      <div className="mt-8 flex gap-3">
-        <span className="w-3.5 h-3.5 rounded-full bg-pink-500 animate-bounce-gentle" style={{ animationDelay: '0ms' }} />
-        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 animate-bounce-gentle" style={{ animationDelay: '150ms' }} />
-        <span className="w-3.5 h-3.5 rounded-full bg-purple-500 animate-bounce-gentle" style={{ animationDelay: '300ms' }} />
-      </div>
+      {/* No loading dots for a cleaner look */}
     </div>
   );
 };
