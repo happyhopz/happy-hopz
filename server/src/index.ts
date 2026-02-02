@@ -25,9 +25,7 @@ app.set('trust proxy', 1);
 
 // Request logging for debug
 app.use((req, res, next) => {
-    if (process.env.NODE_ENV === 'development') {
-        console.log(`[${req.method}] ${req.url}`);
-    }
+    console.log(`[${req.method}] ${req.url} - Origin: ${req.headers.origin}`);
     next();
 });
 
