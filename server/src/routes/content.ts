@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 router.get('/:key', async (req, res) => {
     try {
         const content = await prisma.siteContent.findUnique({
-            where: { key: req.params.key }
+            where: { key: req.params.key as string }
         });
         if (!content) {
             return res.status(404).json({ error: 'Content not found' });
@@ -27,10 +27,10 @@ router.put('/:key', authenticate, requireAdmin, async (req: AuthRequest, res: Re
         const { content } = req.body;
 
         const updated = await prisma.siteContent.upsert({
-            where: { key },
+            where: { key: key as string },
             update: { content: JSON.stringify(content) },
             create: {
-                key,
+                key: key as string,
                 content: JSON.stringify(content)
             }
         });

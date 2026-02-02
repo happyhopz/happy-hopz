@@ -63,7 +63,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
         const data = couponSchema.partial().parse(req.body);
 
         const coupon = await prisma.coupon.update({
-            where: { id: req.params.id },
+            where: { id: req.params.id as string },
             data: {
                 ...data,
                 expiryDate: data.expiryDate ? new Date(data.expiryDate) : data.expiryDate === null ? null : undefined
@@ -83,7 +83,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
 router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         await prisma.coupon.delete({
-            where: { id: req.params.id }
+            where: { id: req.params.id as string }
         });
         res.json({ message: 'Coupon deleted successfully' });
     } catch (error) {

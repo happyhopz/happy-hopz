@@ -55,7 +55,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
     try {
         const product = await prisma.product.findUnique({
-            where: { id: req.params.id }
+            where: { id: req.params.id as string }
         });
 
         if (!product) {
@@ -130,7 +130,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
         if (data.tags) updateData.tags = JSON.stringify(data.tags);
 
         const product = await prisma.product.update({
-            where: { id: req.params.id },
+            where: { id: req.params.id as string },
             data: updateData
         });
 
@@ -153,7 +153,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
 router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         await prisma.product.delete({
-            where: { id: req.params.id }
+            where: { id: req.params.id as string }
         });
 
         res.json({ message: 'Product deleted successfully' });
