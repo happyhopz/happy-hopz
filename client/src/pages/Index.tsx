@@ -4,7 +4,6 @@ import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import FeaturedShoes from '@/components/FeaturedShoes';
 import WhyParentsLove from '@/components/WhyParentsLove';
-import ComingSoon from '@/components/ComingSoon';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -24,7 +23,6 @@ const Index = () => {
           <HeroSection />
           <FeaturedShoes />
           <WhyParentsLove />
-          <ComingSoon />
         </main>
         <Footer />
       </div>
