@@ -106,79 +106,91 @@ const Cart = () => {
                         {/* Cart Items */}
                         <div className="lg:col-span-2 space-y-4">
                             {cartItems.map((item: any) => (
-                                <Card key={item.id} className="p-4 md:p-6 relative overflow-hidden group">
-                                    <div className="flex gap-4 md:gap-6 items-center">
-                                        {/* Product Image */}
-                                        <div className="w-24 h-24 md:w-40 md:h-40 bg-gradient-soft rounded-2xl flex items-center justify-center flex-shrink-0 border border-muted/20">
+                                <Card key={item.id} className="p-0 md:p-6 relative overflow-hidden group">
+                                    <div className="flex flex-col md:flex-row gap-0 md:gap-6 items-stretch md:items-center">
+                                        {/* Product Image - Full width on mobile, compact on desktop */}
+                                        <div className="w-full h-72 md:w-40 md:h-40 bg-gradient-soft flex items-center justify-center flex-shrink-0 border-b md:border border-muted/20">
                                             <img
                                                 src={item.product?.images?.[0]}
                                                 alt={item.product?.name}
-                                                className="w-20 h-20 md:w-36 md:h-36 object-contain transition-transform duration-300 group-hover:scale-110"
+                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                             />
                                         </div>
 
-                                        {/* Product Info */}
-                                        <div className="flex-1 pr-8">
-                                            <h3 className="text-base md:text-xl font-fredoka font-bold mb-1 line-clamp-2">
+                                        {/* Product Info - Padded on mobile */}
+                                        <div className="flex-1 p-4 md:p-0 pr-8 md:pr-12">
+                                            <h3 className="text-xl md:text-xl font-fredoka font-bold mb-1 line-clamp-2 text-foreground">
                                                 {item.product?.name}
                                             </h3>
-                                            <p className="text-xs md:text-sm text-muted-foreground mb-2">
-                                                Size: {item.size} | Color: {item.color}
+                                            <p className="text-sm text-muted-foreground mb-3">
+                                                Size: <span className="font-semibold">{item.size}</span> | Color: <span className="font-semibold">{item.color}</span>
                                             </p>
-                                            <div className="flex items-center gap-2 md:gap-3 mb-3">
-                                                <span className="text-lg md:text-2xl font-fredoka font-bold text-cyan-600">
-                                                    ₹{item.product?.discountPrice || item.product?.price}
-                                                </span>
-                                                {item.product?.discountPrice && (
-                                                    <span className="text-xs md:text-sm text-muted-foreground line-through">
-                                                        ₹{item.product?.price}
+
+                                            <div className="flex items-center justify-between md:justify-start gap-4 mb-4 md:mb-6">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-2xl font-fredoka font-bold text-cyan-600">
+                                                        ₹{item.product?.discountPrice || item.product?.price}
                                                     </span>
-                                                )}
+                                                    {item.product?.discountPrice && (
+                                                        <span className="text-sm text-muted-foreground line-through">
+                                                            ₹{item.product?.price}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            {/* Quantity Controls */}
-                                            <div className="flex items-center gap-2 md:gap-3">
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="w-8 h-8 md:w-10 md:h-10 rounded-full"
-                                                    onClick={() => {
-                                                        if (item.quantity > 1) {
-                                                            updateMutation.mutate({
-                                                                id: item.id,
-                                                                quantity: item.quantity - 1
-                                                            });
-                                                        } else {
-                                                            removeMutation.mutate(item.id);
-                                                        }
-                                                    }}
-                                                >
-                                                    <Minus className="w-3 h-3 md:w-4 md:h-4" />
-                                                </Button>
-                                                <span className="text-sm md:text-lg font-fredoka font-bold w-6 md:w-12 text-center text-foreground">
-                                                    {item.quantity}
-                                                </span>
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="w-8 h-8 md:w-10 md:h-10 rounded-full"
-                                                    onClick={() => updateMutation.mutate({
-                                                        id: item.id,
-                                                        quantity: item.quantity + 1
-                                                    })}
-                                                >
-                                                    <Plus className="w-3 h-3 md:w-4 md:h-4" />
-                                                </Button>
+                                            {/* Quantity Controls - Larger on mobile */}
+                                            <div className="flex items-center justify-between md:justify-start gap-6">
+                                                <div className="flex items-center gap-4">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="w-10 h-10 md:w-10 md:h-10 rounded-full border-cyan-200 hover:bg-cyan-50"
+                                                        onClick={() => {
+                                                            if (item.quantity > 1) {
+                                                                updateMutation.mutate({
+                                                                    id: item.id,
+                                                                    quantity: item.quantity - 1
+                                                                });
+                                                            } else {
+                                                                removeMutation.mutate(item.id);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Minus className="w-4 h-4 text-cyan-600" />
+                                                    </Button>
+                                                    <span className="text-xl font-fredoka font-bold w-8 text-center text-foreground">
+                                                        {item.quantity}
+                                                    </span>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="w-10 h-10 md:w-10 md:h-10 rounded-full border-cyan-200 hover:bg-cyan-50"
+                                                        onClick={() => updateMutation.mutate({
+                                                            id: item.id,
+                                                            quantity: item.quantity + 1
+                                                        })}
+                                                    >
+                                                        <Plus className="w-4 h-4 text-cyan-600" />
+                                                    </Button>
+                                                </div>
+
+                                                <div className="md:hidden">
+                                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Total</p>
+                                                    <p className="text-lg font-fredoka font-bold text-foreground">
+                                                        ₹{((item.product?.discountPrice || item.product?.price) * item.quantity).toFixed(0)}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Remove Button - Fixed Absolute Positioning */}
+                                        {/* Remove Button - Top Right Always */}
                                         <button
                                             onClick={() => removeMutation.mutate(item.id)}
-                                            className="absolute top-2 right-2 md:top-4 md:right-4 p-2 text-muted-foreground hover:text-destructive transition-colors rounded-full hover:bg-destructive/10"
+                                            className="absolute top-3 right-3 p-2 bg-white/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none text-muted-foreground hover:text-destructive transition-colors rounded-full shadow-sm md:shadow-none"
                                             title="Remove from cart"
                                         >
-                                            <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+                                            <Trash2 className="w-6 h-6 md:w-5 md:h-5 text-red-500 md:text-destructive" />
                                         </button>
                                     </div>
                                 </Card>
