@@ -1,8 +1,10 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import productRoutes from './routes/products';
 import cartRoutes from './routes/cart';
@@ -13,10 +15,13 @@ import couponRoutes from './routes/coupons';
 import reviewRoutes from './routes/reviews';
 import contentRoutes from './routes/content';
 import notificationRoutes from './routes/notifications';
-
-dotenv.config();
+import { PrismaClient } from '@prisma/client';
 
 const app: Express = express();
+const prisma = new PrismaClient();
+
+// Trust proxy for Render/Vercel
+app.set('trust proxy', 1);
 
 // Request logging for debug
 app.use((req, res, next) => {
@@ -86,7 +91,17 @@ app.use((req: Request, res: Response) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`🚀 Happy Hopz Server running on port ${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV}`);
+
+    try {
+        const count = await prisma.product.count();
+        console.log(`📦 Database connection verified. Total products: ${count}`);
+        if (process.env.DATABASE_URL) {
+            console.log(`🔗 DB Host: ${new URL(process.env.DATABASE_URL).hostname}`);
+        }
+    } catch (error) {
+        console.error('❌ Database connection failed at startup:', error);
+    }
 });
