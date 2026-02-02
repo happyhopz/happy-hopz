@@ -45,7 +45,7 @@ const HeroSection = () => {
 
           {/* Title & Tagline section */}
           <div className="text-center px-6">
-            <h1 className="text-4xl md:text-5xl font-fredoka font-black text-foreground leading-snug animate-fade-up opacity-0 delay-100 tracking-tight">
+            <h1 className="text-3xl md:text-5xl font-fredoka font-black text-foreground leading-snug animate-fade-up opacity-0 delay-100 tracking-tight">
               Little Feet, <span className="text-cyan-600 drop-shadow-md font-fredoka">Big Adventures</span>
             </h1>
 
@@ -98,12 +98,12 @@ const HeroSection = () => {
               </span>
             </div>
 
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-fredoka font-black text-foreground leading-tight animate-fade-up opacity-0 delay-100 tracking-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-fredoka font-black text-foreground leading-tight animate-fade-up opacity-0 delay-100 tracking-tight">
               Little Feet,{' '}
               <span className="text-cyan-600 drop-shadow-md font-fredoka">Big Adventures</span>
             </h1>
 
-            <p className="mt-8 text-xl md:text-2xl text-muted-foreground font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic">
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic">
               Where Every Step Is a Happy Hopz – Growing With Your Little Ones 🐼
             </p>
 
