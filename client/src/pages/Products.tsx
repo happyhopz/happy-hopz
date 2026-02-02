@@ -338,11 +338,11 @@ const ProductCard = ({
                     {product.tags && product.tags.map((tag: string, idx: number) => {
                         const getTagColor = (t: string) => {
                             const lowT = t.toLowerCase();
-                            if (lowT.includes('sale')) return 'bg-cyan-500';
+                            if (lowT.includes('sale')) return 'bg-[#06b6d4]';
                             if (lowT.includes('best')) return 'bg-orange-500';
                             if (lowT.includes('new')) return 'bg-pink-500';
                             if (lowT.includes('trending')) return 'bg-purple-500';
-                            return 'bg-cyan-500';
+                            return 'bg-[#06b6d4]';
                         };
                         return (
                             <span key={idx} className={`px-2 py-0.5 md:px-3 md:py-1 ${getTagColor(tag)} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none`}>
@@ -351,8 +351,8 @@ const ProductCard = ({
                         );
                     })}
                     {product.discountPrice && (!product.tags || product.tags.length === 0) && (
-                        <span className="px-2 py-0.5 md:px-3 md:py-1 bg-cyan-500 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none">
-                            Sale
+                        <span className="px-2 py-0.5 md:px-3 md:py-1 bg-[#06b6d4] text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-md z-50 pointer-events-none uppercase tracking-wider">
+                            SALE!
                         </span>
                     )}
                 </div>

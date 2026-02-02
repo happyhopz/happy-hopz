@@ -28,7 +28,7 @@ const FeaturedShoes = () => {
   const tags = [
     { tag: 'Best Seller', tagColor: 'bg-orange-500' },
     { tag: 'New', tagColor: 'bg-pink-500' },
-    { tag: 'Sale', tagColor: 'bg-cyan-500' },
+    { tag: 'SALE!', tagColor: 'bg-[#06b6d4]' },
   ];
 
   const { data: products, isLoading } = useQuery({
