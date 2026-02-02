@@ -104,11 +104,19 @@ app.listen(PORT, async () => {
 
     try {
         const count = await prisma.product.count();
-        console.log(`📦 Database connection verified. Total products: ${count}`);
-        const dbUrl = process.env.SUPABASE_DATABASE_URL || process.env.PROD_DATABASE_URL || process.env.DATABASE_URL;
-        if (dbUrl) {
-            console.log(`🔗 DB Host: ${new URL(dbUrl).hostname}`);
-        }
+        console.log(`📦 DATABASE VERIFIED: Total products = ${count}`);
+
+        const envs = ['SUPABASE_DATABASE_URL', 'PROD_DATABASE_URL', 'DATABASE_URL'];
+        envs.forEach(key => {
+            if (process.env[key]) {
+                try {
+                    const url = new URL(process.env[key] as string);
+                    console.log(`📡 [${key}] matches host: ${url.hostname}`);
+                } catch (e) {
+                    console.log(`📡 [${key}] exists but is not a valid URL`);
+                }
+            }
+        });
     } catch (error) {
         console.error('❌ Database connection failed at startup:', error);
     }
