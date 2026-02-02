@@ -11,7 +11,7 @@ router.get('/:productId', async (req, res) => {
     try {
         const reviews = await prisma.review.findMany({
             where: {
-                productId: req.params.productId,
+                productId: req.params.productId as string,
                 isApproved: true
             },
             include: {
@@ -100,7 +100,7 @@ router.get('/admin/all', authenticate, requireAdmin, async (req: AuthRequest, re
 router.put('/:id/approve', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const review = await prisma.review.update({
-            where: { id: req.params.id },
+            where: { id: req.params.id as string },
             data: { isApproved: req.body.isApproved }
         });
         res.json(review);
@@ -113,7 +113,7 @@ router.put('/:id/approve', authenticate, requireAdmin, async (req: AuthRequest, 
 router.put('/:id/feature', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const review = await prisma.review.update({
-            where: { id: req.params.id },
+            where: { id: req.params.id as string },
             data: { isFeatured: req.body.isFeatured }
         });
         res.json(review);
@@ -126,7 +126,7 @@ router.put('/:id/feature', authenticate, requireAdmin, async (req: AuthRequest, 
 router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         await prisma.review.delete({
-            where: { id: req.params.id }
+            where: { id: req.params.id as string }
         });
         res.json({ message: 'Review deleted successfully' });
     } catch (error) {
