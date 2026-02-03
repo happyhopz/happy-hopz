@@ -44,28 +44,28 @@ const HeroSection = () => {
           </div>
 
           {/* Title & Tagline section */}
-          <div className="text-center px-4">
-            <h1 className="text-[28px] sm:text-4xl md:text-5xl lg:text-6xl font-fredoka font-black leading-snug animate-fade-up opacity-0 delay-100 tracking-tighter whitespace-nowrap text-gray-500">
+          <div className="text-center px-4 w-full">
+            <h1 className="text-[28px] sm:text-4xl md:text-5xl lg:text-3xl xl:text-7xl font-fredoka font-black leading-tight animate-fade-up opacity-0 delay-100 tracking-tighter !text-black drop-shadow-sm">
               Little Feet, Big Adventures
             </h1>
 
-            <p className="mt-3 text-xs sm:text-sm md:text-base animate-fade-up opacity-0 delay-200 italic font-medium text-gray-500 font-nunito">
+            <p className="mt-4 text-sm sm:text-base md:text-lg animate-fade-up opacity-0 delay-200 italic font-bold !text-black font-nunito max-w-sm mx-auto">
               Where Every Step Is a Happy Hopz – Growing With Your Little Ones 🐼
             </p>
           </div>
 
           {/* Buttons section */}
-          <div className="w-full flex gap-3 px-4 animate-fade-up opacity-0 delay-300">
-            <Link to="/products" className="flex-1">
-              <Button variant="hopz" size="lg" className="w-full group bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-600 font-bold shadow-md rounded-full">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 animate-fade-up opacity-0 delay-300 w-full">
+            <Link to="/products" className="w-full sm:w-auto flex justify-center">
+              <Button variant="hopz" size="lg" className="w-full sm:w-52 group bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-600 font-bold shadow-pink rounded-full text-lg h-14">
                 Shop Now
-                <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
             <Button
               variant="outline"
               size="lg"
-              className="flex-1 rounded-full border-2 border-cyan-500 text-black bg-cyan-400 hover:bg-cyan-500 font-bold shadow-sm"
+              className="w-full sm:w-52 rounded-full border-2 border-cyan-500 text-black bg-cyan-400 hover:bg-cyan-500 font-black shadow-card h-14 text-lg"
               onClick={() => {
                 const element = document.getElementById('featured');
                 if (element) {
@@ -98,26 +98,26 @@ const HeroSection = () => {
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-fredoka font-black leading-tight animate-fade-up opacity-0 delay-100 tracking-tight text-gray-500">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-fredoka font-black leading-tight animate-fade-up opacity-0 delay-100 tracking-tight !text-black">
               Little Feet,{' '}
-              <span className="drop-shadow-md font-fredoka">Big Adventures</span>
+              <span className="drop-shadow-md font-fredoka text-primary">Big Adventures</span>
             </h1>
 
-            <p className="mt-6 text-lg md:text-xl font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic text-gray-500">
+            <p className="mt-6 text-xl md:text-2xl font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic font-bold !text-black">
               Where Every Step Is a Happy Hopz – Growing With Your Little Ones 🐼
             </p>
 
-            <div className="mt-8 flex gap-4 animate-fade-up opacity-0 delay-300">
+            <div className="mt-10 flex items-center gap-6 animate-fade-up opacity-0 delay-300">
               <Link to="/products">
-                <Button variant="hopz" size="lg" className="group bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-600 font-bold shadow-md rounded-full">
+                <Button variant="hopz" size="lg" className="w-56 group bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-600 font-bold shadow-pink rounded-full h-16 text-xl">
                   Shop Now
-                  <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
               <Button
                 variant="outline"
                 size="lg"
-                className="rounded-full border-2 border-cyan-500 text-black bg-cyan-400 hover:bg-cyan-500 font-bold shadow-sm"
+                className="w-56 rounded-full border-2 border-cyan-500 text-black bg-cyan-400 hover:bg-cyan-500 font-black shadow-card h-16 text-xl"
                 onClick={() => {
                   const element = document.getElementById('featured');
                   if (element) {

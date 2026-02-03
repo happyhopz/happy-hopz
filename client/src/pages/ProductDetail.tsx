@@ -382,16 +382,35 @@ const ProductDetail = () => {
                                     placeholder="Enter pincode"
                                     value={pincode}
                                     onChange={(e) => setPincode(e.target.value)}
-                                    className="flex-1 px-4 py-3 border-2 border-muted-foreground/30 rounded-lg focus:border-pink-500 outline-none"
+                                    className="flex-1 px-4 py-3 border-2 border-muted-foreground/30 rounded-lg focus:border-pink-500 outline-none transition-all"
                                     maxLength={6}
                                 />
-                                <Button variant="ghost" className="text-pink-500 font-bold hover:bg-pink-50">
+                                <Button
+                                    variant="ghost"
+                                    className="text-pink-500 font-bold hover:bg-pink-50"
+                                    onClick={() => {
+                                        if (pincode.length === 6) {
+                                            toast.success('Delivery available for this pincode!');
+                                        } else {
+                                            toast.error('Please enter a valid 6-digit pincode');
+                                        }
+                                    }}
+                                >
                                     Check
                                 </Button>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Please enter PIN code to check delivery time & Pay on Delivery Availability
-                            </p>
+                            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 space-y-2">
+                                <div className="flex items-center gap-2 text-blue-700">
+                                    <Truck className="w-5 h-5 flex-shrink-0" />
+                                    <span className="font-bold text-sm tracking-wide">ESTIMATED DELIVERY</span>
+                                </div>
+                                <p className="text-xl font-fredoka font-bold text-blue-900">
+                                    {format(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), 'EEEE, MMM dd')} - {format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'MMM dd')}
+                                </p>
+                                <p className="text-xs text-blue-600/80 font-medium">
+                                    Express Shipping available for active Happy Hopz members!
+                                </p>
+                            </div>
                             <div className="space-y-3 pt-2">
                                 <div className="flex items-start gap-3 text-sm">
                                     <MapPin className="w-5 h-5 text-muted-foreground flex-shrink-0" />

@@ -189,6 +189,26 @@ const OrderDetail = () => {
                                         />
                                     </div>
                                 </div>
+
+                                {order.expectedDelivery && order.status !== 'DELIVERED' && (
+                                    <div className="mt-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                                <Truck className="w-6 h-6 text-blue-500" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Expected Delivery</p>
+                                                <p className="text-lg font-fredoka font-bold text-blue-900">
+                                                    {format(new Date(order.expectedDelivery), 'EEEE, MMMM dd, yyyy')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="hidden md:block text-right">
+                                            <p className="text-xs text-blue-600 font-medium italic">"On track for timely arrival"</p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {order.status === 'SHIPPED' && (
                                     <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
                                         <Truck className="w-5 h-5 text-blue-500" />
