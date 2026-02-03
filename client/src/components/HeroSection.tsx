@@ -50,7 +50,7 @@ const HeroSection = () => {
             </h1>
 
             <p className="mt-4 text-sm sm:text-base md:text-lg animate-fade-up opacity-0 delay-200 italic font-bold !text-black font-nunito max-w-sm mx-auto">
-              Where Every Step Is a Happy Hopz – Growing With Your Little Ones 🐼
+              Where Every Step Is a Happy Hopz 🐼
             </p>
           </div>
 
@@ -104,7 +104,7 @@ const HeroSection = () => {
             </h1>
 
             <p className="mt-6 text-xl md:text-2xl font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic font-bold !text-black">
-              Where Every Step Is a Happy Hopz – Growing With Your Little Ones 🐼
+              Where Every Step Is a Happy Hopz 🐼
             </p>
 
             <div className="mt-10 flex items-center gap-6 animate-fade-up opacity-0 delay-300">
