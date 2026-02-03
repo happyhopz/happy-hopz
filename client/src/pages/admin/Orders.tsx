@@ -25,31 +25,6 @@ const AdminOrders = () => {
     const [endDate, setEndDate] = useState<string>('');
     const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
-    const deleteOrderMutation = useMutation({
-        mutationFn: (id: string) => adminAPI.deleteOrder(id),
-        onSuccess: (_, id) => {
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            setSelectedOrders(prev => prev.filter(orderId => orderId !== id));
-            toast.success('Order deleted successfully');
-        },
-        onError: (err: any) => {
-            console.error('Delete order error:', err);
-            toast.error(err.response?.data?.error || 'Failed to delete order');
-        }
-    });
-
-    const bulkDeleteMutation = useMutation({
-        mutationFn: (ids: string[]) => adminAPI.bulkDeleteOrders(ids),
-        onSuccess: (data: any) => {
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            setSelectedOrders([]);
-            toast.success(data?.data?.message || 'Orders deleted successfully');
-        },
-        onError: (err: any) => {
-            console.error('Bulk delete error:', err);
-            toast.error(err.response?.data?.error || 'Failed to delete orders');
-        }
-    });
 
     const { data: orders, isLoading, error } = useQuery({
         queryKey: ['admin-orders', statusFilter, paymentFilter, searchTerm, startDate, endDate],
@@ -170,63 +145,10 @@ const AdminOrders = () => {
                             <ShoppingBag className="w-5 h-5 text-primary" />
                             <span className="font-nunito font-semibold">{orders?.length || 0} Orders</span>
                         </div>
-                        {orders && orders.length > 0 && (
-                            <div className="flex items-center gap-2 border-l pl-4 border-primary/10">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
-                                    checked={orders.length > 0 && selectedOrders.length === orders.length}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setSelectedOrders(orders.map((o: any) => o.id));
-                                        } else {
-                                            setSelectedOrders([]);
-                                        }
-                                    }}
-                                />
-                                <span className="text-xs font-bold uppercase tracking-wider">Select All</span>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Bulk Action Bar */}
-            {selectedOrders.length > 0 && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-8 duration-300">
-                    <Card className="bg-primary text-primary-foreground p-4 shadow-float border-none flex items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="bg-white text-primary rounded-full px-3">
-                                {selectedOrders.length}
-                            </Badge>
-                            <span className="font-nunito font-bold">Orders Selected</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                className="bg-white text-destructive hover:bg-gray-100 font-bold"
-                                onClick={() => {
-                                    if (confirm(`Are you sure you want to delete ${selectedOrders.length} orders? This cannot be undone.`)) {
-                                        bulkDeleteMutation.mutate(selectedOrders);
-                                    }
-                                }}
-                            >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Selected
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-white hover:bg-primary/20"
-                                onClick={() => setSelectedOrders([])}
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    </Card>
-                </div>
-            )}
 
             {/* Search and Filters */}
             <Card className="p-6 mb-8 border-primary/10 shadow-sm">
@@ -327,18 +249,6 @@ const AdminOrders = () => {
                         <Card key={order.id} className={`p-6 hover:shadow-float transition-all border-primary/5 ${selectedOrders.includes(order.id) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                 <div className="flex items-center gap-4">
-                                    <input
-                                        type="checkbox"
-                                        className="w-5 h-5 rounded-md border-primary/20 text-primary focus:ring-primary cursor-pointer"
-                                        checked={selectedOrders.includes(order.id)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setSelectedOrders(prev => [...prev, order.id]);
-                                            } else {
-                                                setSelectedOrders(prev => prev.filter(id => id !== order.id));
-                                            }
-                                        }}
-                                    />
                                     <div className="w-12 h-12 rounded-xl bg-gradient-hopz flex items-center justify-center shadow-sm">
                                         <Package className="w-6 h-6 text-white" />
                                     </div>
@@ -388,17 +298,6 @@ const AdminOrders = () => {
                                                     View Details
                                                 </Button>
                                             </Link>
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => {
-                                                    if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
-                                                        deleteOrderMutation.mutate(order.id);
-                                                    }
-                                                }}
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
                                         </div>
                                     </div>
                                 </div>

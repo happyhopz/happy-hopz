@@ -100,7 +100,7 @@ const HeroSection = () => {
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-fredoka font-black leading-tight animate-fade-up opacity-0 delay-100 tracking-tight !text-black">
               Little Feet,{' '}
-              <span className="drop-shadow-md font-fredoka text-primary">Big Adventures</span>
+              <span className="drop-shadow-md font-fredoka !text-black">Big Adventures</span>
             </h1>
 
             <p className="mt-6 text-xl md:text-2xl font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic font-bold !text-black">
