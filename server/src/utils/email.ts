@@ -37,7 +37,14 @@ export const sendVerificationEmail = async (email: string, code: string) => {
         `
     };
 
-    return transporter.sendMail(mailOptions);
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('📧 EMAIL SENDING FAILED (Signup):', error);
+        console.log('------------------------------------');
+        console.log(`FALLBACK: VERIFICATION CODE FOR ${email}: ${code}`);
+        console.log('------------------------------------');
+    }
 };
 
 export const sendOrderConfirmationEmail = async (email: string, order: any) => {
