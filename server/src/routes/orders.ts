@@ -28,11 +28,15 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
         // Run as transaction
         const result = await prisma.$transaction(async (tx) => {
             // 1. Create the order
+            const deliveryDate = new Date();
+            deliveryDate.setDate(deliveryDate.getDate() + 7);
+
             const order = await tx.order.create({
                 data: {
                     userId: req.user!.id,
                     total: data.total,
                     addressId: data.addressId,
+                    expectedDelivery: deliveryDate,
                     items: {
                         create: data.items
                     }
@@ -159,10 +163,11 @@ router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 // Update order status (Admin only)
 router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const { status, paymentStatus, trackingNumber } = z.object({
+        const { status, paymentStatus, trackingNumber, expectedDelivery } = z.object({
             status: z.enum(['PLACED', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLED']).optional(),
             paymentStatus: z.enum(['PENDING', 'COMPLETED', 'FAILED']).optional(),
-            trackingNumber: z.string().nullable().optional()
+            trackingNumber: z.string().nullable().optional(),
+            expectedDelivery: z.string().datetime().nullable().optional()
         }).parse(req.body);
 
         const order = await prisma.order.update({
@@ -170,7 +175,8 @@ router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, r
             data: {
                 ...(status && { status }),
                 ...(paymentStatus && { paymentStatus }),
-                ...(trackingNumber !== undefined && { trackingNumber })
+                ...(trackingNumber !== undefined && { trackingNumber }),
+                ...(expectedDelivery !== undefined && { expectedDelivery: expectedDelivery ? new Date(expectedDelivery) : null })
             },
             include: {
                 items: true,

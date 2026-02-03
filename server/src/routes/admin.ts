@@ -9,50 +9,6 @@ const router = Router();
 router.use(authenticate);
 router.use(requireAdmin);
 
-// Bulk delete orders
-router.delete('/orders/bulk', async (req: AuthRequest, res: Response) => {
-    try {
-        const { ids } = req.body;
-        console.log('[ADMIN] Bulk delete attempt:', ids);
-        if (!Array.isArray(ids) || ids.length === 0) {
-            return res.status(400).json({ error: 'No order IDs provided' });
-        }
-
-        await prisma.$transaction([
-            prisma.orderItem.deleteMany({
-                where: { orderId: { in: ids } }
-            }),
-            prisma.order.deleteMany({
-                where: { id: { in: ids } }
-            })
-        ]);
-
-        res.json({ message: `${ids.length} orders deleted successfully` });
-    } catch (error) {
-        console.error('[ADMIN] Bulk delete error:', error);
-        res.status(500).json({ error: 'Failed to delete orders' });
-    }
-});
-
-// Delete single order
-router.delete('/orders/:id', async (req: AuthRequest, res: Response) => {
-    try {
-        const { id } = req.params;
-        console.log('[ADMIN] Single delete attempt for ID:', id);
-
-        await prisma.orderItem.deleteMany({
-            where: { orderId: id as string }
-        });
-        await prisma.order.delete({
-            where: { id: id as string }
-        });
-        res.json({ message: 'Order deleted successfully' });
-    } catch (error) {
-        console.error('[ADMIN] Delete order error:', error);
-        res.status(500).json({ error: 'Failed to delete order' });
-    }
-});
-
 // Dashboard stats
 router.get('/stats', async (req: AuthRequest, res: Response) => {
     try {
