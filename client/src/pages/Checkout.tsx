@@ -450,6 +450,19 @@ const Checkout = () => {
                                         </div>
                                     ))}
 
+                                    {/* Clear Continue Button for Selected Address */}
+                                    {selectedAddressId && savedAddresses.length > 0 && (
+                                        <div className="pt-4 flex justify-center border-t border-gray-100 mt-4">
+                                            <Button
+                                                onClick={handleContinueToPayment}
+                                                className="w-full h-14 bg-pink-600 hover:bg-pink-700 text-white font-black text-lg shadow-xl shadow-pink-100 rounded-2xl uppercase tracking-widest animate-pulse-gentle"
+                                            >
+                                                Continue to Payment
+                                                <ChevronRight className="ml-2 w-5 h-5" />
+                                            </Button>
+                                        </div>
+                                    )}
+
                                     {(showAddForm || (savedAddresses.length === 0 && !selectedAddressId)) ? (
                                         <div className="p-6 border-2 border-pink-200 rounded-xl bg-pink-50/50">
                                             <h3 className="font-bold text-pink-600 mb-4 tracking-tight">ADD DELIVERY ADDRESS</h3>
@@ -462,8 +475,8 @@ const Checkout = () => {
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">City *</Label><Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} className="bg-white border-pink-100" /></div>
                                             </div>
                                             <div className="flex gap-3 mt-6">
-                                                {user || isGuest ? (
-                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold h-12 px-8 uppercase tracking-wider" onClick={handleAddAddress} disabled={addAddressMutation.isPending}>{addAddressMutation.isPending ? 'SAVING...' : 'Use This Address & Continue'}</Button>
+                                                {user ? (
+                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold h-12 px-8 uppercase tracking-wider" onClick={handleAddAddress} disabled={addAddressMutation.isPending}>{addAddressMutation.isPending ? 'SAVING...' : 'Save & Use This Address'}</Button>
                                                 ) : (
                                                     <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold h-12 px-8 uppercase tracking-wider" onClick={handleContinueToPayment}>CONTINUE TO PAYMENT</Button>
                                                 )}
