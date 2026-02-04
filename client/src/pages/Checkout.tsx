@@ -79,8 +79,16 @@ const Checkout = () => {
             setShowAddForm(false);
             setAddress({ name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' });
             toast.success('Address saved successfully');
+            setCurrentStep('payment'); // Auto-proceed to payment
         }
     });
+
+    // Auto-select first address if available
+    useEffect(() => {
+        if (savedAddresses.length > 0 && !selectedAddressId) {
+            setSelectedAddressId(savedAddresses[0].id);
+        }
+    }, [savedAddresses, selectedAddressId]);
 
     // Check authentication and set step
     useEffect(() => {
@@ -218,7 +226,12 @@ const Checkout = () => {
         }
     };
 
-    if (!user) return null;
+    // Remove the blocking if (!user) check
+    if (loading && !isGuest) return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
     if (cartLoading) {
         return (
@@ -447,10 +460,10 @@ const Checkout = () => {
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">City *</Label><Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} className="bg-white border-pink-100" /></div>
                                             </div>
                                             <div className="flex gap-3 mt-6">
-                                                {user ? (
-                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold" onClick={handleAddAddress} disabled={addAddressMutation.isPending}>{addAddressMutation.isPending ? 'SAVING...' : 'SAVE AND DELIVER HERE'}</Button>
+                                                {user || isGuest ? (
+                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold h-12 px-8 uppercase tracking-wider" onClick={handleAddAddress} disabled={addAddressMutation.isPending}>{addAddressMutation.isPending ? 'SAVING...' : 'Use This Address & Continue'}</Button>
                                                 ) : (
-                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold" onClick={handleContinueToPayment}>CONTINUE TO PAYMENT</Button>
+                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold h-12 px-8 uppercase tracking-wider" onClick={handleContinueToPayment}>CONTINUE TO PAYMENT</Button>
                                                 )}
                                                 {savedAddresses.length > 0 && <Button variant="ghost" className="font-bold text-gray-600" onClick={() => setShowAddForm(false)}>CANCEL</Button>}
                                             </div>
