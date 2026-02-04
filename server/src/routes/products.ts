@@ -104,6 +104,17 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
             }
         });
 
+        // Create Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: 'CREATE_PRODUCT',
+                entity: 'PRODUCT',
+                entityId: product.id,
+                details: `Product "${product.name}" created`,
+                adminId: req.user!.id
+            }
+        });
+
         res.status(201).json({
             ...product,
             sizes: JSON.parse(product.sizes),
@@ -135,6 +146,17 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
             data: updateData
         });
 
+        // Create Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: 'UPDATE_PRODUCT',
+                entity: 'PRODUCT',
+                entityId: product.id,
+                details: `Product "${product.name}" updated`,
+                adminId: req.user!.id
+            }
+        });
+
         res.json({
             ...product,
             sizes: JSON.parse(product.sizes),
@@ -155,6 +177,17 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
     try {
         await prisma.product.delete({
             where: { id: req.params.id as string }
+        });
+
+        // Create Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: 'DELETE_PRODUCT',
+                entity: 'PRODUCT',
+                entityId: req.params.id as string,
+                details: `Product deleted`,
+                adminId: req.user!.id
+            }
         });
 
         res.json({ message: 'Product deleted successfully' });

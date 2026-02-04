@@ -103,6 +103,17 @@ router.put('/:id/approve', authenticate, requireAdmin, async (req: AuthRequest, 
             where: { id: req.params.id as string },
             data: { isApproved: req.body.isApproved }
         });
+
+        // Audit Log
+        const { logActivity } = await import('../lib/logger');
+        await logActivity({
+            action: 'APPROVE_REVIEW',
+            entity: 'REVIEW',
+            entityId: review.id,
+            details: { isApproved: req.body.isApproved },
+            adminId: req.user!.id
+        });
+
         res.json(review);
     } catch (error) {
         res.status(500).json({ error: 'Failed to update review status' });
@@ -116,6 +127,17 @@ router.put('/:id/feature', authenticate, requireAdmin, async (req: AuthRequest, 
             where: { id: req.params.id as string },
             data: { isFeatured: req.body.isFeatured }
         });
+
+        // Audit Log
+        const { logActivity } = await import('../lib/logger');
+        await logActivity({
+            action: 'FEATURE_REVIEW',
+            entity: 'REVIEW',
+            entityId: review.id,
+            details: { isFeatured: req.body.isFeatured },
+            adminId: req.user!.id
+        });
+
         res.json(review);
     } catch (error) {
         res.status(500).json({ error: 'Failed to update review featured status' });
@@ -128,6 +150,16 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
         await prisma.review.delete({
             where: { id: req.params.id as string }
         });
+
+        // Audit Log
+        const { logActivity } = await import('../lib/logger');
+        await logActivity({
+            action: 'DELETE_REVIEW',
+            entity: 'REVIEW',
+            entityId: req.params.id as string,
+            adminId: req.user!.id
+        });
+
         res.json({ message: 'Review deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete review' });

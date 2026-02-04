@@ -220,6 +220,16 @@ router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, r
                         orderId: updatedOrder.id
                     }
                 });
+
+                // Create Audit Log
+                const { logActivity } = await import('../lib/logger');
+                await logActivity({
+                    action: 'UPDATE_ORDER_STATUS',
+                    entity: 'ORDER',
+                    entityId: updatedOrder.id,
+                    details: { status, paymentStatus },
+                    adminId: req.user!.id
+                });
             }
 
             return updatedOrder;

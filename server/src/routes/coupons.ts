@@ -1,5 +1,4 @@
 import { Router, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
@@ -48,6 +47,17 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
             }
         });
 
+        // Create Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: 'CREATE_COUPON',
+                entity: 'COUPON',
+                entityId: coupon.id,
+                details: `Coupon "${coupon.code}" created`,
+                adminId: req.user!.id
+            }
+        });
+
         res.status(201).json(coupon);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -70,6 +80,17 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
             }
         });
 
+        // Create Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: 'UPDATE_COUPON',
+                entity: 'COUPON',
+                entityId: coupon.id,
+                details: `Coupon "${coupon.code}" updated`,
+                adminId: req.user!.id
+            }
+        });
+
         res.json(coupon);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -85,6 +106,18 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
         await prisma.coupon.delete({
             where: { id: req.params.id as string }
         });
+
+        // Create Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: 'DELETE_COUPON',
+                entity: 'COUPON',
+                entityId: req.params.id as string,
+                details: `Coupon deleted`,
+                adminId: req.user!.id
+            }
+        });
+
         res.json({ message: 'Coupon deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete coupon' });
@@ -116,7 +149,7 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
         }
 
         if (coupon.minOrderValue && cartTotal < coupon.minOrderValue) {
-            return res.status(400).json({ error: `Minimum order value of ?${coupon.minOrderValue} required` });
+            return res.status(400).json({ error: `Minimum order value of ₹${coupon.minOrderValue} required` });
         }
 
         let discount = 0;

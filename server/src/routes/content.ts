@@ -1,5 +1,4 @@
 import { Router, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
@@ -32,6 +31,17 @@ router.put('/:key', authenticate, requireAdmin, async (req: AuthRequest, res: Re
             create: {
                 key: key as string,
                 content: JSON.stringify(content)
+            }
+        });
+
+        // Create Audit Log
+        await prisma.auditLog.create({
+            data: {
+                action: 'UPDATE_CONTENT',
+                entity: 'CONTENT',
+                entityId: key as string,
+                details: `Site content "${key}" updated`,
+                adminId: req.user!.id
             }
         });
 
