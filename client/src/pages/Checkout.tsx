@@ -167,20 +167,33 @@ const Checkout = () => {
     };
 
     const handleContinueToPayment = () => {
+        // Validation for Guest
         if (isGuest) {
             if (!guestInfo.email || !guestInfo.name || !guestInfo.phone) {
                 toast.error('Please fill in your contact information');
                 return;
             }
-        }
-        if (!selectedAddressId && savedAddresses.length === 0) {
-            // Check if transient address is filled
             if (!address.name || !address.phone || !address.line1 || !address.city || !address.state || !address.pincode) {
-                toast.error('Please provide a delivery address');
+                toast.error('Please fill in your delivery address');
                 return;
             }
         }
+        // Validation for Logged-in User
+        else {
+            // Case 1: Filling New Address Form
+            if (showAddForm || (savedAddresses.length === 0 && !selectedAddressId)) {
+                handleAddAddress();
+                return; // handleAddAddress will handle the next step on success
+            }
+            // Case 2: Selected from List
+            if (!selectedAddressId) {
+                toast.error('Please select or add a delivery address');
+                return;
+            }
+        }
+
         setCurrentStep('payment');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handlePlaceOrder = async () => {
@@ -428,44 +441,17 @@ const Checkout = () => {
                                                         <span className="text-gray-400 font-medium">Mobile:</span>
                                                         <span className="font-bold text-gray-900">{addr.phone}</span>
                                                     </div>
-
-                                                    {selectedAddressId === addr.id && (
-                                                        <div className="mt-6 pt-4 border-t border-pink-100 flex gap-3 animate-in fade-in slide-in-from-top-2">
-                                                            <Button
-                                                                className="bg-orange-600 hover:bg-orange-700 text-white font-black px-8 h-12 rounded-xl shadow-lg shadow-orange-200 uppercase tracking-wider"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleContinueToPayment();
-                                                                }}
-                                                            >
-                                                                Deliver Here
-                                                            </Button>
-                                                            <Button variant="ghost" className="h-12 px-6 font-bold text-gray-400 hover:text-pink-600">
-                                                                Edit
-                                                            </Button>
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
 
-                                    {/* Clear Continue Button for Selected Address */}
-                                    {selectedAddressId && savedAddresses.length > 0 && (
-                                        <div className="pt-4 flex justify-center border-t border-gray-100 mt-4">
-                                            <Button
-                                                onClick={handleContinueToPayment}
-                                                className="w-full h-14 bg-pink-600 hover:bg-pink-700 text-white font-black text-lg shadow-xl shadow-pink-100 rounded-2xl uppercase tracking-widest animate-pulse-gentle"
-                                            >
-                                                Continue to Payment
-                                                <ChevronRight className="ml-2 w-5 h-5" />
-                                            </Button>
-                                        </div>
-                                    )}
-
                                     {(showAddForm || (savedAddresses.length === 0 && !selectedAddressId)) ? (
                                         <div className="p-6 border-2 border-pink-200 rounded-xl bg-pink-50/50">
-                                            <h3 className="font-bold text-pink-600 mb-4 tracking-tight">ADD DELIVERY ADDRESS</h3>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="font-bold text-pink-600 tracking-tight uppercase">Enter Delivery Address</h3>
+                                                {savedAddresses.length > 0 && <Button variant="ghost" size="sm" className="font-bold text-gray-600" onClick={() => setShowAddForm(false)}>Back to saved</Button>}
+                                            </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Name *</Label><Input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} className="bg-white border-pink-100" /></div>
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Mobile *</Label><Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} className="bg-white border-pink-100" /></div>
@@ -474,18 +460,26 @@ const Checkout = () => {
                                                 <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Address *</Label><Input value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} className="bg-white border-pink-100" /></div>
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">City *</Label><Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} className="bg-white border-pink-100" /></div>
                                             </div>
-                                            <div className="flex gap-3 mt-6">
-                                                {user ? (
-                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold h-12 px-8 uppercase tracking-wider" onClick={handleAddAddress} disabled={addAddressMutation.isPending}>{addAddressMutation.isPending ? 'SAVING...' : 'Save & Use This Address'}</Button>
-                                                ) : (
-                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold h-12 px-8 uppercase tracking-wider" onClick={handleContinueToPayment}>CONTINUE TO PAYMENT</Button>
-                                                )}
-                                                {savedAddresses.length > 0 && <Button variant="ghost" className="font-bold text-gray-600" onClick={() => setShowAddForm(false)}>CANCEL</Button>}
-                                            </div>
                                         </div>
                                     ) : (
                                         <button onClick={() => setShowAddForm(true)} className="w-full p-6 border-2 border-dashed border-pink-200 rounded-xl text-pink-600 font-bold flex items-center justify-center gap-2 hover:bg-pink-50 transition-colors"><Plus className="w-5 h-5" />Add New Address</button>
                                     )}
+
+                                    {/* EXPLICIT UNIFIED CONTINUE BUTTON */}
+                                    <div className="pt-8 border-t border-pink-50 mt-8">
+                                        <Button
+                                            onClick={handleContinueToPayment}
+                                            disabled={addAddressMutation.isPending}
+                                            className="w-full h-16 bg-pink-600 hover:bg-pink-700 text-white font-black text-xl shadow-2xl shadow-pink-100 rounded-3xl uppercase tracking-widest animate-pulse-gentle group"
+                                        >
+                                            {addAddressMutation.isPending ? 'Saving Address...' : 'Continue to Payment'}
+                                            <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                                        </Button>
+                                        <p className="text-center text-[10px] text-gray-400 font-bold mt-4 uppercase tracking-widest flex items-center justify-center gap-2">
+                                            <Shield className="w-3 h-3 text-green-500" />
+                                            SSL Secure Checkout
+                                        </p>
+                                    </div>
                                 </div>
                             )}
 
