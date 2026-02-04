@@ -9,6 +9,8 @@ import { Card } from '@/components/ui/card';
 import { Mail, Phone, MapPin, Instagram, Facebook, Clock, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { contactsAPI } from '@/lib/api';
+
 const Contact = () => {
     const [formData, setFormData] = useState({
         name: '',
@@ -21,11 +23,15 @@ const Contact = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSending(true);
-        // Simulate sending
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        toast.success('Message sent! We\'ll get back to you soon.');
-        setFormData({ name: '', email: '', subject: '', message: '' });
-        setSending(false);
+        try {
+            await contactsAPI.submit(formData);
+            toast.success('Message sent! We\'ll get back to you soon.');
+            setFormData({ name: '', email: '', subject: '', message: '' });
+        } catch (error) {
+            toast.error('Failed to send message. Please try again later.');
+        } finally {
+            setSending(false);
+        }
     };
 
     return (

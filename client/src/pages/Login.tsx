@@ -31,14 +31,23 @@ const Login = () => {
         setLoading(true);
         try {
             await login(loginData.email, loginData.password);
-            toast.success('Welcome back!');
-            navigate(redirectUrl);
+
+            // Check verification status after login
+            // We use a small timeout to let the AuthProvider state update
+            setTimeout(() => {
+                const storedUser = localStorage.getItem('user');
+                const userObj = storedUser ? JSON.parse(storedUser) : null;
+
+                if (userObj && !userObj.isVerified) {
+                    toast.info('Please verify your email to continue');
+                    navigate('/verify-email');
+                } else {
+                    toast.success('Welcome back!');
+                    navigate(redirectUrl);
+                }
+            }, 100);
         } catch (error: any) {
-            if (error.response?.data?.error === 'Please verify your email') {
-                navigate('/verify-email');
-            } else {
-                toast.error(error.response?.data?.error || 'Login failed');
-            }
+            toast.error(error.response?.data?.error || 'Login failed');
         } finally {
             setLoading(false);
         }
@@ -130,7 +139,7 @@ const Login = () => {
                                             <div className="space-y-2">
                                                 <div className="flex justify-between items-center">
                                                     <Label htmlFor="login-password">Password</Label>
-                                                    <Link to="/forgot-password" title="Coming soon!" className="text-xs text-primary hover:underline opacity-60">Forgot password?</Link>
+                                                    <Link to="/forgot-password" title="Reset your password" className="text-xs text-primary hover:underline">Forgot password?</Link>
                                                 </div>
                                                 <Input
                                                     id="login-password"

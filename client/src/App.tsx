@@ -30,9 +30,13 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminOrderDetail from "./pages/admin/OrderDetail";
 import AdminCoupons from "./pages/admin/Coupons";
 import AdminReviews from "./pages/admin/Reviews";
+import AdminCMS from "./pages/admin/CMS";
+import AdminContacts from "./pages/admin/Contacts";
 import AdminSettings from "./pages/admin/Settings";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +59,8 @@ const App = () => (
               <Route path="/orders" element={<Orders />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
@@ -73,6 +79,8 @@ const App = () => (
                 <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
                 <Route path="/admin/coupons" element={<AdminCoupons />} />
                 <Route path="/admin/reviews" element={<AdminReviews />} />
+                <Route path="/admin/cms" element={<AdminCMS />} />
+                <Route path="/admin/contacts" element={<AdminContacts />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -8,26 +8,24 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(uuid())
-  email              String         @unique
-  password           String
-  role               String         @default("USER")
-  name               String?
-  phone              String?
-  isVerified         Boolean        @default(false)
-  verificationCode   String?
-  codeExpires        DateTime?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @default(now()) @updatedAt
-  emailNotifications Boolean        @default(true)
-  promoNotifications Boolean        @default(true)
-  resetToken         String?
-  resetExpires       DateTime?
-  addresses          Address[]
-  cartItems          CartItem[]
-  notifications      Notification[]
-  orders             Order[]
-  reviews            Review[]
+  id               String         @id @default(uuid())
+  email            String         @unique
+  password         String
+  role             String         @default("USER")
+  name             String?
+  phone            String?
+  isVerified       Boolean        @default(false)
+  verificationCode String?
+  codeExpires      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
+  emailNotifications Boolean      @default(true)
+  promoNotifications Boolean      @default(true)
+  addresses        Address[]
+  cartItems        CartItem[]
+  notifications    Notification[]
+  orders           Order[]
+  reviews          Review[]
 }
 
 model Notification {
@@ -81,6 +79,7 @@ model Order {
   status         String      @default("PLACED")
   paymentStatus  String      @default("PENDING")
   trackingNumber String?
+  expectedDelivery DateTime?
   addressId      String
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @default(now()) @updatedAt
@@ -149,24 +148,4 @@ model SiteContent {
   key       String   @unique
   content   String
   updatedAt DateTime @updatedAt
-}
-
-model AuditLog {
-  id        String   @id @default(uuid())
-  action    String
-  entity    String
-  entityId  String?
-  details   String?
-  adminId   String?
-  createdAt DateTime @default(now())
-}
-
-model ContactForm {
-  id        String   @id @default(uuid())
-  name      String
-  email     String
-  subject   String
-  message   String
-  status    String   @default("UNREAD") // UNREAD, READ, REPLIED
-  createdAt DateTime @default(now())
 }

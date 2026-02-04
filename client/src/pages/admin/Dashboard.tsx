@@ -5,8 +5,9 @@ import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, ShoppingBag, IndianRupee, TrendingUp, Package, Ticket, MessageSquare, Settings } from 'lucide-react';
+import { Users, ShoppingBag, IndianRupee, TrendingUp, Package, Ticket, MessageSquare, Settings, Activity, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { format } from 'date-fns';
 
 const AdminDashboard = () => {
     const { user, isAdmin, loading } = useAuth();
@@ -18,6 +19,16 @@ const AdminDashboard = () => {
             return response.data;
         },
         enabled: isAdmin
+    });
+
+    const { data: auditLogs } = useQuery({
+        queryKey: ['admin-audit-logs'],
+        queryFn: async () => {
+            const response = await adminAPI.getAuditLogs();
+            return response.data;
+        },
+        enabled: isAdmin,
+        refetchInterval: 10000 // Refresh every 10s for "real-time" feel
     });
 
     if (loading) {
@@ -179,9 +190,9 @@ const AdminDashboard = () => {
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
                         {/* Revenue Trend Chart */}
-                        <Card className="lg:col-span-2">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="font-fredoka">Revenue Trends (Last 7 Days)</CardTitle>
                             </CardHeader>
@@ -228,7 +239,9 @@ const AdminDashboard = () => {
                                 </div>
                             </CardContent>
                         </Card>
+                    </div>
 
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                         {/* Order Status Distribution */}
                         <Card>
                             <CardHeader>
@@ -251,53 +264,122 @@ const AdminDashboard = () => {
                                 </div>
                             </CardContent>
                         </Card>
-                    </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                         {/* Top Selling Products */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="font-fredoka">Top Selling Products</CardTitle>
+                                <CardTitle className="font-fredoka flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-green-500" />
+                                    Top Selling Items
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
-                                    {Array.isArray(stats?.topSellingProducts) && stats.topSellingProducts.map((item: any, index: number) => (
+                                    {Array.isArray(stats?.topSellingProducts) && stats.topSellingProducts.map((item: any) => (
                                         <div key={item.productId} className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-muted-foreground font-bold">#{index + 1}</span>
-                                                <span className="font-medium">{item.name}</span>
+                                            <div className="flex-1">
+                                                <p className="font-nunito font-bold text-sm truncate">{item.name}</p>
+                                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{item._sum.quantity} Sold</p>
                                             </div>
-                                            <Badge variant="secondary">
-                                                {item._sum.quantity} Sold
-                                            </Badge>
+                                            <div className="flex gap-1 h-1.5 w-24 bg-secondary rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-green-500"
+                                                    style={{ width: `${stats.topSellingProducts[0]?._sum.quantity > 0 ? (item._sum.quantity / stats.topSellingProducts[0]._sum.quantity) * 100 : 0}%` }}
+                                                />
+                                            </div>
                                         </div>
                                     ))}
+                                    {(!stats?.topSellingProducts || stats.topSellingProducts.length === 0) && (
+                                        <div className="text-center py-6 text-muted-foreground text-sm">
+                                            No sales data available yet.
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                        {/* Activity Feed */}
+                        <Card className="lg:col-span-2">
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle className="flex items-center gap-2 font-fredoka">
+                                    <Activity className="w-5 h-5 text-primary" />
+                                    Real-time Audit Logs
+                                </CardTitle>
+                                <Badge variant="secondary" className="animate-pulse">Live</Badge>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2">
+                                    {auditLogs?.length > 0 ? auditLogs.map((log: any) => (
+                                        <div key={log.id} className="flex gap-4 relative">
+                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <Activity className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0 border-b border-gray-100 pb-4 last:border-0">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <p className="font-bold text-sm text-foreground uppercase tracking-tight">
+                                                        {log.action.replace(/_/g, ' ')}
+                                                    </p>
+                                                    <span className="text-[10px] text-muted-foreground whitespace-nowrap flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-full">
+                                                        <Clock className="w-3 h-3" />
+                                                        {format(new Date(log.createdAt), 'HH:mm • dd MMM')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Target: <span className="font-mono bg-gray-100 px-1 rounded">{log.entity}</span>
+                                                    {log.entityId && ` (${log.entityId.slice(0, 8)})`}
+                                                </p>
+                                                {log.details && (
+                                                    <div className="mt-2 p-2 bg-gray-50 rounded-lg text-[10px] font-mono text-muted-foreground border border-gray-100">
+                                                        {log.details}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                                            <Activity className="w-12 h-12 mb-2 opacity-10" />
+                                            <p>No recent activity logs found</p>
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Low Stock Products */}
+                        {/* Low Stock Alerts */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Package className="w-5 h-5" />
+                                <CardTitle className="flex items-center gap-2 font-fredoka">
+                                    <Package className="w-5 h-5 text-destructive" />
                                     Low Stock Alert
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
                                     {Array.isArray(stats?.lowStockProducts) && stats.lowStockProducts.map((product: any) => (
-                                        <div key={product.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                                        <div key={product.id} className="flex items-center justify-between p-4 bg-red-50/30 border border-red-100 rounded-xl">
                                             <div>
-                                                <p className="font-nunito font-semibold">{product.name}</p>
-                                                <p className="text-sm text-muted-foreground">{product.category}</p>
+                                                <p className="font-nunito font-bold text-sm">{product.name}</p>
+                                                <p className="text-[10px] text-muted-foreground">{product.category}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="font-fredoka font-bold text-destructive">{product.stock} left</p>
+                                                <p className="font-fredoka font-black text-destructive">{product.stock}</p>
+                                                <p className="text-[8px] uppercase font-bold text-destructive/60">units</p>
                                             </div>
                                         </div>
                                     ))}
+                                    {(!stats?.lowStockProducts || stats.lowStockProducts.length === 0) && (
+                                        <div className="text-center py-6 text-muted-foreground text-sm">
+                                            All products in safe stock levels ✅
+                                        </div>
+                                    )}
                                 </div>
+                                <Link to="/admin/products">
+                                    <Button variant="outline" size="sm" className="w-full mt-4 rounded-xl text-xs h-10 border-2">
+                                        Manage Inventory
+                                    </Button>
+                                </Link>
                             </CardContent>
                         </Card>
                     </div>

@@ -27,7 +27,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(() => {
+        const storedUser = localStorage.getItem('user');
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
@@ -60,6 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(userData);
         setToken(userToken);
         localStorage.setItem('token', userToken);
+        localStorage.setItem('user', JSON.stringify(userData));
     };
 
     const signup = async (data: { email: string; password: string; name?: string; phone?: string }) => {
@@ -68,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(userData);
         setToken(userToken);
         localStorage.setItem('token', userToken);
+        localStorage.setItem('user', JSON.stringify(userData));
     };
 
     const googleLogin = async (credential: string) => {
@@ -76,12 +81,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(userData);
         setToken(userToken);
         localStorage.setItem('token', userToken);
+        localStorage.setItem('user', JSON.stringify(userData));
     };
 
     const logout = () => {
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
     };
 
     const isAdmin = user?.role === 'ADMIN';

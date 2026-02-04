@@ -5,8 +5,9 @@ import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { sendVerificationEmail } from '../utils/email';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 import { OAuth2Client } from 'google-auth-library';
+import crypto from 'crypto';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const router = Router();
@@ -101,11 +102,6 @@ router.post('/login', async (req: Request, res: Response) => {
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
             return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        // Check if verified
-        if (!(user as any).isVerified) {
-            return res.status(401).json({ error: 'Please verify your email' });
         }
 
         // Generate token
@@ -402,6 +398,82 @@ router.put('/email-preferences', authenticate, async (req: AuthRequest, res: Res
             return res.status(400).json({ error: 'Validation failed', details: error.errors });
         }
         res.status(500).json({ error: 'Failed to update preferences' });
+    }
+});
+
+
+// Forgot Password
+router.post('/forgot-password', async (req: Request, res: Response) => {
+    try {
+        const { email } = z.object({ email: z.string().email() }).parse(req.body);
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            // Return success even if user not found for security
+            return res.json({ message: 'If an account exists with this email, a reset link has been sent.' });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetExpires = new Date(Date.now() + 3600000); // 1 hour
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                resetToken,
+                resetExpires
+            } as any
+        });
+
+        // Send reset email
+        await sendPasswordResetEmail(email, resetToken);
+
+        res.json({ message: 'If an account exists with this email, a reset link has been sent.' });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Valid email is required' });
+        }
+        res.status(500).json({ error: 'Failed to process request' });
+    }
+});
+
+// Reset Password
+router.post('/reset-password', async (req: Request, res: Response) => {
+    try {
+        const { token, password } = z.object({
+            token: z.string(),
+            password: z.string().min(6)
+        }).parse(req.body);
+
+        const user = await prisma.user.findFirst({
+            where: {
+                resetToken: token,
+                resetExpires: { gte: new Date() }
+            } as any
+        });
+
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid or expired reset token' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashedPassword,
+                resetToken: null,
+                resetExpires: null
+            } as any
+        });
+
+        res.json({ message: 'Password has been reset successfully' });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Token and new password (min 6 chars) are required' });
+        }
+        res.status(500).json({ error: 'Failed to reset password' });
     }
 });
 

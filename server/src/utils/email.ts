@@ -101,3 +101,37 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
 
     return transporter.sendMail(mailOptions);
 };
+
+export const sendPasswordResetEmail = async (email: string, token: string) => {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log('------------------------------------');
+        console.log(`PASSWORD RESET TOKEN FOR ${email}: ${token}`);
+        console.log('------------------------------------');
+        return;
+    }
+
+    const resetUrl = `https://happy-hopz.vercel.app/reset-password?token=${token}`;
+
+    const mailOptions = {
+        from: '"Happy Hopz" <noreply@happyhopz.com>',
+        to: email,
+        subject: 'Reset Your Happy Hopz Password',
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                <h2 style="color: #ff6b6b; text-align: center;">Password Reset Request 🔑</h2>
+                <p>Hello,</p>
+                <p>We received a request to reset the password for your Happy Hopz account. Click the button below to proceed:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${resetUrl}" style="background: #ff6b6b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">Reset Password</a>
+                </div>
+                <p>This link will expire in 1 hour.</p>
+                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+                <p style="color: #888; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
+                    For security, never share this link with anyone.
+                </p>
+            </div>
+        `
+    };
+
+    return transporter.sendMail(mailOptions);
+};

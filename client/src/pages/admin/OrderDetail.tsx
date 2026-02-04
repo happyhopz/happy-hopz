@@ -50,6 +50,15 @@ const AdminOrderDetail = () => {
         }
     });
 
+    const { data: timelineLogs } = useQuery({
+        queryKey: ['admin-order-logs', id],
+        queryFn: async () => {
+            const response = await adminAPI.getAuditLogs({ entity: 'ORDER', entityId: id });
+            return response.data;
+        },
+        enabled: isAdmin && !!id
+    });
+
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -297,16 +306,50 @@ const AdminOrderDetail = () => {
                         </Card>
 
                         <Card className="p-6 border-black/10 shadow-none">
-                            <h2 className="text-lg font-bold mb-4 text-black underline">Timeline</h2>
-                            <div className="space-y-4 text-sm text-black">
-                                <div className="border-l-2 border-black pl-4 py-1">
-                                    <p className="font-bold">Placed</p>
-                                    <p className="text-xs">{new Date(order.createdAt).toLocaleString()}</p>
-                                </div>
-                                {order.updatedAt !== order.createdAt && (
-                                    <div className="border-l-2 border-black pl-4 py-1">
-                                        <p className="font-bold">Last Update</p>
-                                        <p className="text-xs">{new Date(order.updatedAt).toLocaleString()}</p>
+                            <h2 className="text-xl font-bold mb-6 text-black underline">Order History</h2>
+                            <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-black/10">
+                                {timelineLogs && timelineLogs.length > 0 ? timelineLogs.map((log: any) => (
+                                    <div key={log.id} className="relative pl-8">
+                                        <div className="absolute left-0 top-1.5 w-[24px] h-[24px] rounded-full bg-white border-2 border-black flex items-center justify-center z-10">
+                                            <div className="w-2 h-2 rounded-full bg-black" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-sm text-black">
+                                                {log.action.replace(/_/g, ' ')}
+                                            </p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                {new Date(log.createdAt).toLocaleString()}
+                                            </p>
+                                            {log.details && (
+                                                <div className="mt-2 p-2 bg-gray-50 rounded text-[10px] font-mono border border-black/5 leading-relaxed overflow-x-auto">
+                                                    {(() => {
+                                                        try {
+                                                            const details = JSON.parse(log.details);
+                                                            return Object.entries(details).map(([key, value]) => (
+                                                                <div key={key} className="flex justify-between gap-4">
+                                                                    <span className="font-bold opacity-60 lowercase">{key}:</span>
+                                                                    <span className="text-right">{String(value)}</span>
+                                                                </div>
+                                                            ));
+                                                        } catch (e) {
+                                                            return log.details;
+                                                        }
+                                                    })()}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="relative pl-8">
+                                        <div className="absolute left-0 top-1.5 w-[24px] h-[24px] rounded-full bg-white border-2 border-black flex items-center justify-center z-10">
+                                            <div className="w-2 h-2 rounded-full bg-black" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-sm text-black">ORDER PLACED</p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                {new Date(order.createdAt).toLocaleString()}
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>

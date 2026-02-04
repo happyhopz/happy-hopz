@@ -1,9 +1,31 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { contentAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import pandaLogo from '@/assets/happy-hopz-logo.png';
 
 const HeroSection = () => {
+  const { data: heroData } = useQuery({
+    queryKey: ['hero-content'],
+    queryFn: async () => {
+      try {
+        const response = await contentAPI.get('homepage.hero');
+        return response.data;
+      } catch (e) {
+        return null;
+      }
+    }
+  });
+
+  const content = heroData || {
+    badge: 'New Collection Available!',
+    title: 'Little Feet, Big Adventures',
+    subtitle: 'Where Every Step Is a Happy Hopz 🐼',
+    ctaText: 'Shop Now',
+    secondaryCta: 'View Collection'
+  };
+
   return (
     <section className="relative min-h-screen lg:min-h-[90vh] flex items-center overflow-hidden gradient-hopz">
       {/* Floating decorations */}
@@ -21,7 +43,7 @@ const HeroSection = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-100 border-2 border-cyan-400 rounded-full mb-4 animate-fade-up">
               <Sparkles className="w-4 h-4 text-cyan-600" />
               <span className="text-sm font-nunito font-extrabold text-black">
-                New Collection Available!
+                {content.badge}
               </span>
             </div>
 
@@ -45,12 +67,12 @@ const HeroSection = () => {
 
           {/* Title & Tagline section */}
           <div className="text-center px-4 w-full">
-            <h1 className="text-[28px] sm:text-4xl md:text-5xl lg:text-3xl xl:text-7xl font-fredoka font-black leading-tight animate-fade-up opacity-0 delay-100 tracking-tighter !text-black drop-shadow-sm">
-              Little Feet, Big Adventures
+            <h1 className="text-[26px] sm:text-3xl md:text-4xl font-fredoka font-black leading-tight animate-fade-up opacity-0 delay-100 tracking-tighter text-[#26252b] drop-shadow-sm">
+              {content.title}
             </h1>
 
-            <p className="mt-4 text-sm sm:text-base md:text-lg animate-fade-up opacity-0 delay-200 italic font-bold !text-black font-nunito max-w-sm mx-auto">
-              Where Every Step Is a Happy Hopz 🐼
+            <p className="mt-3 text-sm sm:text-base animate-fade-up opacity-0 delay-200 italic font-bold text-[#26252b] font-nunito max-w-sm mx-auto">
+              {content.subtitle}
             </p>
           </div>
 
@@ -58,7 +80,7 @@ const HeroSection = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 animate-fade-up opacity-0 delay-300 w-full">
             <Link to="/products" className="w-full sm:w-auto flex justify-center">
               <Button variant="hopz" size="lg" className="w-full sm:w-52 group bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-600 font-bold shadow-pink rounded-full text-lg h-14">
-                Shop Now
+                {content.ctaText}
                 <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
@@ -73,7 +95,7 @@ const HeroSection = () => {
                 }
               }}
             >
-              View Collection
+              {content.secondaryCta}
             </Button>
           </div>
 
@@ -94,23 +116,22 @@ const HeroSection = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-100 border-2 border-cyan-400 rounded-full mb-6 animate-fade-up">
               <Sparkles className="w-4 h-4 text-cyan-600" />
               <span className="text-sm font-nunito font-extrabold text-black">
-                New Collection Available!
+                {content.badge}
               </span>
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-fredoka font-black leading-tight animate-fade-up opacity-0 delay-100 tracking-tight !text-black">
-              Little Feet,{' '}
-              <span className="drop-shadow-md font-fredoka !text-black">Big Adventures</span>
+              {content.title}
             </h1>
 
             <p className="mt-6 text-xl md:text-2xl font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic font-bold !text-black">
-              Where Every Step Is a Happy Hopz 🐼
+              {content.subtitle}
             </p>
 
             <div className="mt-10 flex items-center gap-6 animate-fade-up opacity-0 delay-300">
               <Link to="/products">
                 <Button variant="hopz" size="lg" className="w-56 group bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-600 font-bold shadow-pink rounded-full h-16 text-xl">
-                  Shop Now
+                  {content.ctaText}
                   <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
@@ -125,7 +146,7 @@ const HeroSection = () => {
                   }
                 }}
               >
-                View Collection
+                {content.secondaryCta}
               </Button>
             </div>
 

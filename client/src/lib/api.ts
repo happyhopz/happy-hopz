@@ -25,13 +25,10 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
-            // Remove hard redirect to let React state handle it
         }
         return Promise.reject(error);
     }
 );
-
-export default api;
 
 // Auth API
 export const authAPI = {
@@ -44,6 +41,8 @@ export const authAPI = {
     updateProfile: (data: { name?: string; phone?: string }) => api.put('/auth/profile', data),
     changePassword: (data: any) => api.post('/auth/change-password', data),
     updateEmailPrefs: (data: any) => api.put('/auth/email-preferences', data),
+    forgotPassword: (email: string) => api.post('/forgot-password', { email }),
+    resetPassword: (data: any) => api.post('/reset-password', data),
 };
 
 // Products API
@@ -95,6 +94,14 @@ export const adminAPI = {
     createProduct: (data: any) => api.post('/admin/products', data),
     updateProduct: (id: string, data: any) => api.put(`/admin/products/${id}`, data),
     deleteProduct: (id: string) => api.delete(`/admin/products/${id}`),
+    bulkCreateProducts: (products: any[]) => api.post('/admin/products/bulk', { products }),
+    search: (query: string) => api.get(`/admin/search?q=${query}`),
+    getAuditLogs: (filters?: { entity?: string; entityId?: string }) => {
+        const params = new URLSearchParams();
+        if (filters?.entity) params.append('entity', filters.entity);
+        if (filters?.entityId) params.append('entityId', filters.entityId);
+        return api.get(`/admin/audit-logs?${params.toString()}`);
+    },
     getCoupons: () => api.get('/coupons'),
     createCoupon: (data: any) => api.post('/coupons', data),
     updateCoupon: (id: string, data: any) => api.put(`/coupons/${id}`, data),
@@ -108,7 +115,7 @@ export const adminAPI = {
 
 export const contentAPI = {
     get: (key: string) => api.get(`/content/${key}`),
-    update: (key: string) => api.put(`/content/${key}`, { content: {} })
+    update: (key: string, content: any) => api.put(`/content/${key}`, { content })
 };
 
 export const notificationsAPI = {
@@ -122,3 +129,12 @@ export const addressAPI = {
     create: (data: any) => api.post('/addresses', data),
     delete: (id: string) => api.delete(`/addresses/${id}`)
 };
+
+export const contactsAPI = {
+    submit: (data: { name: string; email: string; subject: string; message: string }) =>
+        api.post('/contacts', data),
+    getAll: (params?: { status?: string }) => api.get('/contacts', { params }),
+    updateStatus: (id: string, status: string) => api.put(`/contacts/${id}`, { status })
+};
+
+export default api;

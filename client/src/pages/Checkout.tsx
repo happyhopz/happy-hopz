@@ -272,26 +272,49 @@ const Checkout = () => {
                             {currentStep === 'address' && (
                                 <div className="p-6 space-y-4 bg-white">
                                     {savedAddresses.map((addr: any) => (
-                                        <div key={addr.id} onClick={() => setSelectedAddressId(addr.id)}
-                                            className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${selectedAddressId === addr.id ? 'border-pink-500 bg-pink-50 ring-2 ring-pink-100' : 'border-gray-200 hover:border-pink-200'}`}>
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex gap-4">
-                                                    <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedAddressId === addr.id ? 'border-pink-600 bg-pink-600' : 'border-gray-300'}`}>
-                                                        {selectedAddressId === addr.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                                        <div key={addr.id}
+                                            onClick={() => setSelectedAddressId(addr.id)}
+                                            className={`p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300 relative group ${selectedAddressId === addr.id
+                                                ? 'border-pink-500 bg-pink-50/50 ring-4 ring-pink-100'
+                                                : 'border-gray-100 hover:border-pink-200 hover:bg-gray-50/50'}`}>
+
+                                            <div className="flex items-start gap-4">
+                                                <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedAddressId === addr.id ? 'border-pink-600 bg-pink-600' : 'border-gray-300 group-hover:border-pink-300'}`}>
+                                                    {selectedAddressId === addr.id && <div className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />}
+                                                </div>
+
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="font-black text-gray-900 uppercase tracking-tight">{addr.name}</span>
+                                                        <span className="text-[10px] font-bold bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full uppercase">HOME</span>
                                                     </div>
-                                                    <div>
-                                                        <div className="font-bold text-gray-900">{addr.name}</div>
-                                                        <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                                                            {addr.line1}, {addr.line2 && `${addr.line2}, `}<br />
-                                                            {addr.city}, {addr.state} - <span className="font-bold">{addr.pincode}</span>
-                                                        </p>
-                                                        <p className="text-sm text-gray-700 mt-2 font-medium">Mobile: {addr.phone}</p>
+                                                    <p className="text-sm text-gray-600 leading-relaxed max-w-sm">
+                                                        {addr.line1}, {addr.line2 && `${addr.line2}, `}
+                                                        <span className="block">{addr.city}, {addr.state} - <span className="font-bold text-gray-900">{addr.pincode}</span></span>
+                                                    </p>
+                                                    <div className="mt-3 flex items-center gap-2 text-sm">
+                                                        <span className="text-gray-400 font-medium">Mobile:</span>
+                                                        <span className="font-bold text-gray-900">{addr.phone}</span>
                                                     </div>
+
+                                                    {selectedAddressId === addr.id && (
+                                                        <div className="mt-6 pt-4 border-t border-pink-100 flex gap-3 animate-in fade-in slide-in-from-top-2">
+                                                            <Button
+                                                                className="bg-orange-600 hover:bg-orange-700 text-white font-black px-8 h-12 rounded-xl shadow-lg shadow-orange-200 uppercase tracking-wider"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleContinueToPayment();
+                                                                }}
+                                                            >
+                                                                Deliver Here
+                                                            </Button>
+                                                            <Button variant="ghost" className="h-12 px-6 font-bold text-gray-400 hover:text-pink-600">
+                                                                Edit
+                                                            </Button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                            {selectedAddressId === addr.id && (
-                                                <Button className="mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold w-full sm:w-auto" onClick={handleContinueToPayment}>DELIVER HERE</Button>
-                                            )}
                                         </div>
                                     ))}
 

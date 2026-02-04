@@ -27,16 +27,11 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         // Run as transaction
         const result = await prisma.$transaction(async (tx) => {
-            // 1. Create the order
-            const deliveryDate = new Date();
-            deliveryDate.setDate(deliveryDate.getDate() + 7);
-
             const order = await tx.order.create({
                 data: {
                     userId: req.user!.id,
                     total: data.total,
                     addressId: data.addressId,
-                    expectedDelivery: deliveryDate,
                     items: {
                         create: data.items
                     }
@@ -170,36 +165,67 @@ router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, r
             expectedDelivery: z.string().datetime().nullable().optional()
         }).parse(req.body);
 
-        const order = await prisma.order.update({
-            where: { id: req.params.id as string },
-            data: {
-                ...(status && { status }),
-                ...(paymentStatus && { paymentStatus }),
-                ...(trackingNumber !== undefined && { trackingNumber }),
-                ...(expectedDelivery !== undefined && { expectedDelivery: expectedDelivery ? new Date(expectedDelivery) : null })
-            },
-            include: {
-                items: true,
-                address: true
-            }
-        });
+        const result = await prisma.$transaction(async (tx) => {
+            // Get original order to check current status
+            const originalOrder = await tx.order.findUnique({
+                where: { id: req.params.id as string },
+                include: { items: true }
+            });
 
-        // Create notification for the user
-        if (status || paymentStatus) {
-            await prisma.notification.create({
+            if (!originalOrder) throw new Error('Order not found');
+
+            // 1. If status is being changed TO cancelled and it WASN'T already cancelled
+            if (status === 'CANCELLED' && originalOrder.status !== 'CANCELLED') {
+                for (const item of originalOrder.items) {
+                    await tx.product.update({
+                        where: { id: item.productId },
+                        data: { stock: { increment: item.quantity } }
+                    });
+                }
+            }
+
+            // 2. If status is being changed FROM cancelled to something else (unlikely but possible)
+            if (originalOrder.status === 'CANCELLED' && status && status !== 'CANCELLED') {
+                for (const item of originalOrder.items) {
+                    await tx.product.update({
+                        where: { id: item.productId },
+                        data: { stock: { decrement: item.quantity } }
+                    });
+                }
+            }
+
+            const updatedOrder = await tx.order.update({
+                where: { id: req.params.id as string },
                 data: {
-                    userId: order.userId,
-                    title: status ? `Order Status Updated: ${status}` : 'Order Payment Updated',
-                    message: status
-                        ? `Your order #${order.id.slice(0, 8)} is now ${status.toLowerCase()}.`
-                        : `Payment status for order #${order.id.slice(0, 8)} has been updated to ${paymentStatus?.toLowerCase()}.`,
-                    type: 'ORDER_STATUS',
-                    orderId: order.id
+                    ...(status && { status }),
+                    ...(paymentStatus && { paymentStatus }),
+                    ...(trackingNumber !== undefined && { trackingNumber }),
+                },
+                include: {
+                    items: true,
+                    address: true
                 }
             });
-        }
 
-        res.json(order);
+            // Create notification for the user
+            if (status || paymentStatus) {
+                await tx.notification.create({
+                    data: {
+                        userId: updatedOrder.userId,
+                        title: status ? `Order Status: ${status}` : 'Payment Update',
+                        message: status
+                            ? `Order #${updatedOrder.id.slice(0, 8)} is now ${status.toLowerCase()}.`
+                            : `Payment for order #${updatedOrder.id.slice(0, 8)} is ${paymentStatus?.toLowerCase()}.`,
+                        type: 'ORDER_STATUS',
+                        orderId: updatedOrder.id
+                    }
+                });
+            }
+
+            return updatedOrder;
+        });
+
+        res.json(result);
     } catch (error) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Validation failed', details: error.errors });

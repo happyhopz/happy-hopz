@@ -2,6 +2,8 @@ import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
+import { sendOrderConfirmationEmail } from '../utils/email';
+import { logActivity } from '../lib/logger';
 
 const router = Router();
 
@@ -170,6 +172,48 @@ router.get('/orders', async (req: AuthRequest, res: Response) => {
 });
 
 // Product Management
+// Bulk import products
+router.post('/products/bulk', async (req: AuthRequest, res: Response) => {
+    try {
+        const { products } = req.body;
+
+        if (!Array.isArray(products)) {
+            return res.status(400).json({ error: 'Invalid data format' });
+        }
+
+        const formattedProducts = products.map((p: any) => ({
+            name: p.name,
+            description: p.description || '',
+            price: parseFloat(p.price),
+            discountPrice: p.discountPrice ? parseFloat(p.discountPrice) : null,
+            category: p.category || 'Sneakers',
+            ageGroup: p.ageGroup || '3-6 years',
+            sizes: JSON.stringify(p.sizes || []),
+            colors: JSON.stringify(p.colors || []),
+            stock: parseInt(p.stock) || 0,
+            images: JSON.stringify(p.images || []),
+            status: p.status || 'ACTIVE',
+            tags: JSON.stringify(p.tags || [])
+        }));
+
+        const result = await prisma.product.createMany({
+            data: formattedProducts
+        });
+
+        await logActivity({
+            action: 'BULK_PRODUCT_IMPORT',
+            entity: 'PRODUCT',
+            details: { count: result.count },
+            adminId: req.user!.id
+        });
+
+        res.json({ message: `Successfully imported ${result.count} products`, count: result.count });
+    } catch (error) {
+        console.error('Bulk import error:', error);
+        res.status(500).json({ error: 'Bulk import failed' });
+    }
+});
+
 // Get all products (admin view)
 router.get('/products', async (req: AuthRequest, res: Response) => {
     try {
@@ -211,6 +255,14 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
             }
         });
 
+        await logActivity({
+            action: 'PRODUCT_CREATED',
+            entity: 'PRODUCT',
+            entityId: product.id,
+            details: { name: product.name },
+            adminId: req.user!.id
+        });
+
         res.json({
             ...product,
             sizes: JSON.parse(product.sizes),
@@ -245,6 +297,14 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             }
         });
 
+        await logActivity({
+            action: 'PRODUCT_UPDATED',
+            entity: 'PRODUCT',
+            entityId: id as string,
+            details: { name: product.name, changes: req.body },
+            adminId: req.user!.id
+        });
+
         res.json({
             ...product,
             sizes: JSON.parse(product.sizes),
@@ -261,9 +321,103 @@ router.delete('/products/:id', async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         await prisma.product.delete({ where: { id: id as string } });
+
+        await logActivity({
+            action: 'PRODUCT_DELETED',
+            entity: 'PRODUCT',
+            entityId: id as string,
+            adminId: req.user!.id
+        });
+
         res.json({ message: 'Product deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete product' });
+    }
+});
+
+// Global Search
+router.get('/search', async (req: AuthRequest, res: Response) => {
+    try {
+        const { q } = req.query;
+        if (!q || typeof q !== 'string') {
+            return res.json({ products: [], orders: [], users: [] });
+        }
+
+        const query = q;
+
+        const [products, orders, users] = await Promise.all([
+            prisma.product.findMany({
+                where: {
+                    OR: [
+                        { name: { contains: query, mode: 'insensitive' } },
+                        { description: { contains: query, mode: 'insensitive' } },
+                        { category: { contains: query, mode: 'insensitive' } }
+                    ]
+                },
+                take: 5
+            }),
+            prisma.order.findMany({
+                where: {
+                    OR: [
+                        { id: { contains: query, mode: 'insensitive' } },
+                        { user: { email: { contains: query, mode: 'insensitive' } } },
+                        { user: { name: { contains: query, mode: 'insensitive' } } }
+                    ]
+                },
+                include: {
+                    user: { select: { name: true, email: true } }
+                },
+                take: 5
+            }),
+            prisma.user.findMany({
+                where: {
+                    OR: [
+                        { name: { contains: query, mode: 'insensitive' } },
+                        { email: { contains: query, mode: 'insensitive' } },
+                        { phone: { contains: query, mode: 'insensitive' } }
+                    ]
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true
+                },
+                take: 5
+            })
+        ]);
+
+        res.json({
+            products: products.map(p => ({
+                ...p,
+                sizes: JSON.parse(p.sizes || '[]'),
+                colors: JSON.parse(p.colors || '[]'),
+                images: JSON.parse(p.images || '[]')
+            })),
+            orders,
+            users
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Search failed' });
+    }
+});
+
+// Get audit logs
+router.get('/audit-logs', async (req: AuthRequest, res: Response) => {
+    try {
+        const { entity, entityId } = req.query;
+        const where: any = {};
+        if (entity) where.entity = entity;
+        if (entityId) where.entityId = entityId;
+
+        const logs = await (prisma as any).auditLog.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            take: 50
+        });
+        res.json(logs);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
 });
 

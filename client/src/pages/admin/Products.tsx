@@ -12,201 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Package, IndianRupee } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-
-const AdminProducts = () => {
-    const { user, isAdmin, loading } = useAuth();
-    const queryClient = useQueryClient();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<any>(null);
-
-    const { data: products, isLoading } = useQuery({
-        queryKey: ['admin-products'],
-        queryFn: async () => {
-            const response = await adminAPI.getProducts();
-            return response.data;
-        },
-        enabled: isAdmin
-    });
-
-    const createMutation = useMutation({
-        mutationFn: (data: any) => adminAPI.createProduct(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-            toast.success('Product created successfully');
-            setIsDialogOpen(false);
-        },
-        onError: () => toast.error('Failed to create product')
-    });
-
-    const updateMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => adminAPI.updateProduct(id, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-            toast.success('Product updated successfully');
-            setIsDialogOpen(false);
-            setEditingProduct(null);
-        },
-        onError: () => toast.error('Failed to update product')
-    });
-
-    const deleteMutation = useMutation({
-        mutationFn: (id: string) => adminAPI.deleteProduct(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-            toast.success('Product deleted successfully');
-        },
-        onError: () => toast.error('Failed to delete product')
-    });
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center py-20">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    if (!user || !isAdmin) {
-        return <Navigate to="/" />;
-    }
-
-    return (
-        <>
-            <div className="flex items-center justify-between mb-8">
-                <h1 className="text-4xl font-fredoka font-bold text-foreground">
-                    Product Management
-                </h1>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="hopz" onClick={() => setEditingProduct(null)}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Product
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>
-                                {editingProduct ? 'Edit Product' : 'Add New Product'}
-                            </DialogTitle>
-                        </DialogHeader>
-                        <ProductForm
-                            product={editingProduct}
-                            onSubmit={(data) => {
-                                if (editingProduct) {
-                                    updateMutation.mutate({ id: editingProduct.id, data });
-                                } else {
-                                    createMutation.mutate(data);
-                                }
-                            }}
-                            isLoading={createMutation.isPending || updateMutation.isPending}
-                        />
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            {isLoading ? (
-                <div className="text-center py-20">
-                    <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-            ) : !products || products.length === 0 ? (
-                <Card className="p-12 text-center">
-                    <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-fredoka font-bold mb-2">No products yet</h3>
-                    <p className="text-muted-foreground mb-4">Get started by adding your first product</p>
-                </Card>
-            ) : (
-                <div className="grid grid-cols-1 gap-4">
-                    {products?.filter(Boolean).map((product: any) => (
-                        <Card key={product.id} className="p-6">
-                            <div className="flex gap-6">
-                                <div className="w-24 h-24 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0">
-                                    {product.images?.[0] ? (
-                                        <img
-                                            src={product.images[0]}
-                                            alt={product.name}
-                                            className="w-20 h-20 object-contain"
-                                        />
-                                    ) : (
-                                        <Package className="w-12 h-12 text-muted-foreground" />
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div>
-                                            <h3 className="text-xl font-fredoka font-bold">{product.name || 'Unnamed Product'}</h3>
-                                            <p className="text-sm text-muted-foreground line-clamp-2">
-                                                {product.description || 'No description available'}
-                                            </p>
-                                        </div>
-                                        <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
-                                            {product.status || 'ACTIVE'}
-                                        </Badge>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Price</p>
-                                            <p className="font-nunito font-bold text-primary flex items-center gap-1">
-                                                <IndianRupee className="w-4 h-4" />
-                                                {(product.discountPrice || product.price || 0)}
-                                                {product.discountPrice && (
-                                                    <span className="text-sm text-muted-foreground line-through ml-2 flex items-center gap-0.5">
-                                                        <IndianRupee className="w-3 h-3" />
-                                                        {product.price}
-                                                    </span>
-                                                )}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Category</p>
-                                            <p className="font-nunito font-semibold">{product.category || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Age Group</p>
-                                            <p className="font-nunito font-semibold">{product.ageGroup || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Stock</p>
-                                            <p className={`font-nunito font-semibold ${(product.stock || 0) < 10 ? 'text-red-500' : ''}`}>
-                                                {product.stock || 0}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2 mt-4">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => {
-                                                setEditingProduct(product);
-                                                setIsDialogOpen(true);
-                                            }}
-                                        >
-                                            <Edit className="w-4 h-4 mr-2" />
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() => {
-                                                if (confirm('Are you sure you want to delete this product?')) {
-                                                    deleteMutation.mutate(product.id);
-                                                }
-                                            }}
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-2" />
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-                    ))}
-                </div>
-            )}
-        </>
-    );
-};
 
 const ProductForm = ({ product, onSubmit, isLoading }: any) => {
     const [formData, setFormData] = useState({
@@ -228,8 +35,8 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         e.preventDefault();
         onSubmit({
             ...formData,
-            sizes: formData.sizes.split(',').map(s => s.trim()),
-            colors: formData.colors.split(',').map(c => c.trim())
+            sizes: formData.sizes.split(',').map((s: any) => s.trim()),
+            colors: formData.colors.split(',').map((c: any) => c.trim())
         });
     };
 
@@ -382,6 +189,293 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                 {isLoading ? 'Saving...' : product ? 'Update Product' : 'Create Product'}
             </Button>
         </form>
+    );
+};
+
+const AdminProducts = () => {
+    const { user, isAdmin, loading } = useAuth();
+    const queryClient = useQueryClient();
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+
+    const { data: products, isLoading } = useQuery({
+        queryKey: ['admin-products'],
+        queryFn: async () => {
+            const response = await adminAPI.getProducts();
+            return response.data;
+        },
+        enabled: isAdmin
+    });
+
+    const createMutation = useMutation({
+        mutationFn: (data: any) => adminAPI.createProduct(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            toast.success('Product created successfully');
+            setIsDialogOpen(false);
+        },
+        onError: () => toast.error('Failed to create product')
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: any }) => adminAPI.updateProduct(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            toast.success('Product updated successfully');
+            setIsDialogOpen(false);
+            setEditingProduct(null);
+        },
+        onError: () => toast.error('Failed to update product')
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => adminAPI.deleteProduct(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            toast.success('Product deleted successfully');
+        },
+        onError: () => toast.error('Failed to delete product')
+    });
+
+    const bulkCreateMutation = useMutation({
+        mutationFn: (products: any[]) => adminAPI.bulkCreateProducts(products),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            toast.success('Products imported successfully');
+            setIsBulkDialogOpen(false);
+        },
+        onError: () => toast.error('Failed to import products')
+    });
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const csvData = event.target?.result as string;
+            const lines = csvData.split('\n');
+            if (lines.length < 2) {
+                toast.error('CSV file is empty or missing headers');
+                return;
+            }
+            const headers = lines[0].split(',').map(h => h.trim());
+            const products = lines.slice(1).filter(line => line.trim()).map(line => {
+                const values = line.split(',').map(v => v.trim());
+                const product: any = {};
+                headers.forEach((header, index) => {
+                    product[header] = values[index];
+                });
+                return product;
+            });
+
+            const cleanedProducts = products.map(p => ({
+                ...p,
+                sizes: p.sizes ? String(p.sizes).split('|').map((s: string) => s.trim()) : [],
+                colors: p.colors ? String(p.colors).split('|').map((c: string) => c.trim()) : [],
+                images: p.images ? String(p.images).split('|').map((i: string) => i.trim()) : [],
+                tags: p.tags ? String(p.tags).split('|').map((t: string) => t.trim()) : []
+            }));
+
+            bulkCreateMutation.mutate(cleanedProducts);
+        };
+        reader.readAsText(file);
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (!user || !isAdmin) {
+        return <Navigate to="/" />;
+    }
+
+    return (
+        <>
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-4xl font-fredoka font-bold text-foreground">
+                    Product Management
+                </h1>
+                <div className="flex flex-wrap gap-4">
+                    <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="rounded-xl font-bold border-2 gap-2 hover:bg-primary/5 transition-colors">
+                                <Upload className="w-4 h-4" />
+                                Bulk Import
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px] rounded-3xl">
+                            <DialogHeader>
+                                <DialogTitle className="text-2xl font-black font-fredoka">Bulk Import Products</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6 pt-4">
+                                <div className="p-10 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50 flex flex-col items-center text-center">
+                                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                                        <FileText className="w-8 h-8 text-primary" />
+                                    </div>
+                                    <h3 className="text-lg font-bold mb-1">Upload CSV File</h3>
+                                    <p className="text-[10px] text-muted-foreground mb-6 max-w-[300px] leading-relaxed">
+                                        Required headers: <span className="font-mono text-foreground font-bold">name, price, category, stock</span><br />
+                                        Optional: <span className="font-mono">description, ageGroup, sizes, colors, images</span>
+                                    </p>
+                                    <label className="cursor-pointer w-full">
+                                        <Input
+                                            type="file"
+                                            className="hidden"
+                                            accept=".csv"
+                                            onChange={handleFileUpload}
+                                            disabled={bulkCreateMutation.isPending}
+                                        />
+                                        <div className="bg-primary text-primary-foreground h-12 rounded-xl flex items-center justify-center font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity">
+                                            {bulkCreateMutation.isPending ? 'Processing Import...' : 'Select & Upload CSV'}
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex gap-3">
+                                    <AlertCircle className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                                    <div className="text-[10px] text-blue-700 leading-relaxed">
+                                        <p className="font-bold mb-1 text-xs text-blue-800">CSV Formatting Tip:</p>
+                                        Use the <span className="font-black">pipe symbol |</span> to separate multiple values in a single column (e.g., sizes: 6-9m | 9-12m | 12-18m).
+                                    </div>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="rounded-xl px-6 font-bold shadow-lg shadow-primary/20 gap-2" onClick={() => setEditingProduct(null)}>
+                                <Plus className="w-4 h-4" />
+                                New Product
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                                <DialogTitle>
+                                    {editingProduct ? 'Edit Product' : 'Add New Product'}
+                                </DialogTitle>
+                            </DialogHeader>
+                            <ProductForm
+                                product={editingProduct}
+                                onSubmit={(data) => {
+                                    if (editingProduct) {
+                                        updateMutation.mutate({ id: editingProduct.id, data });
+                                    } else {
+                                        createMutation.mutate(data);
+                                    }
+                                }}
+                                isLoading={createMutation.isPending || updateMutation.isPending}
+                            />
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            </div>
+
+            {isLoading ? (
+                <div className="text-center py-20">
+                    <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+            ) : !products || products.length === 0 ? (
+                <Card className="p-12 text-center">
+                    <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-xl font-fredoka font-bold mb-2">No products yet</h3>
+                    <p className="text-muted-foreground mb-4">Get started by adding your first product</p>
+                </Card>
+            ) : (
+                <div className="grid grid-cols-1 gap-4">
+                    {products?.filter(Boolean).map((product: any) => (
+                        <Card key={product.id} className="p-6">
+                            <div className="flex gap-6">
+                                <div className="w-24 h-24 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0">
+                                    {product.images?.[0] ? (
+                                        <img
+                                            src={product.images[0]}
+                                            alt={product.name}
+                                            className="w-20 h-20 object-contain"
+                                        />
+                                    ) : (
+                                        <Package className="w-12 h-12 text-muted-foreground" />
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                            <h3 className="text-xl font-fredoka font-bold">{product.name || 'Unnamed Product'}</h3>
+                                            <p className="text-sm text-muted-foreground line-clamp-2">
+                                                {product.description || 'No description available'}
+                                            </p>
+                                        </div>
+                                        <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
+                                            {product.status || 'ACTIVE'}
+                                        </Badge>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">Price</p>
+                                            <p className="font-nunito font-bold text-primary flex items-center gap-1">
+                                                <IndianRupee className="w-4 h-4" />
+                                                {(product.discountPrice || product.price || 0)}
+                                                {product.discountPrice && (
+                                                    <span className="text-sm text-muted-foreground line-through ml-2 flex items-center gap-0.5">
+                                                        <IndianRupee className="w-3 h-3" />
+                                                        {product.price}
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">Category</p>
+                                            <p className="font-nunito font-semibold">{product.category || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">Age Group</p>
+                                            <p className="font-nunito font-semibold">{product.ageGroup || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground">Stock</p>
+                                            <p className={`font-nunito font-semibold ${(product.stock || 0) < 10 ? 'text-red-500' : ''}`}>
+                                                {product.stock || 0}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 mt-4">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                setEditingProduct(product);
+                                                setIsDialogOpen(true);
+                                            }}
+                                        >
+                                            <Edit className="w-4 h-4 mr-2" />
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => {
+                                                if (confirm('Are you sure you want to delete this product?')) {
+                                                    deleteMutation.mutate(product.id);
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            )}
+        </>
     );
 };
 

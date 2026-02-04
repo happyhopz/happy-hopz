@@ -1,13 +1,30 @@
-import { Heart, ShoppingCart, Edit } from 'lucide-react';
+import { Heart, ShoppingCart, Edit, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productsAPI, cartAPI } from '@/lib/api';
+import { productsAPI, cartAPI, contentAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 const FeaturedShoes = () => {
   const { user } = useAuth();
+  const { data: featuredContent } = useQuery({
+    queryKey: ['featured-content'],
+    queryFn: async () => {
+      try {
+        const response = await contentAPI.get('homepage.featured');
+        return response.data;
+      } catch (e) {
+        return null;
+      }
+    }
+  });
+
+  const content = featuredContent || {
+    badge: 'Our Collection',
+    title: 'Featured Kids Shoes',
+    subtitle: 'Comfort meets style in every step. Pick the perfect pair for your little adventurer!'
+  };
   const isAdmin = user?.role === 'ADMIN';
 
   const queryClient = useQueryClient();
@@ -112,13 +129,13 @@ const FeaturedShoes = () => {
         {/* Section Header */}
         <div className="text-center mb-12">
           <span className="inline-block px-4 py-1 bg-cyan/50 rounded-full text-sm font-nunito font-semibold text-secondary-foreground mb-4">
-            👟 Our Collection
+            👟 {content.badge}
           </span>
           <h2 className="text-3xl md:text-4xl font-fredoka font-bold text-foreground">
-            Featured Kids Shoes
+            {content.title}
           </h2>
           <p className="mt-4 text-muted-foreground font-nunito max-w-md mx-auto">
-            Comfort meets style in every step. Pick the perfect pair for your little adventurer!
+            {content.subtitle}
           </p>
         </div>
 
