@@ -465,12 +465,11 @@ const Checkout = () => {
                                         <button onClick={() => setShowAddForm(true)} className="w-full p-6 border-2 border-dashed border-pink-200 rounded-xl text-pink-600 font-bold flex items-center justify-center gap-2 hover:bg-pink-50 transition-colors"><Plus className="w-5 h-5" />Add New Address</button>
                                     )}
 
-                                    {/* EXPLICIT UNIFIED CONTINUE BUTTON */}
                                     <div className="pt-8 border-t border-pink-50 mt-8">
                                         <Button
                                             onClick={handleContinueToPayment}
                                             disabled={addAddressMutation.isPending}
-                                            className="w-full h-16 bg-pink-600 hover:bg-pink-700 text-white font-black text-xl shadow-2xl shadow-pink-100 rounded-3xl uppercase tracking-widest animate-pulse-gentle group"
+                                            className="w-full h-16 bg-primary text-primary-foreground font-black text-xl shadow-2xl shadow-primary/20 rounded-3xl uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all group"
                                         >
                                             {addAddressMutation.isPending ? 'Saving Address...' : 'Continue to Payment'}
                                             <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
