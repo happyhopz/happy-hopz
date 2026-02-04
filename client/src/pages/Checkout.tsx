@@ -337,12 +337,14 @@ const Checkout = () => {
                                     <div className="flex items-center gap-2">
                                         {isGuest && <span className="text-[10px] font-bold bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full uppercase">GUEST</span>}
                                         <Button variant="ghost" size="sm" className="text-pink-600 font-bold hover:bg-pink-50" onClick={() => {
-                                            if (user) navigate('/login?redirect=/checkout');
-                                            else {
+                                            if (user) {
+                                                // If logged in, maybe show a toast or just allow them to toggle to guest if they want
+                                                toast.info("You're already logged in as " + user.name);
+                                            } else {
                                                 setIsGuest(false);
                                                 setCurrentStep('login' as any);
                                             }
-                                        }}>CHANGE</Button>
+                                        }}>{user ? 'LOGGED IN' : 'CHANGE'}</Button>
                                     </div>
                                 </div>
                             )}

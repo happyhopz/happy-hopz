@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import BackButton from '@/components/BackButton';
@@ -15,8 +15,15 @@ const Login = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const redirectUrl = searchParams.get('redirect') || '/';
-    const { login, signup, googleLogin } = useAuth();
+    const { login, signup, googleLogin, user, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(false);
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (!authLoading && user) {
+            navigate(redirectUrl);
+        }
+    }, [user, authLoading, navigate, redirectUrl]);
 
     const [loginData, setLoginData] = useState({ email: '', password: '' });
     const [signupData, setSignupData] = useState({
