@@ -88,6 +88,16 @@ const Footer = () => {
               </a>
 
               <a
+                href="tel:+919711864674"
+                className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm border border-border/40">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <span className="font-medium">+91 97118 64674</span>
+              </a>
+
+              <a
                 href="https://www.instagram.com/happyhopzz?igsh=czMyaW1zYTY5ZWtz"
                 target="_blank"
                 rel="noopener noreferrer"

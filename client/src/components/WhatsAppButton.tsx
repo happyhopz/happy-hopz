@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const WhatsAppButton = () => {
     const location = useLocation();
-    const phoneNumber = "919876543210"; // Placeholder: Team's WhatsApp number
+    const phoneNumber = "919711864674"; // Happy Hopz WhatsApp number
 
     const getWhatsAppMessage = () => {
         const path = location.pathname;
