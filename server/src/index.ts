@@ -17,6 +17,9 @@ import contentRoutes from './routes/content';
 import notificationRoutes from './routes/notifications';
 import addressRoutes from './routes/addresses';
 import contactRoutes from './routes/contacts';
+import marketingRoutes from './routes/marketing';
+import searchRoutes from './routes/search';
+import { authenticate, requireAdmin, AuthRequest, checkMaintenance } from './middleware/auth';
 import { PrismaClient } from '@prisma/client';
 import { prisma } from './lib/prisma';
 
@@ -75,6 +78,9 @@ app.use('/api/', limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Maintenance Check (Allows Admin/Auth only)
+app.use(checkMaintenance);
+
 // Health check (Versioned to verify deployment)
 app.get('/health', (req: Request, res: Response) => {
     res.json({
@@ -98,6 +104,8 @@ const registerRoutes = (prefix: string) => {
     app.use(`${prefix}/notifications`, notificationRoutes);
     app.use(`${prefix}/addresses`, addressRoutes);
     app.use(`${prefix}/contacts`, contactRoutes);
+    app.use(`${prefix}/marketing`, marketingRoutes);
+    app.use(`${prefix}/search`, searchRoutes);
 };
 
 registerRoutes('/api');

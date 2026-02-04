@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
-import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
+import { optionalAuthenticate, authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 import { sendOrderConfirmationEmail } from '../utils/email';
 
 const router = Router();
@@ -17,55 +17,90 @@ const createOrderSchema = z.object({
         size: z.string(),
         color: z.string()
     })),
+    subtotal: z.number().positive(),
+    tax: z.number().nonnegative(),
+    shipping: z.number().nonnegative(),
     total: z.number().positive(),
-    addressId: z.string()
+    addressId: z.string().nullable().optional(),
+    isGuest: z.boolean().optional(),
+    guestEmail: z.string().email().nullable().optional(),
+    guestName: z.string().nullable().optional(),
+    guestPhone: z.string().nullable().optional(),
+    address: z.object({
+        name: z.string(),
+        phone: z.string(),
+        line1: z.string(),
+        line2: z.string().optional(),
+        city: z.string(),
+        state: z.string(),
+        pincode: z.string()
+    }).nullable().optional()
 });
 
-router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const data = createOrderSchema.parse(req.body);
 
         // Run as transaction
         const result = await prisma.$transaction(async (tx) => {
+            let finalAddressId = data.addressId;
+
+            // If guest or no addressId provided, create a transient address
+            if (!finalAddressId && data.address) {
+                const newAddress = await tx.address.create({
+                    data: {
+                        name: data.address.name,
+                        phone: data.address.phone,
+                        line1: data.address.line1,
+                        line2: data.address.line2,
+                        city: data.address.city,
+                        state: data.address.state,
+                        pincode: data.address.pincode,
+                        ...(req.user ? { userId: req.user.id } : { userId: null })
+                    } as any
+                });
+                finalAddressId = newAddress.id;
+            }
+
+            if (!finalAddressId) {
+                throw new Error('Address is required');
+            }
+
             const order = await tx.order.create({
                 data: {
-                    userId: req.user!.id,
+                    ...(req.user ? { userId: req.user.id } : { userId: null }),
+                    guestEmail: data.guestEmail,
+                    guestName: data.guestName,
+                    guestPhone: data.guestPhone,
+                    subtotal: data.subtotal,
+                    tax: data.tax,
+                    shipping: data.shipping,
                     total: data.total,
-                    addressId: data.addressId,
+                    addressId: finalAddressId,
                     items: {
                         create: data.items
                     }
-                },
+                } as any,
                 include: {
                     items: true
                 }
             });
 
-            // 1.5 Create "Order Placed" notification
-            await tx.notification.create({
-                data: {
-                    userId: req.user!.id,
-                    title: 'Order Placed Successfully! 🎊',
-                    message: `Your order #${order.id.slice(0, 8)} has been placed and is being processed.`,
-                    type: 'ORDER_STATUS',
-                    orderId: order.id
-                }
-            });
-
-            // 2. Reduce stock for each product
-            for (const item of data.items) {
-                const product = await tx.product.findUnique({
-                    where: { id: item.productId }
+            // If user is logged in, create a notification
+            if (req.user) {
+                await tx.notification.create({
+                    data: {
+                        userId: req.user.id,
+                        title: 'Order Placed Successfully! 🎊',
+                        message: `Your order #${order.id.slice(0, 8)} has been placed and is being processed.`,
+                        type: 'ORDER_STATUS',
+                        orderId: order.id
+                    }
                 });
+            }
 
-                if (!product) {
-                    throw new Error(`Product ${item.productId} not found`);
-                }
-
-                if (product.stock < item.quantity) {
-                    throw new Error(`Insufficient stock for product ${item.name}`);
-                }
-
+            // Reduce stock for each product
+            for (const item of data.items) {
                 await tx.product.update({
                     where: { id: item.productId },
                     data: {
@@ -76,21 +111,26 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
                 });
             }
 
-            // 3. Clear cart after order
-            await tx.cartItem.deleteMany({
-                where: { userId: req.user!.id }
-            });
+            // Clear cart if logged in
+            if (req.user) {
+                await tx.cartItem.deleteMany({
+                    where: { userId: req.user.id }
+                });
+            }
 
-            // 4. Fetch full order for email
+            // Fetch full order for email
             const fullOrder = await tx.order.findUnique({
                 where: { id: order.id },
                 include: { items: true, address: true }
             });
 
-            // 5. Send confirmation email (don't await to avoid slowing down response)
-            sendOrderConfirmationEmail(req.user!.email, fullOrder).catch(err =>
-                console.error('Email sending failed:', err)
-            );
+            // Send confirmation email
+            const recipientEmail = req.user?.email || data.guestEmail;
+            if (recipientEmail) {
+                sendOrderConfirmationEmail(recipientEmail, fullOrder).catch(err =>
+                    console.error('Email sending failed:', err)
+                );
+            }
 
             return order;
         });

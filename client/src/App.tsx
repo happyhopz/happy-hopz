@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import AdminLayout from "./components/AdminLayout";
+import WhatsAppButton from "./components/WhatsAppButton";
 import { AuthProvider } from "@/hooks/useAuth";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import Index from "./pages/Index";
@@ -32,11 +33,13 @@ import AdminCoupons from "./pages/admin/Coupons";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminCMS from "./pages/admin/CMS";
 import AdminContacts from "./pages/admin/Contacts";
+import AdminMarketing from "./pages/admin/Marketing";
 import AdminSettings from "./pages/admin/Settings";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +74,7 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route element={<AdminLayout><Outlet /></AdminLayout>}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
@@ -81,11 +85,13 @@ const App = () => (
                 <Route path="/admin/reviews" element={<AdminReviews />} />
                 <Route path="/admin/cms" element={<AdminCMS />} />
                 <Route path="/admin/contacts" element={<AdminContacts />} />
+                <Route path="/admin/marketing" element={<AdminMarketing />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <WhatsAppButton />
           </BrowserRouter>
         </TooltipProvider>
       </NotificationProvider>

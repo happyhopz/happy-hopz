@@ -31,14 +31,17 @@ router.get('/:productId', async (req, res) => {
 const reviewSchema = z.object({
     productId: z.string(),
     rating: z.number().int().min(1).max(5),
-    comment: z.string().min(3).max(500)
+    comment: z.string().min(3).max(1000),
+    images: z.array(z.string()).optional(),
+    recommend: z.boolean().optional()
 });
 
 router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const data = reviewSchema.parse(req.body);
 
-        // Check if order exists for this user and product (optional but good for verified purchase)
+        // Check if order exists for this user and product
+        // Note: For production, we allow reviews if they bought it, but maybe relax for demo
         const order = await prisma.order.findFirst({
             where: {
                 userId: req.user!.id,
@@ -53,7 +56,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ error: 'You can only review products you have purchased and received' });
         }
 
-        const review = await prisma.review.upsert({
+        const review = await (prisma.review as any).upsert({
             where: {
                 productId_userId: {
                     productId: data.productId,
@@ -63,11 +66,18 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             update: {
                 rating: data.rating,
                 comment: data.comment,
+                images: data.images ? JSON.stringify(data.images) : null,
+                recommend: data.recommend ?? true,
                 isApproved: false // Re-approve after edit
             },
             create: {
-                ...data,
-                userId: req.user!.id
+                productId: data.productId,
+                userId: req.user!.id,
+                rating: data.rating,
+                comment: data.comment,
+                images: data.images ? JSON.stringify(data.images) : null,
+                recommend: data.recommend ?? true,
+                isApproved: false
             }
         });
 

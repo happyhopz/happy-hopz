@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { format } from 'date-fns';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { productsAPI, cartAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,9 +25,12 @@ import {
     Shield,
     Zap,
     Ruler,
+    CheckCircle,
+    Clock,
     X
 } from 'lucide-react';
 import { toast } from 'sonner';
+import Reviews from '@/components/Reviews';
 
 const ProductDetail = () => {
     const { id } = useParams();
@@ -42,8 +46,9 @@ const ProductDetail = () => {
     const [showProductDetails, setShowProductDetails] = useState(true);
     const [showDeliveryDetails, setShowDeliveryDetails] = useState(false);
     const [showSizeChart, setShowSizeChart] = useState(false);
+    const [showSizeGuider, setShowSizeGuider] = useState(false);
 
-    const { data: product, isLoading } = useQuery({
+    const { data: product, isLoading: loadingProduct } = useQuery({
         queryKey: ['product', id],
         queryFn: async () => {
             const response = await productsAPI.getById(id!);
@@ -52,7 +57,15 @@ const ProductDetail = () => {
         enabled: !!id
     });
 
-    const { data: relatedProducts } = useQuery({
+    const { data: products } = useQuery({
+        queryKey: ['products'],
+        queryFn: async () => {
+            const response = await productsAPI.getAll();
+            return response.data;
+        }
+    });
+
+    const { data: relatedProducts, isLoading: loadingRelated } = useQuery({
         queryKey: ['related-products', product?.category],
         queryFn: async () => {
             const response = await productsAPI.getAll({ category: product?.category });
@@ -60,6 +73,22 @@ const ProductDetail = () => {
         },
         enabled: !!product?.category
     });
+
+    // Track recently viewed products
+    useEffect(() => {
+        if (product) {
+            const stored = sessionStorage.getItem('recentlyViewed');
+            let list = stored ? JSON.parse(stored) : [];
+            list = list.filter((p: any) => p.id !== product.id);
+            list.unshift({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                images: product.images
+            });
+            sessionStorage.setItem('recentlyViewed', JSON.stringify(list.slice(0, 10)));
+        }
+    }, [product]);
 
     // Reset selection when product changes
     useEffect(() => {
@@ -70,12 +99,6 @@ const ProductDetail = () => {
     }, [id]);
 
     const handleAddToCart = async () => {
-        if (!user) {
-            toast.info('Please login to add items to cart');
-            navigate(`/login?redirect=/products/${id}`);
-            return;
-        }
-
         if (!selectedSize) {
             toast.error('Please select a size');
             return;
@@ -88,14 +111,41 @@ const ProductDetail = () => {
 
         setAdding(true);
         try {
-            await cartAPI.add({
-                productId: product.id,
-                quantity: 1,
-                size: selectedSize,
-                color: selectedColor
-            });
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
-            toast.success('Added to bag!');
+            if (!user) {
+                // Handle guest cart
+                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const existingItemIndex = localCart.findIndex((item: any) =>
+                    item.productId === product.id &&
+                    item.size === selectedSize &&
+                    item.color === selectedColor
+                );
+
+                if (existingItemIndex > -1) {
+                    localCart[existingItemIndex].quantity += 1;
+                } else {
+                    localCart.push({
+                        id: `guest_${Date.now()}`,
+                        productId: product.id,
+                        quantity: 1,
+                        size: selectedSize,
+                        color: selectedColor,
+                        product: product
+                    });
+                }
+
+                localStorage.setItem('cart', JSON.stringify(localCart));
+                toast.success('Added to bag!');
+                queryClient.invalidateQueries({ queryKey: ['cart'] });
+            } else {
+                await cartAPI.add({
+                    productId: product.id,
+                    quantity: 1,
+                    size: selectedSize,
+                    color: selectedColor
+                });
+                queryClient.invalidateQueries({ queryKey: ['cart'] });
+                toast.success('Added to bag!');
+            }
         } catch (error) {
             toast.error('Failed to add to bag');
         } finally {
@@ -135,15 +185,37 @@ const ProductDetail = () => {
     };
 
     const handleWishlist = () => {
+        const stored = localStorage.getItem('wishlist');
+        let list = stored ? JSON.parse(stored) : [];
+        if (isWishlisted) {
+            list = list.filter((p: any) => p.id !== product.id);
+            toast.success('Removed from wishlist');
+        } else {
+            list.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                images: product.images
+            });
+            toast.success('Added to wishlist!');
+        }
+        localStorage.setItem('wishlist', JSON.stringify(list));
         setIsWishlisted(!isWishlisted);
-        toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist!');
     };
+
+    useEffect(() => {
+        if (product) {
+            const stored = localStorage.getItem('wishlist');
+            const list = stored ? JSON.parse(stored) : [];
+            setIsWishlisted(list.some((p: any) => p.id === product.id));
+        }
+    }, [product]);
 
     const discountPercent = product?.discountPrice
         ? Math.round((1 - product.discountPrice / product.price) * 100)
         : 0;
 
-    if (isLoading) {
+    if (loadingProduct) {
         return (
             <div className="min-h-screen bg-background">
                 <Navbar />
@@ -514,6 +586,11 @@ const ProductDetail = () => {
                     </div>
                 </div>
 
+                {/* Reviews Section */}
+                <div className="mb-16">
+                    <Reviews productId={product.id} />
+                </div>
+
                 {/* Similar Products Section */}
                 {relatedProducts && relatedProducts.length > 0 && (
                     <section className="py-12 border-t">
@@ -562,7 +639,84 @@ const ProductDetail = () => {
                         </div>
                     </section>
                 )}
+                {/* Size Confidence Modal Trigger - will be added next */}
+
+                {/* Related Products */}
+                <div className="mt-16 border-t pt-12">
+                    <h2 className="text-3xl font-fredoka font-bold mb-8">You Might Also Like</h2>
+                    {loadingRelated ? (
+                        <div className="flex gap-4 overflow-x-auto pb-4">
+                            {[1, 2, 3, 4].map(i => <div key={i} className="w-64 h-80 bg-muted animate-pulse rounded-3xl shrink-0" />)}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            {relatedProducts?.map((p: any) => (
+                                <Link key={p.id} to={`/products/${p.id}`} className="group bg-card rounded-3xl p-4 shadow-sm hover:shadow-float transition-all border border-transparent hover:border-primary/10">
+                                    <div className="aspect-square bg-muted/20 rounded-2xl flex items-center justify-center mb-4">
+                                        <img src={p.images?.[0]} alt={p.name} className="w-32 h-32 object-contain transition-transform group-hover:scale-110" />
+                                    </div>
+                                    <h3 className="font-fredoka font-bold text-sm line-clamp-2 mb-2">{p.name}</h3>
+                                    <p className="text-primary font-bold">₹{p.price}</p>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </main>
+
+            {/* Sticky Mobile CTA */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[55] bg-white border-t p-4 shadow-[0_-8px_30px_rgb(0,0,0,0.08)] animate-fade-up">
+                <div className="flex gap-3 max-w-lg mx-auto">
+                    <Button
+                        variant="outline"
+                        className="flex-1 h-12 rounded-xl font-bold border-2 border-primary/20 hover:border-primary/50 text-foreground"
+                        onClick={handleAddToCart}
+                        disabled={adding}
+                    >
+                        {adding ? '...' : 'ADD TO BAG'}
+                    </Button>
+                    <Button
+                        variant="hopz"
+                        className="flex-[2] h-12 rounded-xl font-black text-lg shadow-lg shadow-primary/20"
+                        onClick={handleBuyNow}
+                    >
+                        BUY NOW
+                    </Button>
+                </div>
+            </div>
+
+            {/* Recently Viewed Products */}
+            {(() => {
+                const stored = sessionStorage.getItem('recentlyViewed');
+                const list = stored ? JSON.parse(stored).filter((p: any) => p.id !== id) : [];
+                if (list.length === 0) return null;
+
+                return (
+                    <section className="bg-muted/30 py-12 border-t border-b">
+                        <div className="container mx-auto px-4">
+                            <h2 className="text-2xl font-fredoka font-bold mb-8 flex items-center gap-3">
+                                <Clock className="w-6 h-6 text-primary" />
+                                Recently Viewed
+                            </h2>
+                            <div className="flex gap-4 overflow-x-auto pb-6 -mx-4 px-4 scrollbar-hide">
+                                {list.map((p: any) => (
+                                    <Link
+                                        key={p.id}
+                                        to={`/products/${p.id}`}
+                                        className="flex-shrink-0 w-48 bg-card rounded-2xl p-4 shadow-sm hover:shadow-card transition-all"
+                                    >
+                                        <div className="aspect-square bg-white rounded-xl flex items-center justify-center mb-3">
+                                            <img src={p.images?.[0]} alt={p.name} className="w-32 h-32 object-contain" />
+                                        </div>
+                                        <h3 className="font-fredoka font-bold text-sm line-clamp-1">{p.name}</h3>
+                                        <p className="text-primary font-bold">₹{p.price}</p>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                );
+            })()}
 
             <Footer />
 
@@ -671,6 +825,112 @@ const ProductDetail = () => {
                     </div>
                 </div>
             )}
+        </div>
+    );
+};
+
+// --- Sub-components ---
+
+const SizeGuider = ({ isOpen, onClose, onSelectSize }: { isOpen: boolean, onClose: () => void, onSelectSize: (size: string) => void }) => {
+    const [age, setAge] = useState('');
+    const [footLength, setFootLength] = useState('');
+    const [result, setResult] = useState<string | null>(null);
+
+    const calculateSize = () => {
+        if (!footLength) {
+            toast.error('Please enter foot length');
+            return;
+        }
+
+        const len = parseFloat(footLength);
+        let recommended = 'M';
+
+        if (len < 12) recommended = 'XS';
+        else if (len < 14) recommended = 'S';
+        else if (len < 16) recommended = 'M';
+        else if (len < 18) recommended = 'L';
+        else if (len < 20) recommended = 'XL';
+        else recommended = 'XXL';
+
+        setResult(recommended);
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="p-6 bg-primary text-white flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <Ruler className="w-6 h-6" />
+                        <h2 className="text-2xl font-fredoka font-bold">Find My Size</h2>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+                        <ChevronRight className="w-6 h-6 rotate-180" />
+                    </button>
+                </div>
+
+                <div className="p-8 space-y-6">
+                    {!result ? (
+                        <>
+                            <div className="space-y-4">
+                                <label className="block text-sm font-bold text-gray-700">How old is your child?</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {['0-1y', '1-3y', '3-6y', '6-9y'].map(a => (
+                                        <button
+                                            key={a}
+                                            onClick={() => setAge(a)}
+                                            className={`py-3 rounded-xl border-2 font-bold transition-all ${age === a ? 'border-primary bg-primary/5 text-primary' : 'border-muted text-muted-foreground'}`}
+                                        >
+                                            {a}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-sm font-bold text-gray-700">Foot Length (in CM)</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        placeholder="e.g. 14.5"
+                                        className="w-full h-14 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none text-lg font-bold"
+                                        value={footLength}
+                                        onChange={(e) => setFootLength(e.target.value)}
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">CM</span>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground italic">Place foot on a paper, mark heel and toe, and measure!</p>
+                            </div>
+
+                            <Button onClick={calculateSize} className="w-full h-14 rounded-2xl font-black text-lg bg-primary hover:bg-primary/90">
+                                RECOMMEND MY SIZE
+                            </Button>
+                        </>
+                    ) : (
+                        <div className="text-center space-y-6 animate-in slide-in-from-bottom-4">
+                            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                                <CheckCircle className="w-12 h-12 text-green-600" />
+                            </div>
+                            <div>
+                                <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Our Recommendation</p>
+                                <h3 className="text-6xl font-fredoka font-black text-primary mt-2">SIZE {result}</h3>
+                            </div>
+                            <div className="p-4 bg-muted/50 rounded-2xl text-sm italic">
+                                "This size offers about 0.5cm of wiggle room for growth and comfort."
+                            </div>
+                            <div className="flex gap-3">
+                                <Button variant="outline" className="flex-1 h-12 rounded-xl" onClick={() => setResult(null)}>
+                                    RE-MEASURE
+                                </Button>
+                                <Button className="flex-[2] h-12 rounded-xl bg-green-600 hover:bg-green-700 font-bold" onClick={() => onSelectSize(result)}>
+                                    USE THIS SIZE
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

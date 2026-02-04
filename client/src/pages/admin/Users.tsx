@@ -6,10 +6,14 @@ import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Users as UsersIcon, Search, Mail, Phone, ShoppingBag } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users as UsersIcon, Search, Mail, Phone, ShoppingBag, Shield, User as UserIcon } from 'lucide-react';
+import { toast } from 'sonner';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const AdminUsers = () => {
     const { user, isAdmin, loading } = useAuth();
+    const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
 
     const { data: users, isLoading } = useQuery({
@@ -19,6 +23,15 @@ const AdminUsers = () => {
             return response.data;
         },
         enabled: isAdmin
+    });
+
+    const updateRoleMutation = useMutation({
+        mutationFn: ({ id, role }: { id: string, role: string }) => adminAPI.updateUserRole(id, role),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+            toast.success('User role updated successfully');
+        },
+        onError: () => toast.error('Failed to update role')
     });
 
     if (loading) {
@@ -82,17 +95,26 @@ const AdminUsers = () => {
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-3">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-hopz flex items-center justify-center">
-                                            <span className="text-white font-fredoka font-bold text-lg">
-                                                {u.name?.[0]?.toUpperCase() || u.email?.[0]?.toUpperCase() || 'U'}
-                                            </span>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${u.role === 'ADMIN' ? 'bg-red-100 text-red-600' : u.role === 'STAFF' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
+                                            {u.role === 'ADMIN' ? <Shield className="w-6 h-6" /> : <UserIcon className="w-6 h-6" />}
                                         </div>
                                         <div>
                                             <h3 className="text-lg font-fredoka font-bold">{u.name || 'No Name'}</h3>
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant={u.role === 'ADMIN' ? 'default' : 'secondary'}>
-                                                    {u.role || 'USER'}
-                                                </Badge>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <Select
+                                                    value={u.role || 'USER'}
+                                                    onValueChange={(newRole) => updateRoleMutation.mutate({ id: u.id, role: newRole })}
+                                                    disabled={u.id === user.id} // Don't let admin demote themselves
+                                                >
+                                                    <SelectTrigger className="h-7 w-28 text-[10px] font-bold uppercase tracking-wider">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="USER">Customer</SelectItem>
+                                                        <SelectItem value="STAFF">Staff</SelectItem>
+                                                        <SelectItem value="ADMIN">Admin</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
                                     </div>

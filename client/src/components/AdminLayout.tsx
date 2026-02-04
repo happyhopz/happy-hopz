@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import {
     LayoutDashboard, ShoppingBag, Users, Ticket, MessageSquare,
-    Settings, LogOut, Search, X, Loader2, Star, Layout, Package, ChevronRight
+    Settings, LogOut, Search, X, Loader2, Star, Layout, Package, ChevronRight, Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -66,10 +66,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         { icon: Users, label: 'Users', path: '/admin/users' },
         { icon: Ticket, label: 'Coupons', path: '/admin/coupons' },
         { icon: Star, label: 'Reviews', path: '/admin/reviews' },
+        { icon: Zap, label: 'Marketing', path: '/admin/marketing' },
         { icon: MessageSquare, label: 'Support Requests', path: '/admin/contacts' },
         { icon: Layout, label: 'Store Content', path: '/admin/cms' },
-        { icon: Settings, label: 'Settings', path: '/admin/settings' },
+        { icon: Settings, label: 'Settings', path: '/admin/settings', adminOnly: true },
     ];
+
+    const filteredMenuItems = menuItems.filter(item => !item.adminOnly || user?.role === 'ADMIN');
 
     if (loading) {
         return (
@@ -105,7 +108,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                             Admin Panel
                         </h2>
                         <nav className="space-y-1">
-                            {menuItems.map((item) => {
+                            {filteredMenuItems.map((item) => {
                                 const Icon = item.icon;
                                 const isActive = location.pathname === item.path || (item.path !== '/admin/dashboard' && location.pathname.startsWith(item.path));
 

@@ -1,4 +1,4 @@
-import { ShoppingCart, User, Menu, X, ChevronDown, ShoppingBag, Bell } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, ChevronDown, ShoppingBag, Bell, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +15,7 @@ import { cartAPI } from '@/lib/api';
 import { useNotifications } from '@/contexts/NotificationContext';
 import pandaLogo from '@/assets/happy-hopz-logo.png';
 import { format } from 'date-fns';
+import OmniSearch from './OmniSearch';
 
 const menuItems = [
   {
@@ -68,12 +69,16 @@ const Navbar = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   const { data: cartItems } = useQuery({
-    queryKey: ['cart'],
+    queryKey: ['cart', user?.id],
     queryFn: async () => {
+      if (!user) {
+        const localCart = localStorage.getItem('cart');
+        return localCart ? JSON.parse(localCart) : [];
+      }
       const response = await cartAPI.get();
       return response.data;
     },
-    enabled: !!user
+    enabled: true // Always enabled to support guest cart count
   });
 
   const cartCount = cartItems?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
@@ -143,6 +148,10 @@ const Navbar = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          <div className="hidden lg:flex flex-1 max-w-sm mx-4">
+            <OmniSearch />
           </div>
 
           {/* RIGHT: Desktop - Login/Signup + Cart */}
@@ -322,6 +331,11 @@ const Navbar = () => {
                 </button>
               </Link>
             )}
+            <Link to="/wishlist">
+              <button className="p-2 rounded-full border-2 border-pink-400/50 hover:border-pink-500 transition-colors">
+                <Heart className="w-5 h-5 text-pink-500" />
+              </button>
+            </Link>
             <Link to="/cart">
               <button className="p-2 rounded-full border-2 border-primary/50 hover:border-primary transition-colors relative">
                 <ShoppingBag className="w-5 h-5 text-primary" />

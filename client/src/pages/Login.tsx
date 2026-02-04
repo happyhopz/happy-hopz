@@ -31,21 +31,8 @@ const Login = () => {
         setLoading(true);
         try {
             await login(loginData.email, loginData.password);
-
-            // Check verification status after login
-            // We use a small timeout to let the AuthProvider state update
-            setTimeout(() => {
-                const storedUser = localStorage.getItem('user');
-                const userObj = storedUser ? JSON.parse(storedUser) : null;
-
-                if (userObj && !userObj.isVerified) {
-                    toast.info('Please verify your email to continue');
-                    navigate('/verify-email');
-                } else {
-                    toast.success('Welcome back!');
-                    navigate(redirectUrl);
-                }
-            }, 100);
+            toast.success('Welcome back!');
+            navigate(redirectUrl);
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Login failed');
         } finally {
@@ -59,7 +46,7 @@ const Login = () => {
         try {
             await signup(signupData);
             toast.success('Account created successfully!');
-            navigate('/verify-email');
+            navigate(redirectUrl);
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Signup failed');
         } finally {

@@ -19,6 +19,7 @@ import {
     Landmark,
     Check,
     MapPin,
+    Mail,
     Wallet,
     Package,
     ChevronRight,
@@ -52,6 +53,12 @@ const Checkout = () => {
         pincode: ''
     });
     const [paymentMethod, setPaymentMethod] = useState('COD');
+    const [isGuest, setIsGuest] = useState(false);
+    const [guestInfo, setGuestInfo] = useState({
+        email: '',
+        name: '',
+        phone: ''
+    });
 
     // Fetch addresses from database
     const { data: savedAddresses = [] } = useQuery({
@@ -60,7 +67,7 @@ const Checkout = () => {
             const response = await addressAPI.getAll();
             return response.data;
         },
-        enabled: !!user
+        enabled: !!user && !isGuest
     });
 
     // Save address mutation
@@ -75,21 +82,24 @@ const Checkout = () => {
         }
     });
 
-    // Redirect to login if not authenticated
+    // Check authentication and set step
     useEffect(() => {
-        if (!loading && !user) {
-            toast.info('Please login to continue checkout');
-            navigate('/login?redirect=/checkout');
+        if (!loading && !user && !isGuest) {
+            setCurrentStep('login' as any);
         }
-    }, [user, loading, navigate]);
+    }, [user, loading, isGuest]);
 
     const { data: cartItems, isLoading: cartLoading } = useQuery({
-        queryKey: ['cart'],
+        queryKey: ['cart', user?.id, isGuest],
         queryFn: async () => {
+            if (isGuest) {
+                const localCart = localStorage.getItem('cart');
+                return { data: localCart ? JSON.parse(localCart) : [] };
+            }
             const response = await cartAPI.get();
             return response.data;
         },
-        enabled: !!user
+        enabled: !loading
     });
 
     const createOrderMutation = useMutation({
@@ -110,10 +120,14 @@ const Checkout = () => {
         }
     });
 
-    const total = cartItems?.reduce((sum: number, item: any) => {
+    const subtotal = cartItems?.reduce((sum: number, item: any) => {
         const price = item.product?.discountPrice || item.product?.price || 0;
         return sum + (price * item.quantity);
     }, 0) || 0;
+
+    const tax = subtotal * 0.18; // 18% GST (Footwear industry standard)
+    const shipping = subtotal > 999 ? 0 : 99; // Free shipping above 999
+    const total = subtotal + tax + shipping;
 
     const itemCount = cartItems?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
     const savings = cartItems?.reduce((sum: number, item: any) => {
@@ -124,7 +138,7 @@ const Checkout = () => {
     }, 0) || 0;
 
     const steps = [
-        { id: 'login', label: 'LOGIN', icon: Check },
+        { id: 'login', label: 'AUTH / GUEST', icon: Check },
         { id: 'address', label: 'DELIVERY ADDRESS', icon: MapPin },
         { id: 'payment', label: 'PAYMENT OPTIONS', icon: Wallet },
     ];
@@ -145,18 +159,24 @@ const Checkout = () => {
     };
 
     const handleContinueToPayment = () => {
-        if (!selectedAddressId && savedAddresses.length === 0) {
-            toast.error('Please add a delivery address');
-            return;
+        if (isGuest) {
+            if (!guestInfo.email || !guestInfo.name || !guestInfo.phone) {
+                toast.error('Please fill in your contact information');
+                return;
+            }
         }
-        if (!selectedAddressId && savedAddresses.length > 0) {
-            setSelectedAddressId(savedAddresses[0]?.id);
+        if (!selectedAddressId && savedAddresses.length === 0) {
+            // Check if transient address is filled
+            if (!address.name || !address.phone || !address.line1 || !address.city || !address.state || !address.pincode) {
+                toast.error('Please provide a delivery address');
+                return;
+            }
         }
         setCurrentStep('payment');
     };
 
     const handlePlaceOrder = async () => {
-        if (!selectedAddressId) {
+        if (!selectedAddressId && !isGuest) {
             toast.error('Please select a shipping address');
             return;
         }
@@ -172,11 +192,25 @@ const Checkout = () => {
                     size: item.size,
                     color: item.color
                 })),
+                subtotal: subtotal,
+                tax: tax,
+                shipping: shipping,
                 total: total,
-                addressId: selectedAddressId
+                addressId: selectedAddressId,
+                // Guest Info
+                isGuest: isGuest,
+                guestEmail: isGuest ? guestInfo.email : null,
+                guestName: isGuest ? guestInfo.name : null,
+                guestPhone: isGuest ? guestInfo.phone : null,
+                // Transient address if guest
+                address: isGuest ? address : null
             };
 
             await createOrderMutation.mutateAsync(orderData);
+
+            if (isGuest) {
+                localStorage.removeItem('cart');
+            }
         } catch (error) {
             console.error('Order placement failed:', error);
         } finally {
@@ -242,19 +276,63 @@ const Checkout = () => {
                     <div className="lg:col-span-2 space-y-4">
                         {/* 1. Login Step */}
                         <Card className="overflow-hidden border-none shadow-sm">
-                            <div className="bg-white border-b px-6 py-3 flex items-center justify-between">
+                            <div className={`px-6 py-3 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'login' ? 'bg-pink-600 text-white shadow-md' : 'bg-white border-b'}`} onClick={() => !user && !isGuest && setCurrentStep('login' as any)}>
                                 <div className="flex items-center gap-3">
-                                    <span className="w-6 h-6 bg-pink-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                                    <span className="font-bold text-gray-800">LOGIN</span>
-                                    <Check className="w-4 h-4 text-green-600" />
+                                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${user || isGuest ? 'bg-green-600 text-white' : 'bg-pink-600 text-white'}`}>
+                                        {user || isGuest ? <Check className="w-4 h-4" /> : '1'}
+                                    </span>
+                                    <span className={`font-bold ${currentStep === 'login' ? 'text-white' : 'text-gray-800'}`}>LOGIN OR GUEST CHECKOUT</span>
                                 </div>
                             </div>
-                            <div className="px-6 py-4 bg-gray-50 flex items-center justify-between">
-                                <div className="text-sm">
-                                    <span className="font-bold text-gray-900">{user.name}</span>
-                                    <span className="text-gray-600 ml-2">{user.email}</span>
+
+                            {currentStep === 'login' && !user && !isGuest && (
+                                <div className="p-8 bg-white text-center space-y-6">
+                                    <div className="max-w-xs mx-auto space-y-4">
+                                        <h3 className="text-xl font-fredoka font-bold text-gray-900">Let's get started</h3>
+                                        <p className="text-gray-500 text-sm">Sign in for a better experience or continue as a guest.</p>
+                                        <Button
+                                            onClick={() => navigate('/login?redirect=/checkout')}
+                                            className="w-full h-12 rounded-full font-bold text-base"
+                                            variant="hopz"
+                                        >
+                                            Login / Sign Up
+                                        </Button>
+                                        <div className="relative">
+                                            <div className="absolute inset-0 flex items-center"><span className="w-full border-t"></span></div>
+                                            <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-muted-foreground">Or</span></div>
+                                        </div>
+                                        <Button
+                                            onClick={() => {
+                                                setIsGuest(true);
+                                                setCurrentStep('address');
+                                            }}
+                                            variant="outline"
+                                            className="w-full h-12 rounded-full font-bold border-2"
+                                        >
+                                            Checkout as Guest
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {(user || isGuest) && currentStep !== 'login' && (
+                                <div className="px-6 py-4 bg-gray-50 flex items-center justify-between">
+                                    <div className="text-sm">
+                                        <span className="font-bold text-gray-900">{user?.name || guestInfo.name || 'Guest User'}</span>
+                                        <span className="text-gray-600 ml-2">{user?.email || guestInfo.email}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {isGuest && <span className="text-[10px] font-bold bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full uppercase">GUEST</span>}
+                                        <Button variant="ghost" size="sm" className="text-pink-600 font-bold hover:bg-pink-50" onClick={() => {
+                                            if (user) navigate('/login?redirect=/checkout');
+                                            else {
+                                                setIsGuest(false);
+                                                setCurrentStep('login' as any);
+                                            }
+                                        }}>CHANGE</Button>
+                                    </div>
+                                </div>
+                            )}
                         </Card>
 
                         {/* 2. Address Step */}
@@ -271,6 +349,45 @@ const Checkout = () => {
 
                             {currentStep === 'address' && (
                                 <div className="p-6 space-y-4 bg-white">
+                                    {isGuest && (
+                                        <div className="p-6 border-2 border-pink-100 rounded-2xl bg-white mb-6 space-y-4 shadow-sm">
+                                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                                <Mail className="w-4 h-4 text-pink-600" />
+                                                CONTACT INFORMATION
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-bold text-gray-600 uppercase">Full Name *</Label>
+                                                    <Input
+                                                        value={guestInfo.name}
+                                                        onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
+                                                        placeholder="John Doe"
+                                                        className="bg-gray-50/50 border-gray-100 h-11"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-bold text-gray-600 uppercase">Email Address *</Label>
+                                                    <Input
+                                                        type="email"
+                                                        value={guestInfo.email}
+                                                        onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
+                                                        placeholder="john@example.com"
+                                                        className="bg-gray-50/50 border-gray-100 h-11"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-bold text-gray-600 uppercase">Phone Number *</Label>
+                                                    <Input
+                                                        value={guestInfo.phone}
+                                                        onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
+                                                        placeholder="+91 98765 43210"
+                                                        className="bg-gray-50/50 border-gray-100 h-11"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {savedAddresses.map((addr: any) => (
                                         <div key={addr.id}
                                             onClick={() => setSelectedAddressId(addr.id)}
@@ -318,9 +435,9 @@ const Checkout = () => {
                                         </div>
                                     ))}
 
-                                    {(showAddForm || savedAddresses.length === 0) ? (
+                                    {(showAddForm || (savedAddresses.length === 0 && !selectedAddressId)) ? (
                                         <div className="p-6 border-2 border-pink-200 rounded-xl bg-pink-50/50">
-                                            <h3 className="font-bold text-pink-600 mb-4 tracking-tight">ADD A NEW ADDRESS</h3>
+                                            <h3 className="font-bold text-pink-600 mb-4 tracking-tight">ADD DELIVERY ADDRESS</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Name *</Label><Input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} className="bg-white border-pink-100" /></div>
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Mobile *</Label><Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} className="bg-white border-pink-100" /></div>
@@ -330,7 +447,11 @@ const Checkout = () => {
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">City *</Label><Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} className="bg-white border-pink-100" /></div>
                                             </div>
                                             <div className="flex gap-3 mt-6">
-                                                <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold" onClick={handleAddAddress} disabled={addAddressMutation.isPending}>{addAddressMutation.isPending ? 'SAVING...' : 'SAVE AND DELIVER HERE'}</Button>
+                                                {user ? (
+                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold" onClick={handleAddAddress} disabled={addAddressMutation.isPending}>{addAddressMutation.isPending ? 'SAVING...' : 'SAVE AND DELIVER HERE'}</Button>
+                                                ) : (
+                                                    <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold" onClick={handleContinueToPayment}>CONTINUE TO PAYMENT</Button>
+                                                )}
                                                 {savedAddresses.length > 0 && <Button variant="ghost" className="font-bold text-gray-600" onClick={() => setShowAddForm(false)}>CANCEL</Button>}
                                             </div>
                                         </div>
@@ -406,12 +527,14 @@ const Checkout = () => {
                             <div className="p-5 bg-white">
                                 <h3 className="text-xs font-black text-gray-400 uppercase mb-4 tracking-widest">Price Details</h3>
                                 <div className="space-y-4 text-sm font-medium">
-                                    <div className="flex justify-between text-gray-600"><span>Price ({itemCount} items)</span><span>₹{(total + savings).toFixed(0)}</span></div>
-                                    {savings > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{savings.toFixed(0)}</span></div>}
-                                    <div className="flex justify-between text-gray-600"><span>Delivery Charges</span><span className="text-green-600 font-bold">FREE</span></div>
+                                    <div className="flex justify-between text-gray-600"><span>Bag Total ({itemCount} items)</span><span>₹{subtotal.toFixed(0)}</span></div>
+                                    {savings > 0 && <div className="flex justify-between text-green-600"><span>Bag Discount</span><span>-₹{savings.toFixed(0)}</span></div>}
+                                    <div className="flex justify-between text-gray-600"><span>GST (18%)</span><span>₹{tax.toFixed(0)}</span></div>
+                                    <div className="flex justify-between text-gray-600"><span>Delivery Charges</span>{shipping === 0 ? <span className="text-green-600 font-bold">FREE</span> : <span>₹{shipping}</span>}</div>
                                     <Separator />
-                                    <div className="flex justify-between font-black text-xl text-gray-900"><span>Total</span><span>₹{total.toFixed(0)}</span></div>
+                                    <div className="flex justify-between font-black text-xl text-gray-900 pt-2"><span>Order Total</span><span>₹{total.toFixed(0)}</span></div>
                                 </div>
+                                {shipping > 0 && <p className="mt-4 text-[10px] text-orange-600 font-bold bg-orange-50 p-2 rounded text-center">Add ₹{(999 - subtotal).toFixed(0)} more for FREE delivery!</p>}
                             </div>
                             <div className="px-5 py-4 bg-gray-50 text-[10px] text-gray-400 flex justify-between font-bold border-t italic uppercase tracking-widest">
                                 <div className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</div>

@@ -39,10 +39,6 @@ router.post('/signup', async (req: Request, res: Response) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Generate verification code
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const codeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
         // Create user
         const user = await prisma.user.create({
             data: {
@@ -51,9 +47,7 @@ router.post('/signup', async (req: Request, res: Response) => {
                 name,
                 phone,
                 role: 'USER',
-                isVerified: false,
-                verificationCode,
-                codeExpires
+                isVerified: true
             },
             select: {
                 id: true,
@@ -63,10 +57,8 @@ router.post('/signup', async (req: Request, res: Response) => {
                 role: true,
                 isVerified: true
             }
-        } as any); // Type cast due to prisma generation lag
+        } as any);
 
-        // Send email
-        await sendVerificationEmail(email, verificationCode);
 
         // Generate token
         const token = jwt.sign(
@@ -118,7 +110,7 @@ router.post('/login', async (req: Request, res: Response) => {
                 name: user.name,
                 phone: user.phone,
                 role: user.role,
-                isVerified: (user as any).isVerified
+                isVerified: user.isVerified
             },
             token
         });
@@ -278,7 +270,7 @@ router.post('/google', async (req: Request, res: Response) => {
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                isVerified: (user as any).isVerified
+                isVerified: user.isVerified
             },
             token
         });

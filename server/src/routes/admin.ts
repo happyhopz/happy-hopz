@@ -1,7 +1,8 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
-import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
+import { authenticate, requireAdmin, AuthRequest, requireStaff } from '../middleware/auth';
+import { z } from 'zod';
 import { sendOrderConfirmationEmail } from '../utils/email';
 import { logActivity } from '../lib/logger';
 
@@ -17,7 +18,7 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
         const [
             totalUsers,
             totalOrders,
-            totalRevenue,
+            totalRevenueAgg,
             recentOrders,
             lowStockProducts,
             ordersByStatus,
@@ -47,13 +48,29 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
                 by: ['status'],
                 _count: true
             }),
-            prisma.orderItem.groupBy({
-                by: ['productId', 'name'],
-                _sum: { quantity: true },
-                orderBy: { _sum: { quantity: 'desc' } },
-                take: 5
+            (prisma as any).orderItem.findMany({
+                orderBy: { quantity: 'desc' },
+                take: 5,
+                include: { product: true }
             })
         ]);
+
+        // Calculate Average Order Value
+        const totalRevenue = totalRevenueAgg._sum.total || 0;
+
+        // Calculate Total Profit (Revenue - Cost of Sold Items)
+        const completedOrders = await (prisma as any).order.findMany({
+            where: { paymentStatus: 'COMPLETED' },
+            include: { items: { include: { product: true } } }
+        });
+
+        let totalProfit = 0;
+        completedOrders.forEach((order: any) => {
+            order.items?.forEach((item: any) => {
+                const cost = item.product?.costPrice || (item.price * 0.6); // Default 60% if cost missing
+                totalProfit += (item.price - cost) * item.quantity;
+            });
+        });
 
         // Calculate daily revenue (last 7 days)
         const sevenDaysAgo = new Date();
@@ -82,8 +99,9 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
         res.json({
             totalUsers,
             totalOrders,
-            totalRevenue: totalRevenue._sum.total || 0,
-            averageOrderValue: totalOrders > 0 ? (totalRevenue._sum.total || 0) / totalOrders : 0,
+            totalRevenue,
+            totalProfit,
+            averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
             recentOrders,
             lowStockProducts: lowStockProducts.map(p => ({
                 ...p,
@@ -182,6 +200,7 @@ router.post('/products/bulk', async (req: AuthRequest, res: Response) => {
         }
 
         const formattedProducts = products.map((p: any) => ({
+            sku: p.sku || `HH-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
             name: p.name,
             description: p.description || '',
             price: parseFloat(p.price),
@@ -193,10 +212,12 @@ router.post('/products/bulk', async (req: AuthRequest, res: Response) => {
             stock: parseInt(p.stock) || 0,
             images: JSON.stringify(p.images || []),
             status: p.status || 'ACTIVE',
-            tags: JSON.stringify(p.tags || [])
+            tags: JSON.stringify(p.tags || []),
+            seoTitle: p.seoTitle || null,
+            seoDescription: p.seoDescription || null
         }));
 
-        const result = await prisma.product.createMany({
+        const result = await (prisma.product as any).createMany({
             data: formattedProducts
         });
 
@@ -237,10 +258,11 @@ router.get('/products', async (req: AuthRequest, res: Response) => {
 // Create product
 router.post('/products', async (req: AuthRequest, res: Response) => {
     try {
-        const { name, description, price, discountPrice, category, ageGroup, sizes, colors, stock, images, status } = req.body;
+        const { sku, name, description, price, discountPrice, category, ageGroup, sizes, colors, stock, images, status, seoTitle, seoDescription } = req.body;
 
-        const product = await prisma.product.create({
+        const product = await (prisma.product as any).create({
             data: {
+                sku: sku || `HH-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
                 name,
                 description,
                 price: parseFloat(price),
@@ -251,7 +273,9 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
                 colors: JSON.stringify(colors),
                 stock: parseInt(stock),
                 images: JSON.stringify(images),
-                status: status || 'ACTIVE'
+                status: status || 'ACTIVE',
+                seoTitle,
+                seoDescription
             }
         });
 
@@ -278,11 +302,12 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
 router.put('/products/:id', async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { name, description, price, discountPrice, category, ageGroup, sizes, colors, stock, images, status } = req.body;
+        const { sku, name, description, price, discountPrice, category, ageGroup, sizes, colors, stock, images, status, seoTitle, seoDescription } = req.body;
 
-        const product = await prisma.product.update({
+        const product = await (prisma.product as any).update({
             where: { id: id as string },
             data: {
+                sku,
                 name,
                 description,
                 price: parseFloat(price),
@@ -293,7 +318,9 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
                 colors: JSON.stringify(colors),
                 stock: parseInt(stock),
                 images: JSON.stringify(images),
-                status
+                status,
+                seoTitle,
+                seoDescription
             }
         });
 
@@ -418,6 +445,145 @@ router.get('/audit-logs', async (req: AuthRequest, res: Response) => {
         res.json(logs);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch audit logs' });
+    }
+});
+
+// Update user role (Admin only)
+router.put('/users/:id/role', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+    try {
+        const { role } = z.object({
+            role: z.enum(['USER', 'STAFF', 'ADMIN'])
+        }).parse(req.body);
+
+        const updatedUser = await prisma.user.update({
+            where: { id: (req.params.id as string) as any },
+            data: { role: (role as string) as any }
+        });
+
+        await logActivity({
+            action: 'UPDATE_ROLE',
+            entity: 'User',
+            entityId: req.params.id as string,
+            details: { newRole: role },
+            adminId: req.user!.id
+        });
+
+        res.json(updatedUser);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update user role' });
+    }
+});
+
+// GET Shipping Label (HTML/Printable)
+router.get('/orders/:id/shipping-label', authenticate, requireStaff, async (req: AuthRequest, res: Response) => {
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: req.params.id as string },
+            include: {
+                user: true,
+                address: true,
+                items: true
+            }
+        });
+
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+
+        const o = order as any;
+        const html = `
+            <html>
+                <head>
+                    <style>
+                        body { font-family: sans-serif; padding: 40px; }
+                        .label { border: 2px solid #000; padding: 20px; max-width: 400px; }
+                        .header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="label">
+                        <div class="header">
+                            <h2>HAPPY HOPZ</h2>
+                            <p>Order ID: ${o.id.slice(0, 8)}</p>
+                        </div>
+                        <div class="to">
+                            <strong>SHIP TO:</strong><br/>
+                            ${o.address?.name || o.user?.name || 'Customer'}<br/>
+                            ${o.address?.street || 'N/A'}<br/>
+                            ${o.address?.city || 'N/A'}, ${o.address?.state || 'N/A'} ${o.address?.zipCode || 'N/A'}<br/>
+                            India
+                        </div>
+                        <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;">
+                            <strong>ITEMS:</strong> ${o.items?.length || 0}<br/>
+                            <strong>WEIGHT:</strong> Approx. ${(o.items?.length || 0) * 0.5}kg
+                        </div>
+                        <div style="margin-top: 20px; text-align: center;">
+                            <div style="font-size: 10px; margin-bottom: 5px;">*SCANNABLE BARCODE*</div>
+                            <div style="background: #000; height: 40px; width: 100%;"></div>
+                        </div>
+                    </div>
+                    <script>window.print();</script>
+                </body>
+            </html>
+        `;
+
+        res.send(html);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to generate shipping label' });
+    }
+});
+
+// Bulk Stock Update
+router.put('/inventory/bulk-stock', async (req: AuthRequest, res: Response) => {
+    try {
+        const { updates } = z.object({
+            updates: z.array(z.object({
+                sku: z.string(),
+                stock: z.number().int().nonnegative()
+            }))
+        }).parse(req.body);
+
+        const results = await Promise.all(updates.map(update =>
+            prisma.product.updateMany({
+                where: { sku: update.sku },
+                data: { stock: update.stock }
+            })
+        ));
+
+        const updatedCount = results.reduce((acc, r) => acc + r.count, 0);
+
+        await logActivity({
+            action: 'BULK_STOCK_UPDATE',
+            entity: 'PRODUCT',
+            details: { updatedCount, skus: updates.map(u => u.sku) },
+            adminId: req.user!.id as string
+        });
+
+        res.json({ message: `Successfully updated stock for ${updatedCount} products`, count: updatedCount });
+    } catch (error) {
+        res.status(500).json({ error: 'Bulk stock update failed' });
+    }
+});
+
+// AI SEO Generation Mock
+router.post('/products/:id/seo-generate', async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const product = await prisma.product.findUnique({ where: { id } });
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+
+        // Simulate AI generation logic
+        const seoTitle = `${product.name} - Premium Kids Footwear | Happy Hopz`;
+        const seoDescription = `Shop the latest ${product.name} from Happy Hopz. Specialized ${product.category} for ${product.ageGroup} with 18% GST benefits and free shipping above ₹999.`;
+
+        await logActivity({
+            action: 'AI_SEO_GENERATED',
+            entity: 'PRODUCT',
+            entityId: id as string,
+            adminId: req.user!.id as string
+        });
+
+        res.json({ seoTitle, seoDescription });
+    } catch (error) {
+        res.status(500).json({ error: 'SEO generation failed' });
     }
 });
 

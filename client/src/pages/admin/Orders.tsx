@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingBag, Eye, Package, IndianRupee, Search, Download, Trash2 } from 'lucide-react';
+import { ShoppingBag, Eye, Package, IndianRupee, Search, Download, Trash2, FileText, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminOrders = () => {
@@ -147,6 +147,10 @@ const AdminOrders = () => {
                         </div>
                     </div>
                 </div>
+                <Button className="gap-2 rounded-xl shadow-lg shadow-primary/20 px-6 font-bold">
+                    <Plus className="w-4 h-4" />
+                    Manual Order
+                </Button>
             </div>
 
 
@@ -292,6 +296,10 @@ const AdminOrders = () => {
                                             Placed on {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}
                                         </p>
                                         <div className="flex items-center gap-2">
+                                            <Button variant="outline" size="sm" className="font-bold border-primary/20 text-primary hover:bg-primary/5" onClick={() => window.open(`/api/admin/orders/${order.id}/shipping-label`, '_blank')}>
+                                                <FileText className="w-4 h-4 mr-2" />
+                                                Label
+                                            </Button>
                                             <Link to={`/admin/orders/${order.id}`}>
                                                 <Button variant="outline" size="sm" className="font-bold border-primary/20 text-primary hover:bg-primary/5">
                                                     <Eye className="w-4 h-4 mr-2" />

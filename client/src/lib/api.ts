@@ -95,6 +95,8 @@ export const adminAPI = {
     updateProduct: (id: string, data: any) => api.put(`/admin/products/${id}`, data),
     deleteProduct: (id: string) => api.delete(`/admin/products/${id}`),
     bulkCreateProducts: (products: any[]) => api.post('/admin/products/bulk', { products }),
+    bulkStockUpdate: (updates: { sku: string; stock: number }[]) => api.put('/admin/inventory/bulk-stock', { updates }),
+    generateSEO: (id: string) => api.post(`/admin/products/${id}/seo-generate`),
     search: (query: string) => api.get(`/admin/search?q=${query}`),
     getAuditLogs: (filters?: { entity?: string; entityId?: string }) => {
         const params = new URLSearchParams();
@@ -110,7 +112,23 @@ export const adminAPI = {
     approveReview: (id: string, isApproved: boolean) => api.put(`/reviews/${id}/approve`, { isApproved }),
     featureReview: (id: string, isFeatured: boolean) => api.put(`/reviews/${id}/feature`, { isFeatured }),
     deleteReview: (id: string) => api.delete(`/reviews/${id}`),
-    updateContent: (key: string, content: any) => api.put(`/content/${key}`, { content })
+    updateContent: (key: string, content: any) => api.put(`/content/${key}`, { content }),
+    updateUserRole: (id: string, role: string) => api.put(`/admin/users/${id}/role`, { role }),
+
+    // Marketing & Growth
+    getAbandonedCarts: () => api.get('/marketing/abandoned-carts'),
+    getFlashSales: () => api.get('/marketing/flash-sales'),
+    createFlashSale: (data: any) => api.post('/marketing/flash-sales', data),
+    getPopups: () => api.get('/marketing/popups'),
+    createPopup: (data: any) => api.post('/marketing/popups', data),
+
+    // Advanced Logistics (Draft Orders)
+    createDraftOrder: (data: any) => api.post('/orders', { ...data, source: 'MANUAL' }),
+};
+
+export const marketingAPI = {
+    getActiveSale: () => api.get('/marketing/flash-sales/active'),
+    getActivePopup: () => api.get('/marketing/popups/active')
 };
 
 export const contentAPI = {
@@ -135,6 +153,10 @@ export const contactsAPI = {
         api.post('/contacts', data),
     getAll: (params?: { status?: string }) => api.get('/contacts', { params }),
     updateStatus: (id: string, status: string) => api.put(`/contacts/${id}`, { status })
+};
+
+export const searchAPI = {
+    query: (q: string) => api.get('/search', { params: { q } })
 };
 
 export default api;

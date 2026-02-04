@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle, Sparkles, Box } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ProductForm = ({ product, onSubmit, isLoading }: any) => {
@@ -28,8 +28,35 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         stock: product?.stock || '50',
         images: product?.images || [],
         status: product?.status || 'ACTIVE',
-        tags: product?.tags || []
+        tags: product?.tags || [],
+        costPrice: product?.costPrice || '',
+        sku: product?.sku || '',
+        seoTitle: product?.seoTitle || '',
+        seoDescription: product?.seoDescription || ''
     });
+
+    const [isGeneratingSEO, setIsGeneratingSEO] = useState(false);
+
+    const handleGenerateSEO = async () => {
+        if (!formData.name) {
+            toast.error('Please enter a product name first');
+            return;
+        }
+        setIsGeneratingSEO(true);
+        try {
+            const response = await adminAPI.generateSEO(product?.id || 'temp');
+            setFormData({
+                ...formData,
+                seoTitle: response.data.seoTitle,
+                seoDescription: response.data.seoDescription
+            });
+            toast.success('SEO metadata generated! ✨');
+        } catch (error) {
+            toast.error('Failed to generate SEO');
+        } finally {
+            setIsGeneratingSEO(false);
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -59,7 +86,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                     required
                 />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
                 <div>
                     <Label>Price (₹)</Label>
                     <Input
@@ -78,6 +105,62 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                         value={formData.discountPrice}
                         onChange={(e) => setFormData({ ...formData, discountPrice: e.target.value })}
                     />
+                </div>
+                <div>
+                    <Label>Cost Price (₹)</Label>
+                    <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.costPrice}
+                        placeholder="e.g. 500"
+                        onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                    />
+                </div>
+            </div>
+            <div>
+                <Label>SKU (Stock Keeping Unit)</Label>
+                <Input
+                    value={formData.sku}
+                    placeholder="e.g. HH-SNK-001"
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                />
+            </div>
+            <div className="p-4 bg-purple-50 rounded-2xl border border-purple-100 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h4 className="text-sm font-bold text-purple-900 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4" /> AI SEO Tools
+                        </h4>
+                        <p className="text-[10px] text-purple-600">Optimize for Google Search</p>
+                    </div>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleGenerateSEO}
+                        disabled={isGeneratingSEO}
+                        className="text-purple-600 hover:text-purple-700 hover:bg-purple-100 h-8 rounded-lg font-bold text-[10px]"
+                    >
+                        {isGeneratingSEO ? 'Generating...' : 'Magic Generate'}
+                    </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <Label className="text-[10px] text-purple-400">SEO Title</Label>
+                        <Input
+                            className="bg-white border-purple-100 text-xs h-9"
+                            value={formData.seoTitle}
+                            onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <Label className="text-[10px] text-purple-400">SEO Description</Label>
+                        <Input
+                            className="bg-white border-purple-100 text-xs h-9"
+                            value={formData.seoDescription}
+                            onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
+                        />
+                    </div>
                 </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -198,6 +281,18 @@ const AdminProducts = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
+    const [inventoryFile, setInventoryFile] = useState<File | null>(null);
+
+    const bulkStockMutation = useMutation({
+        mutationFn: (updates: any[]) => adminAPI.bulkStockUpdate(updates),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            toast.success('Inventory updated successfully! 📦');
+            setIsBulkDialogOpen(false);
+            setInventoryFile(null);
+        },
+        onError: () => toast.error('Failed to update inventory')
+    });
 
     const { data: products, isLoading } = useQuery({
         queryKey: ['admin-products'],
@@ -305,44 +400,83 @@ const AdminProducts = () => {
                     <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="rounded-xl font-bold border-2 gap-2 hover:bg-primary/5 transition-colors">
-                                <Upload className="w-4 h-4" />
-                                Bulk Import
+                                <Box className="w-4 h-4" />
+                                Inventory Control
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[500px] rounded-3xl">
                             <DialogHeader>
-                                <DialogTitle className="text-2xl font-black font-fredoka">Bulk Import Products</DialogTitle>
+                                <DialogTitle className="text-2xl font-black font-fredoka">Bulk Operations</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-6 pt-4">
-                                <div className="p-10 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50 flex flex-col items-center text-center">
-                                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                                        <FileText className="w-8 h-8 text-primary" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-6 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/50 hover:bg-gray-50 transition-colors flex flex-col items-center text-center cursor-pointer group">
+                                        <Upload className="w-8 h-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
+                                        <p className="text-xs font-bold mb-1">Bulk Create</p>
+                                        <p className="text-[10px] text-muted-foreground leading-tight">Import new products via CSV</p>
+                                        <label className="absolute inset-0 cursor-pointer">
+                                            <Input
+                                                type="file"
+                                                className="hidden"
+                                                accept=".csv"
+                                                onChange={handleFileUpload}
+                                                disabled={bulkCreateMutation.isPending}
+                                            />
+                                        </label>
                                     </div>
-                                    <h3 className="text-lg font-bold mb-1">Upload CSV File</h3>
-                                    <p className="text-[10px] text-muted-foreground mb-6 max-w-[300px] leading-relaxed">
-                                        Required headers: <span className="font-mono text-foreground font-bold">name, price, category, stock</span><br />
-                                        Optional: <span className="font-mono">description, ageGroup, sizes, colors, images</span>
-                                    </p>
-                                    <label className="cursor-pointer w-full">
-                                        <Input
-                                            type="file"
-                                            className="hidden"
-                                            accept=".csv"
-                                            onChange={handleFileUpload}
-                                            disabled={bulkCreateMutation.isPending}
-                                        />
-                                        <div className="bg-primary text-primary-foreground h-12 rounded-xl flex items-center justify-center font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity">
-                                            {bulkCreateMutation.isPending ? 'Processing Import...' : 'Select & Upload CSV'}
-                                        </div>
-                                    </label>
+                                    <div className="p-6 border-2 border-dashed border-pink-100 rounded-3xl bg-pink-50/20 hover:bg-pink-50/50 transition-colors flex flex-col items-center text-center cursor-pointer group relative">
+                                        <Box className="w-8 h-8 text-pink-500 mb-3 group-hover:scale-110 transition-transform" />
+                                        <p className="text-xs font-bold mb-1">Stock Sync</p>
+                                        <p className="text-[10px] text-muted-foreground leading-tight">Update stock levels by SKU</p>
+                                        <label className="absolute inset-0 cursor-pointer">
+                                            <Input
+                                                type="file"
+                                                className="hidden"
+                                                accept=".csv"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    const reader = new FileReader();
+                                                    reader.onload = (event) => {
+                                                        const csv = event.target?.result as string;
+                                                        const lines = csv.split('\n').filter(l => l.trim());
+                                                        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                                                        const skuIdx = headers.indexOf('sku');
+                                                        const stockIdx = headers.indexOf('stock');
+
+                                                        if (skuIdx === -1 || stockIdx === -1) {
+                                                            toast.error('CSV must have "sku" and "stock" columns');
+                                                            return;
+                                                        }
+
+                                                        const updates = lines.slice(1).map(line => {
+                                                            const parts = line.split(',');
+                                                            return {
+                                                                sku: parts[skuIdx].trim(),
+                                                                stock: parseInt(parts[stockIdx].trim())
+                                                            };
+                                                        }).filter(u => u.sku && !isNaN(u.stock));
+
+                                                        bulkStockMutation.mutate(updates);
+                                                    };
+                                                    reader.readAsText(file);
+                                                }}
+                                                disabled={bulkStockMutation.isPending}
+                                            />
+                                        </label>
+                                    </div>
                                 </div>
 
-                                <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex gap-3">
-                                    <AlertCircle className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                                    <div className="text-[10px] text-blue-700 leading-relaxed">
-                                        <p className="font-bold mb-1 text-xs text-blue-800">CSV Formatting Tip:</p>
-                                        Use the <span className="font-black">pipe symbol |</span> to separate multiple values in a single column (e.g., sizes: 6-9m | 9-12m | 12-18m).
-                                    </div>
+                                <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Operation Status</h4>
+                                    {bulkCreateMutation.isPending || bulkStockMutation.isPending ? (
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                            <p className="text-xs font-bold text-primary animate-pulse">Processing bulk update...</p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-muted-foreground italic">No active operations</p>
+                                    )}
                                 </div>
                             </div>
                         </DialogContent>
@@ -407,6 +541,7 @@ const AdminProducts = () => {
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
                                             <h3 className="text-xl font-fredoka font-bold">{product.name || 'Unnamed Product'}</h3>
+                                            <p className="text-[10px] font-black text-primary/60 tracking-widest mb-1">{product.sku || 'NO SKU'}</p>
                                             <p className="text-sm text-muted-foreground line-clamp-2">
                                                 {product.description || 'No description available'}
                                             </p>

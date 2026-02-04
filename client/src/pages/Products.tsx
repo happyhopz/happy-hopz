@@ -71,6 +71,7 @@ const Products = () => {
     };
 
     const [showFilters, setShowFilters] = useState(false);
+    const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
 
     const { data: products, isLoading } = useQuery({
         queryKey: ['products', search, category, ageGroup],
@@ -98,9 +99,11 @@ const Products = () => {
         setSearchParams(params);
     };
 
-    const filteredProducts = products?.filter((p: any) =>
-        p.price >= priceRange[0] && p.price <= priceRange[1]
-    );
+    const filteredProducts = products?.filter((p: any) => {
+        const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
+        const matchesSize = selectedSizes.length === 0 || (p.sizes && p.sizes.some((s: string) => selectedSizes.includes(s)));
+        return matchesPrice && matchesSize;
+    });
 
     return (
         <div className="min-h-screen bg-background">
@@ -152,15 +155,15 @@ const Products = () => {
 
                     {/* Filter Panel */}
                     {showFilters && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-card rounded-xl shadow-card">
-                            <div>
-                                <label className="text-sm font-nunito font-semibold mb-2 block">Category</label>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 bg-card rounded-3xl shadow-float border border-primary/10 animate-fade-down">
+                            <div className="space-y-2">
+                                <label className="text-sm font-fredoka font-bold text-foreground">Category</label>
                                 <Select value={category} onValueChange={setCategory}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="rounded-xl">
                                         <SelectValue placeholder="All Categories" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">All Categories</SelectItem>
+                                        <SelectItem value="null">All Categories</SelectItem>
                                         <SelectItem value="Sneakers">Sneakers</SelectItem>
                                         <SelectItem value="Sandals">Sandals</SelectItem>
                                         <SelectItem value="Boots">Boots</SelectItem>
@@ -170,32 +173,77 @@ const Products = () => {
                                 </Select>
                             </div>
 
-                            <div>
-                                <label className="text-sm font-nunito font-semibold mb-2 block">Age Group</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-fredoka font-bold text-foreground">Age Group</label>
                                 <Select value={ageGroup} onValueChange={setAgeGroup}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="rounded-xl">
                                         <SelectValue placeholder="All Ages" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">All Ages</SelectItem>
-                                        <SelectItem value="3-6 years">3-6 years</SelectItem>
-                                        <SelectItem value="6-9 years">6-9 years</SelectItem>
-                                        <SelectItem value="9-12 years">9-12 years</SelectItem>
+                                        <SelectItem value="null">All Ages</SelectItem>
+                                        <SelectItem value="Infant (0-1y)">Infant (0-1y)</SelectItem>
+                                        <SelectItem value="Toddler (1-3y)">Toddler (1-3y)</SelectItem>
+                                        <SelectItem value="Junior (3-6y)">Junior (3-6y)</SelectItem>
+                                        <SelectItem value="Senior (6-9y)">Senior (6-9y)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            <div>
-                                <label className="text-sm font-nunito font-semibold mb-2 block">
-                                    Price: ₹{priceRange[0]} - ₹{priceRange[1]}
-                                </label>
+                            <div className="space-y-3">
+                                <label className="text-sm font-fredoka font-bold text-foreground">Price Filter</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {[500, 1000, 2000, 5000].map(price => (
+                                        <button
+                                            key={price}
+                                            onClick={() => setPriceRange([0, price])}
+                                            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${priceRange[1] === price ? 'bg-primary text-white' : 'bg-muted hover:bg-primary/20'
+                                                }`}
+                                        >
+                                            Under ₹{price}
+                                        </button>
+                                    ))}
+                                </div>
                                 <Slider
                                     value={priceRange}
                                     onValueChange={setPriceRange}
                                     max={10000}
                                     step={100}
-                                    className="mt-2"
+                                    className="mt-4"
                                 />
+                                <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
+                                    <span>₹0</span>
+                                    <span>₹10,000+</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-fredoka font-bold text-foreground mb-2 block">Sizes</label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                                        <button
+                                            key={size}
+                                            onClick={() => {
+                                                setSelectedSizes(prev =>
+                                                    prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
+                                                );
+                                            }}
+                                            className={`h-8 rounded-lg text-xs font-bold border-2 transition-all ${selectedSizes.includes(size)
+                                                    ? 'border-primary bg-primary text-white shadow-sm'
+                                                    : 'border-muted text-muted-foreground hover:border-primary/30'
+                                                }`}
+                                        >
+                                            {size}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-[10px] h-auto p-0 font-bold text-muted-foreground hover:text-primary"
+                                    onClick={() => setSelectedSizes([])}
+                                >
+                                    Reset Sizes
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -369,14 +417,34 @@ const ProductCard = ({
                 </div>
 
                 <button
-                    className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink-50 z-50"
+                    className={`absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink-50 z-50`}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        toast.success('Added to wishlist!');
+
+                        const stored = localStorage.getItem('wishlist');
+                        let list = stored ? JSON.parse(stored) : [];
+                        const isExist = list.some((item: any) => item.id === product.id);
+
+                        if (isExist) {
+                            list = list.filter((item: any) => item.id !== product.id);
+                            localStorage.setItem('wishlist', JSON.stringify(list));
+                            toast.info('Removed from wishlist');
+                        } else {
+                            list.push(product);
+                            localStorage.setItem('wishlist', JSON.stringify(list));
+                            toast.success('Added to wishlist!');
+                        }
                     }}
                 >
-                    <Heart className="w-4 h-4 md:w-5 md:h-5 text-gray-400 hover:text-pink-500 transition-colors" />
+                    <Heart className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${(() => {
+                        const stored = localStorage.getItem('wishlist');
+                        const list = stored ? JSON.parse(stored) : [];
+                        return list.some((item: any) => item.id === product.id)
+                            ? 'text-pink-500 fill-pink-500'
+                            : 'text-gray-400 hover:text-pink-500'
+                    })()
+                        }`} />
                 </button>
             </Link>
         </div>

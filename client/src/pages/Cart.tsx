@@ -16,17 +16,31 @@ const Cart = () => {
     const queryClient = useQueryClient();
 
     const { data: cartItems, isLoading } = useQuery({
-        queryKey: ['cart'],
+        queryKey: ['cart', user?.id],
         queryFn: async () => {
+            if (!user) {
+                const localCart = localStorage.getItem('cart');
+                return localCart ? JSON.parse(localCart) : [];
+            }
             const response = await cartAPI.get();
             return response.data;
         },
-        enabled: !!user
+        enabled: !loading
     });
 
     const updateMutation = useMutation({
-        mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
-            cartAPI.update(id, quantity),
+        mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
+            if (!user) {
+                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const itemIndex = localCart.findIndex((item: any) => item.id === id);
+                if (itemIndex > -1) {
+                    localCart[itemIndex].quantity = quantity;
+                    localStorage.setItem('cart', JSON.stringify(localCart));
+                }
+                return { data: localCart };
+            }
+            return cartAPI.update(id, quantity);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
             toast.success('Cart updated');
@@ -34,36 +48,20 @@ const Cart = () => {
     });
 
     const removeMutation = useMutation({
-        mutationFn: (id: string) => cartAPI.remove(id),
+        mutationFn: async (id: string) => {
+            if (!user) {
+                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const filteredCart = localCart.filter((item: any) => item.id !== id);
+                localStorage.setItem('cart', JSON.stringify(filteredCart));
+                return { data: filteredCart };
+            }
+            return cartAPI.remove(id);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
             toast.success('Item removed');
         }
     });
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    if (!user) {
-        return (
-            <div className="min-h-screen bg-background">
-                <Navbar />
-                <div className="container mx-auto px-4 py-20 text-center">
-                    <ShoppingBag className="w-24 h-24 mx-auto mb-4 text-muted-foreground" />
-                    <h1 className="text-3xl font-fredoka font-bold mb-4">Please Login</h1>
-                    <p className="text-muted-foreground mb-6">Login to view your cart</p>
-                    <Button variant="hopz" onClick={() => navigate('/login')}>
-                        Go to Login
-                    </Button>
-                </div>
-            </div>
-        );
-    }
 
     if (isLoading) {
         return (
