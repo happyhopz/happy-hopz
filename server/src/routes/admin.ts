@@ -149,8 +149,8 @@ router.get('/orders', async (req: AuthRequest, res: Response) => {
         const { status, paymentStatus, search, startDate, endDate } = req.query;
 
         const where: any = {};
-        if (status) where.status = status;
-        if (paymentStatus) where.paymentStatus = paymentStatus;
+        if (status) where.status = status as string;
+        if (paymentStatus) where.paymentStatus = paymentStatus as string;
 
         if (startDate || endDate) {
             where.createdAt = {};
@@ -159,10 +159,11 @@ router.get('/orders', async (req: AuthRequest, res: Response) => {
         }
 
         if (search) {
+            const s = search as string;
             where.OR = [
-                { id: { contains: search as string } },
-                { user: { email: { contains: search as string } } },
-                { user: { name: { contains: search as string } } }
+                { id: { contains: s } },
+                { user: { email: { contains: s } } },
+                { user: { name: { contains: s } } }
             ];
         }
 
@@ -188,6 +189,8 @@ router.get('/orders', async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch orders' });
     }
 });
+
+// Redundant route removed. Order status updates are handled in src/routes/orders.ts
 
 // Product Management
 // Bulk import products
@@ -567,7 +570,7 @@ router.put('/inventory/bulk-stock', async (req: AuthRequest, res: Response) => {
 router.post('/products/:id/seo-generate', async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const product = await prisma.product.findUnique({ where: { id } });
+        const product = await prisma.product.findUnique({ where: { id: id as string } });
         if (!product) return res.status(404).json({ error: 'Product not found' });
 
         // Simulate AI generation logic
@@ -584,6 +587,56 @@ router.post('/products/:id/seo-generate', async (req: AuthRequest, res: Response
         res.json({ seoTitle, seoDescription });
     } catch (error) {
         res.status(500).json({ error: 'SEO generation failed' });
+    }
+});
+
+// Site Settings - Payment Control
+router.get('/site-settings/payment', async (req: AuthRequest, res: Response) => {
+    try {
+        const settings = await prisma.siteContent.findUnique({
+            where: { key: 'payment_methods' }
+        });
+
+        // Default settings if not found
+        const defaultMethods = {
+            COD: true,
+            UPI: false,
+            CARD: false,
+            NETBANKING: false
+        };
+
+        res.json(settings ? JSON.parse(settings.content) : defaultMethods);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch payment settings' });
+    }
+});
+
+router.post('/site-settings/payment', async (req: AuthRequest, res: Response) => {
+    try {
+        const schema = z.object({
+            COD: z.boolean(),
+            UPI: z.boolean(),
+            CARD: z.boolean(),
+            NETBANKING: z.boolean()
+        });
+        const data = schema.parse(req.body);
+
+        const settings = await prisma.siteContent.upsert({
+            where: { key: 'payment_methods' },
+            update: { content: JSON.stringify(data) },
+            create: { key: 'payment_methods', content: JSON.stringify(data) }
+        });
+
+        await logActivity({
+            action: 'UPDATE_PAYMENT_SETTINGS',
+            entity: 'SITE_CONTENT',
+            details: data,
+            adminId: req.user!.id
+        });
+
+        res.json(JSON.parse(settings.content));
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update payment settings' });
     }
 });
 

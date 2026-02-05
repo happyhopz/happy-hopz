@@ -97,10 +97,13 @@ model Order {
   subtotal       Float?
   tax            Float?
   shipping       Float?
-  status         String      @default("PLACED")
-  paymentStatus  String      @default("PENDING")
-  trackingNumber String?
-  addressId      String
+  status             String      @default("PLACED")
+  paymentStatus      String      @default("PENDING")
+  trackingNumber     String?
+  cancellationReason String?
+  returnReason       String?
+  returnStatus       String?     // REQUESTED, APPROVED, REJECTED, COMPLETED
+  addressId          String
   source         String      @default("ONLINE") // ONLINE, MANUAL (Draft Orders)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @default(now()) @updatedAt

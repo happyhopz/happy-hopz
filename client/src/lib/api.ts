@@ -72,7 +72,9 @@ export const ordersAPI = {
     create: (data: any) => api.post('/orders', data),
     getAll: () => api.get('/orders'),
     getById: (id: string) => api.get(`/orders/${id}`),
-    updateStatus: (id: string, data: any) => api.put(`/orders/${id}/status`, data)
+    updateStatus: (id: string, data: any) => api.put(`/orders/${id}/status`, data),
+    cancel: (id: string, data: { reason: string }) => api.patch(`/orders/${id}/cancel`, data),
+    return: (id: string, data: { reason: string }) => api.patch(`/orders/${id}/return`, data)
 };
 
 // Payment API
@@ -114,6 +116,10 @@ export const adminAPI = {
     deleteReview: (id: string) => api.delete(`/reviews/${id}`),
     updateContent: (key: string, content: any) => api.put(`/content/${key}`, { content }),
     updateUserRole: (id: string, role: string) => api.put(`/admin/users/${id}/role`, { role }),
+
+    // NEW: Site Settings - Payment Control
+    getPaymentSettings: () => api.get('/admin/site-settings/payment'),
+    updatePaymentSettings: (data: any) => api.post('/admin/site-settings/payment', data),
 
     // Marketing & Growth
     getAbandonedCarts: () => api.get('/marketing/abandoned-carts'),

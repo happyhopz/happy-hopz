@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersAPI } from '@/lib/api';
@@ -25,6 +26,35 @@ const OrderDetail = () => {
             return response.data;
         },
         enabled: !!id && !!user
+    });
+
+    const [showReasonInput, setShowReasonInput] = useState<'CANCEL' | 'RETURN' | null>(null);
+    const [reason, setReason] = useState('');
+
+    const cancelOrderMutation = useMutation({
+        mutationFn: (data: { reason: string }) => ordersAPI.cancel(id!, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['order', id] });
+            toast.success('Order cancelled successfully');
+            setShowReasonInput(null);
+            setReason('');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to cancel order');
+        }
+    });
+
+    const returnOrderMutation = useMutation({
+        mutationFn: (data: { reason: string }) => ordersAPI.return(id!, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['order', id] });
+            toast.success('Return request submitted');
+            setShowReasonInput(null);
+            setReason('');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to submit return request');
+        }
     });
 
     const updateStatusMutation = useMutation({
@@ -143,6 +173,95 @@ const OrderDetail = () => {
                             <Badge variant="outline">{order.paymentStatus}</Badge>
                         </div>
                     </div>
+
+                    {/* NEW: CUSTOMER ACTIONS */}
+                    {!isAdmin && !['CANCELLED', 'DELIVERED'].includes(order.status) && !showReasonInput && (
+                        <div className="mt-4 flex gap-2">
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setShowReasonInput('CANCEL')}
+                            >
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Cancel Order
+                            </Button>
+                        </div>
+                    )}
+
+                    {order.status === 'DELIVERED' && !order.returnStatus && !showReasonInput && (
+                        <div className="mt-4 flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                                onClick={() => setShowReasonInput('RETURN')}
+                            >
+                                <Package className="w-4 h-4 mr-2" />
+                                Return Order
+                            </Button>
+                        </div>
+                    )}
+
+                    {showReasonInput && (
+                        <Card className="mt-6 p-6 border-2 border-pink-100 bg-pink-50/20">
+                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                {showReasonInput === 'CANCEL' ? <XCircle className="w-5 h-5 text-red-500" /> : <Package className="w-5 h-5 text-orange-500" />}
+                                {showReasonInput === 'CANCEL' ? 'Cancel Order' : 'Return Order'}
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-4 font-medium italic">
+                                {showReasonInput === 'CANCEL' ? 'Please provide a reason for cancellation (min 5 characters)' : 'Please describe the reason for return (min 10 characters)'}
+                            </p>
+                            <textarea
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                placeholder="Type your reason here..."
+                                className="w-full min-h-[100px] p-4 rounded-xl border-2 border-pink-100 focus:border-pink-500 focus:ring-0 transition-all text-sm mb-4"
+                            />
+                            <div className="flex gap-3">
+                                <Button
+                                    className="flex-1 rounded-full font-bold"
+                                    onClick={() => {
+                                        if (showReasonInput === 'CANCEL') {
+                                            cancelOrderMutation.mutate({ reason });
+                                        } else {
+                                            returnOrderMutation.mutate({ reason });
+                                        }
+                                    }}
+                                    disabled={cancelOrderMutation.isPending || returnOrderMutation.isPending || (showReasonInput === 'CANCEL' ? reason.length < 5 : reason.length < 10)}
+                                >
+                                    Confirm {showReasonInput === 'CANCEL' ? 'Cancellation' : 'Return Request'}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    className="rounded-full"
+                                    onClick={() => {
+                                        setShowReasonInput(null);
+                                        setReason('');
+                                    }}
+                                >
+                                    Wait, No!
+                                </Button>
+                            </div>
+                        </Card>
+                    )}
+
+                    {/* Display Cancellation/Return Info if exists */}
+                    {(order.cancellationReason || order.returnReason) && (
+                        <Card className={`mt-6 p-4 border-2 ${order.status === 'CANCELLED' ? 'border-red-100 bg-red-50/30' : 'border-orange-100 bg-orange-50/30'}`}>
+                            <div className="flex items-start gap-3">
+                                <div className={`p-2 rounded-lg ${order.status === 'CANCELLED' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'}`}>
+                                    {order.status === 'CANCELLED' ? <XCircle className="w-5 h-5" /> : <Package className="w-5 h-5" />}
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm uppercase tracking-wider text-gray-800">
+                                        {order.status === 'CANCELLED' ? 'Cancellation Details' : 'Return Details'}
+                                        {order.returnStatus && <Badge className="ml-2 bg-orange-500">{order.returnStatus}</Badge>}
+                                    </h4>
+                                    <p className="text-sm text-gray-600 mt-1 italic font-medium">"{order.cancellationReason || order.returnReason}"</p>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -226,12 +345,25 @@ const OrderDetail = () => {
                             <div className="space-y-4">
                                 {order.items?.map((item: any) => (
                                     <div key={item.id} className="flex gap-4 p-4 bg-muted rounded-xl">
-                                        <div className="w-20 h-20 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <img
-                                                src={item.product?.images?.[0]}
-                                                alt={item.name}
-                                                className="w-16 h-16 object-contain"
-                                            />
+                                        <div className="w-20 h-20 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border">
+                                            {(() => {
+                                                let imageUrl = '';
+                                                try {
+                                                    const images = typeof item.product?.images === 'string'
+                                                        ? JSON.parse(item.product.images)
+                                                        : item.product?.images;
+                                                    imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : '';
+                                                } catch (e) {
+                                                    console.error('Image parse error', e);
+                                                }
+                                                return imageUrl ? (
+                                                    <img
+                                                        src={imageUrl}
+                                                        alt={item.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : <Package className="w-8 h-8 text-muted-foreground" />;
+                                            })()}
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="font-fredoka font-bold">{item.name}</h3>

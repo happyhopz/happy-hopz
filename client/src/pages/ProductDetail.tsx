@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Reviews from '@/components/Reviews';
+import ShareProduct from '@/components/ShareProduct';
 
 const ProductDetail = () => {
     const { id } = useParams();
@@ -309,13 +310,16 @@ const ProductDetail = () => {
                                         SALE {discountPercent}% OFF
                                     </Badge>
                                 )}
-                                <button
-                                    onClick={handleWishlist}
-                                    className={`absolute top-4 right-4 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 z-50 ${isWishlisted ? 'text-pink-500' : 'text-gray-400'
-                                        }`}
-                                >
-                                    <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
-                                </button>
+                                <div className="absolute top-4 right-4 flex flex-col gap-3 z-50">
+                                    <button
+                                        onClick={handleWishlist}
+                                        className={`w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 ${isWishlisted ? 'text-pink-500' : 'text-gray-400'
+                                            }`}
+                                    >
+                                        <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+                                    </button>
+                                    <ShareProduct product={product} iconOnly />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -429,16 +433,18 @@ const ProductDetail = () => {
                             </Button>
                         </div>
 
-                        {/* Buy Now */}
-                        <Button
-                            onClick={handleBuyNow}
-                            disabled={product.stock === 0}
-                            variant="outline"
-                            className="w-full h-14 text-base font-bold border-2 border-pink-500 text-pink-500 hover:bg-pink-50"
-                        >
-                            <Zap className="w-5 h-5 mr-2" />
-                            BUY NOW
-                        </Button>
+                        <div className="flex gap-4 pt-2">
+                            <Button
+                                onClick={handleBuyNow}
+                                disabled={product.stock === 0}
+                                variant="outline"
+                                className="flex-[2] h-14 text-base font-bold border-2 border-pink-500 text-pink-500 hover:bg-pink-50"
+                            >
+                                <Zap className="w-5 h-5 mr-2" />
+                                BUY NOW
+                            </Button>
+                            <ShareProduct product={product} className="flex-1 h-14 shadow-md" />
+                        </div>
 
                         <Separator />
 

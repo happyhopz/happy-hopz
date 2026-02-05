@@ -39,9 +39,16 @@ const Checkout = () => {
     const [currentStep, setCurrentStep] = useState<CheckoutStep>('address');
 
     // UI State
+    // UI State
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentSettings, setPaymentSettings] = useState<any>({
+        COD: true,
+        UPI: false,
+        CARD: false,
+        NETBANKING: false
+    });
 
     const [address, setAddress] = useState({
         name: user?.name || '',
@@ -59,6 +66,23 @@ const Checkout = () => {
         name: '',
         phone: ''
     });
+
+    // Fetch payment settings
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                // Use public content API so guests can also see available methods
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/content/payment_methods`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setPaymentSettings(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch payment settings');
+            }
+        };
+        fetchSettings();
+    }, []);
 
     // Fetch addresses from database
     const { data: savedAddresses = [] } = useQuery({
@@ -102,7 +126,7 @@ const Checkout = () => {
         queryFn: async () => {
             if (isGuest) {
                 const localCart = localStorage.getItem('cart');
-                return { data: localCart ? JSON.parse(localCart) : [] };
+                return localCart ? JSON.parse(localCart) : [];
             }
             const response = await cartAPI.get();
             return response.data;
@@ -112,7 +136,6 @@ const Checkout = () => {
 
     const createOrderMutation = useMutation({
         mutationFn: async (orderData: any) => {
-            console.log('Sending Order To API:', orderData);
             const response = await ordersAPI.create(orderData);
             return response.data;
         },
@@ -123,7 +146,6 @@ const Checkout = () => {
         },
         onError: (error: any) => {
             const msg = error.response?.data?.error || 'Order placement failed';
-            console.error('API Error:', error.response?.data);
             toast.error(msg);
         }
     });
@@ -505,33 +527,48 @@ const Checkout = () => {
                                 <div className="p-6 bg-white">
                                     <div className="space-y-3">
                                         {paymentOptions.map((option) => {
-                                            const Icon = option.icon;
-                                            const isSelected = paymentMethod === option.id;
+                                            const isAvailable = paymentSettings[option.id] !== false;
                                             return (
-                                                <div key={option.id} className="space-y-3">
-                                                    <div onClick={() => setPaymentMethod(option.id)}
-                                                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all flex items-center gap-4 ${isSelected ? 'border-pink-500 bg-pink-50 ring-2 ring-pink-100' : 'border-gray-200 hover:border-pink-200 hover:bg-gray-50'}`}>
-                                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-pink-600 bg-pink-600' : 'border-gray-300'}`}>
-                                                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                                                <button
+                                                    key={option.id}
+                                                    onClick={() => isAvailable && setPaymentMethod(option.id)}
+                                                    disabled={!isAvailable}
+                                                    className={`w-full p-4 rounded-xl border-2 transition-all flex items-center justify-between ${!isAvailable
+                                                        ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                        : paymentMethod === option.id
+                                                            ? 'border-pink-500 bg-pink-50'
+                                                            : 'border-pink-100 hover:border-pink-300'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`p-2 rounded-lg ${!isAvailable ? 'bg-gray-200 text-gray-400' : 'bg-pink-100 text-pink-600'}`}>
+                                                            <option.icon className="w-5 h-5" />
                                                         </div>
-                                                        <Icon className={`w-6 h-6 ${isSelected ? 'text-pink-600' : 'text-gray-400'}`} />
-                                                        <div className="flex-1">
-                                                            <div className={`font-bold ${isSelected ? 'text-pink-900' : 'text-gray-900'}`}>{option.label}</div>
-                                                            <div className="text-sm text-gray-500 font-medium">{option.description}</div>
+                                                        <div className="text-left">
+                                                            <div className="font-bold text-gray-900 flex items-center gap-2">
+                                                                {option.label}
+                                                                {!isAvailable && <span className="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full uppercase">Not Available</span>}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">{option.description}</div>
                                                         </div>
-                                                        {option.id === 'COD' && <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded uppercase tracking-wider">Available</span>}
                                                     </div>
-                                                    {isSelected && option.id === 'UPI' && (
-                                                        <div className="p-6 border-2 border-pink-200 rounded-xl bg-white flex flex-col items-center text-center animate-in fade-in slide-in-from-top-2">
-                                                            <div className="mb-4 p-2 bg-gray-50 rounded-xl border-2 border-dashed border-pink-100"><img src={upiQr} alt="UPI QR" className="w-48 h-48 object-contain" /></div>
-                                                            <p className="font-bold text-gray-900">Scan to Pay via UPI</p>
-                                                            <div className="flex items-center gap-2 py-1 px-3 mt-2 bg-pink-50 rounded-full text-pink-600 text-xs font-bold"><Smartphone className="w-3 h-3" />SECURE MECHANT</div>
+                                                    {isAvailable && paymentMethod === option.id && (
+                                                        <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+                                                            <Check className="w-4 h-4 text-white" />
                                                         </div>
                                                     )}
-                                                </div>
+                                                </button>
                                             );
                                         })}
                                     </div>
+
+                                    {paymentMethod === 'UPI' && paymentSettings.UPI && (
+                                        <div className="mt-6 p-6 border-2 border-pink-100 rounded-2xl bg-pink-50/30 text-center animate-in fade-in slide-in-from-top-4 duration-300">
+                                            <p className="text-sm font-bold text-pink-600 mb-4">Scan QR to pay ₹{total.toFixed(2)}</p>
+                                            <img src={upiQr} alt="UPI QR" className="w-48 h-48 mx-auto rounded-xl shadow-lg border-4 border-white" />
+                                            <p className="text-[10px] text-gray-400 mt-4 italic">Order will be processed after payment verification</p>
+                                        </div>
+                                    )}
                                     <Separator className="my-8" />
                                     <Button onClick={handlePlaceOrder} disabled={createOrderMutation.isPending || isProcessing} className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white text-lg font-black shadow-lg shadow-orange-200">
                                         {createOrderMutation.isPending || isProcessing ? 'PROCESSING...' : paymentMethod === 'COD' ? `PAY ₹${total.toFixed(0)} ON DELIVERY` : `CONFIRM PAYMENT ₹${total.toFixed(0)}`}
@@ -543,25 +580,67 @@ const Checkout = () => {
 
                     {/* Price Summary */}
                     <div className="lg:col-span-1">
-                        <Card className="sticky top-40 border-none shadow-sm overflow-hidden">
-                            <div className="p-4 border-b bg-white"><div className="flex items-center justify-between text-gray-900 font-bold"><div className="flex items-center gap-2">🏷️ Coupons</div><ChevronRight className="w-4 h-4 text-gray-400" /></div></div>
-                            <div className="p-5 bg-white">
-                                <h3 className="text-xs font-black text-gray-400 uppercase mb-4 tracking-widest">Price Details</h3>
-                                <div className="space-y-4 text-sm font-medium">
-                                    <div className="flex justify-between text-gray-600"><span>Bag Total ({itemCount} items)</span><span>₹{subtotal.toFixed(0)}</span></div>
-                                    {savings > 0 && <div className="flex justify-between text-green-600"><span>Bag Discount</span><span>-₹{savings.toFixed(0)}</span></div>}
-                                    <div className="flex justify-between text-gray-600"><span>GST (18%)</span><span>₹{tax.toFixed(0)}</span></div>
-                                    <div className="flex justify-between text-gray-600"><span>Delivery Charges</span>{shipping === 0 ? <span className="text-green-600 font-bold">FREE</span> : <span>₹{shipping}</span>}</div>
-                                    <Separator />
-                                    <div className="flex justify-between font-black text-xl text-gray-900 pt-2"><span>Order Total</span><span>₹{total.toFixed(0)}</span></div>
+                        <div className="sticky top-24 space-y-4">
+                            {/* ITEM SUMMARY */}
+                            <Card className="p-4 border-none shadow-sm overflow-hidden bg-white">
+                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                                    <Package className="w-4 h-4 text-pink-500" />
+                                    Order Summary ({itemCount})
+                                </h3>
+                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {cartItems?.map((item: any) => {
+                                        let imageUrl = '';
+                                        try {
+                                            const images = typeof item.product.images === 'string'
+                                                ? JSON.parse(item.product.images)
+                                                : item.product.images;
+                                            imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : '';
+                                        } catch (e) {
+                                            console.error('Image parse error', e);
+                                        }
+
+                                        return (
+                                            <div key={item.id} className="flex gap-3 items-center p-2 rounded-lg hover:bg-gray-50 transition-colors border border-gray-50">
+                                                <div className="w-14 h-14 rounded-md bg-pink-50 overflow-hidden flex-shrink-0 border border-pink-50">
+                                                    {imageUrl ? (
+                                                        <img src={imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-pink-200">
+                                                            <Package className="w-6 h-6" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="text-[11px] font-bold text-gray-800 truncate leading-tight">{item.product.name}</h4>
+                                                    <p className="text-[10px] text-gray-500 mt-0.5">Size: {item.size} | Qty: {item.quantity}</p>
+                                                    <p className="text-[11px] font-bold text-pink-600">₹{(item.product.discountPrice || item.product.price).toFixed(0)}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                {shipping > 0 && <p className="mt-4 text-[10px] text-orange-600 font-bold bg-orange-50 p-2 rounded text-center">Add ₹{(999 - subtotal).toFixed(0)} more for FREE delivery!</p>}
-                            </div>
-                            <div className="px-5 py-4 bg-gray-50 text-[10px] text-gray-400 flex justify-between font-bold border-t italic uppercase tracking-widest">
-                                <div className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</div>
-                                <div className="flex items-center gap-1"><Truck className="w-3 h-3" /> Fast Delivery</div>
-                            </div>
-                        </Card>
+                            </Card>
+
+                            <Card className="border-none shadow-sm overflow-hidden">
+                                <div className="p-4 border-b bg-white"><div className="flex items-center justify-between text-gray-900 font-bold"><div className="flex items-center gap-2">🏷️ Coupons</div><ChevronRight className="w-4 h-4 text-gray-400" /></div></div>
+                                <div className="p-5 bg-white">
+                                    <h3 className="text-xs font-black text-gray-400 uppercase mb-4 tracking-widest">Price Details</h3>
+                                    <div className="space-y-4 text-sm font-medium">
+                                        <div className="flex justify-between text-gray-600"><span>Bag Total ({itemCount} items)</span><span>₹{subtotal.toFixed(0)}</span></div>
+                                        {savings > 0 && <div className="flex justify-between text-green-600"><span>Bag Discount</span><span>-₹{savings.toFixed(0)}</span></div>}
+                                        <div className="flex justify-between text-gray-600"><span>GST (18%)</span><span>₹{tax.toFixed(0)}</span></div>
+                                        <div className="flex justify-between text-gray-600"><span>Delivery Charges</span>{shipping === 0 ? <span className="text-green-600 font-bold">FREE</span> : <span>₹{shipping}</span>}</div>
+                                        <Separator />
+                                        <div className="flex justify-between font-black text-xl text-gray-900 pt-2"><span>Order Total</span><span>₹{total.toFixed(0)}</span></div>
+                                    </div>
+                                    {shipping > 0 && <p className="mt-4 text-[10px] text-orange-600 font-bold bg-orange-50 p-2 rounded text-center">Add ₹{(999 - subtotal).toFixed(0)} more for FREE delivery!</p>}
+                                </div>
+                                <div className="px-5 py-4 bg-gray-50 text-[10px] text-gray-400 flex justify-between font-bold border-t italic uppercase tracking-widest">
+                                    <div className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</div>
+                                    <div className="flex items-center gap-1"><Truck className="w-3 h-3" /> Fast Delivery</div>
+                                </div>
+                            </Card>
+                        </div>
                     </div>
                 </div>
             </main>

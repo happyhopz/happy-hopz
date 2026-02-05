@@ -248,7 +248,8 @@ router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, r
             });
 
             // Create notification for the user
-            if (status || paymentStatus) {
+            // Create notification for the user
+            if ((status || paymentStatus) && updatedOrder.userId) {
                 await tx.notification.create({
                     data: {
                         userId: updatedOrder.userId,
@@ -281,6 +282,73 @@ router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, r
             return res.status(400).json({ error: 'Validation failed', details: error.errors });
         }
         res.status(500).json({ error: 'Failed to update order' });
+    }
+});
+
+// Cancel Order
+router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const { reason } = z.object({ reason: z.string().min(5) }).parse(req.body);
+
+        const result = await prisma.$transaction(async (tx) => {
+            const order = await tx.order.findUnique({
+                where: { id: req.params.id as string },
+                include: { items: true }
+            });
+
+            if (!order) throw new Error('Order not found');
+            if (order.userId !== req.user!.id) throw new Error('Unauthorized');
+            if (!['PLACED', 'PACKED'].includes(order.status)) {
+                throw new Error('Order cannot be cancelled at this stage');
+            }
+
+            // Restock items
+            for (const item of order.items) {
+                await tx.product.update({
+                    where: { id: item.productId },
+                    data: { stock: { increment: item.quantity } }
+                });
+            }
+
+            return await tx.order.update({
+                where: { id: order.id },
+                data: {
+                    status: 'CANCELLED',
+                    cancellationReason: reason
+                }
+            });
+        });
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Return Order Request
+router.patch('/:id/return', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const { reason } = z.object({ reason: z.string().min(10) }).parse(req.body);
+
+        const order = await prisma.order.findUnique({
+            where: { id: req.params.id as string }
+        });
+
+        if (!order) throw new Error('Order not found');
+        if (order.userId !== req.user!.id) throw new Error('Unauthorized');
+        if (order.status !== 'DELIVERED') throw new Error('Only delivered orders can be returned');
+
+        const updatedOrder = await prisma.order.update({
+            where: { id: order.id },
+            data: {
+                returnStatus: 'REQUESTED',
+                returnReason: reason
+            }
+        });
+
+        res.json(updatedOrder);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
     }
 });
 

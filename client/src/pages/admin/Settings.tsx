@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { contentAPI } from '@/lib/api';
+import { contentAPI, adminAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Globe, Info, Phone, Mail, Instagram, Facebook } from 'lucide-react';
+import { Save, Globe, Info, Phone, Mail, Instagram, Facebook, CreditCard, Smartphone, Landmark, Banknote } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -31,6 +32,15 @@ const AdminSettings = () => {
         enabled: isAdmin
     });
 
+    const { data: paymentSettings, isLoading: isPaymentLoading } = useQuery({
+        queryKey: ['payment-settings'],
+        queryFn: async () => {
+            const response = await adminAPI.getPaymentSettings();
+            return response.data;
+        },
+        enabled: isAdmin
+    });
+
     const updateMutation = useMutation({
         mutationFn: (data: any) => contentAPI.update('site_settings', data),
         onSuccess: () => {
@@ -38,6 +48,15 @@ const AdminSettings = () => {
             toast.success('Settings updated successfully');
         },
         onError: () => toast.error('Failed to update settings')
+    });
+
+    const updatePaymentMutation = useMutation({
+        mutationFn: (data: any) => adminAPI.updatePaymentSettings(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['payment-settings'] });
+            toast.success('Payment settings updated');
+        },
+        onError: () => toast.error('Failed to update payment settings')
     });
 
     if (loading) {
@@ -107,6 +126,10 @@ const AdminSettings = () => {
                                 <Instagram className="w-4 h-4" />
                                 Social Media
                             </TabsTrigger>
+                            <TabsTrigger value="payments" className="flex items-center gap-2">
+                                <CreditCard className="w-4 h-4" />
+                                Payments
+                            </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="general">
@@ -170,6 +193,76 @@ const AdminSettings = () => {
                                             <Facebook className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                             <Input id="facebook" name="facebook" className="pl-10" defaultValue={settings?.socials?.facebook || defaultSettings.socials.facebook} />
                                         </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="payments">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Payment Gateways</CardTitle>
+                                    <CardDescription>Control which payment methods are active during checkout.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="flex items-center justify-between p-4 border rounded-xl bg-gray-50/50">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-2 bg-green-100 text-green-600 rounded-lg"><Banknote className="w-5 h-5" /></div>
+                                            <div>
+                                                <Label className="font-bold">Cash on Delivery (COD)</Label>
+                                                <p className="text-xs text-gray-500">Allow customers to pay when order is delivered.</p>
+                                            </div>
+                                        </div>
+                                        <Switch
+                                            checked={paymentSettings?.COD}
+                                            onCheckedChange={(val) => updatePaymentMutation.mutate({ ...paymentSettings, COD: val })}
+                                            disabled={updatePaymentMutation.isPending}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-4 border rounded-xl">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-2 bg-pink-100 text-pink-600 rounded-lg"><Smartphone className="w-5 h-5" /></div>
+                                            <div>
+                                                <Label className="font-bold">UPI Payments</Label>
+                                                <p className="text-xs text-gray-500">Enable Google Pay, PhonePe, Paytm via static QR.</p>
+                                            </div>
+                                        </div>
+                                        <Switch
+                                            checked={paymentSettings?.UPI}
+                                            onCheckedChange={(val) => updatePaymentMutation.mutate({ ...paymentSettings, UPI: val })}
+                                            disabled={updatePaymentMutation.isPending}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-4 border rounded-xl">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><CreditCard className="w-5 h-5" /></div>
+                                            <div>
+                                                <Label className="font-bold">Credit/Debit Cards</Label>
+                                                <p className="text-xs text-gray-500">Accept Visa, Mastercard, and RuPay cards.</p>
+                                            </div>
+                                        </div>
+                                        <Switch
+                                            checked={paymentSettings?.CARD}
+                                            onCheckedChange={(val) => updatePaymentMutation.mutate({ ...paymentSettings, CARD: val })}
+                                            disabled={updatePaymentMutation.isPending}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-4 border rounded-xl">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><Landmark className="w-5 h-5" /></div>
+                                            <div>
+                                                <Label className="font-bold">Net Banking</Label>
+                                                <p className="text-xs text-gray-500">Accept payments directly from bank accounts.</p>
+                                            </div>
+                                        </div>
+                                        <Switch
+                                            checked={paymentSettings?.NETBANKING}
+                                            onCheckedChange={(val) => updatePaymentMutation.mutate({ ...paymentSettings, NETBANKING: val })}
+                                            disabled={updatePaymentMutation.isPending}
+                                        />
                                     </div>
                                 </CardContent>
                             </Card>
