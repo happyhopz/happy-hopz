@@ -16,7 +16,11 @@ router.get('/', async (req: Request, res: Response) => {
         if (category) where.category = category;
         if (ageGroup) where.ageGroup = ageGroup;
         if (status) where.status = status;
-        else where.status = 'ACTIVE'; // Default to active products
+        else where.status = 'ACTIVE';
+
+        // Always exclude DELETED products from public view
+        if (where.status === 'DELETED') where.status = 'ACTIVE'; // Fallback
+        where.NOT = { status: 'DELETED' };
 
         if (search) {
             where.OR = [
@@ -172,12 +176,28 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
     }
 });
 
-// Delete product (Admin only)
+// Delete product (Hybrid: Soft delete if in orders, else hard delete)
 router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        await prisma.product.delete({
-            where: { id: req.params.id as string }
+        const { id } = req.params;
+
+        // Check for order history
+        const orderCount = await prisma.orderItem.count({
+            where: { productId: id as string }
         });
+
+        if (orderCount > 0) {
+            // Soft delete
+            await prisma.product.update({
+                where: { id: id as string },
+                data: { status: 'DELETED' }
+            });
+        } else {
+            // Hard delete
+            await prisma.product.delete({
+                where: { id: id as string }
+            });
+        }
 
         // Create Audit Log
         await prisma.auditLog.create({

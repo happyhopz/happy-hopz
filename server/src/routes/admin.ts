@@ -238,10 +238,13 @@ router.post('/products/bulk', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// Get all products (admin view)
+// Get all products (admin view) - Filters out DELETED products
 router.get('/products', async (req: AuthRequest, res: Response) => {
     try {
         const products = await prisma.product.findMany({
+            where: {
+                NOT: { status: 'DELETED' }
+            },
             orderBy: { createdAt: 'desc' }
         });
 
@@ -346,18 +349,41 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// Delete product
+// Delete product (Hybrid: Soft delete if in orders, else hard delete)
 router.delete('/products/:id', async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        await prisma.product.delete({ where: { id: id as string } });
 
-        await logActivity({
-            action: 'PRODUCT_DELETED',
-            entity: 'PRODUCT',
-            entityId: id as string,
-            adminId: req.user!.id
+        // Check for order history
+        const orderCount = await prisma.orderItem.count({
+            where: { productId: id as string }
         });
+
+        if (orderCount > 0) {
+            // Soft delete
+            await prisma.product.update({
+                where: { id: id as string },
+                data: { status: 'DELETED' }
+            });
+
+            await logActivity({
+                action: 'PRODUCT_SOFT_DELETED',
+                entity: 'PRODUCT',
+                entityId: id as string,
+                details: { reason: 'Order history exists' },
+                adminId: req.user!.id
+            });
+        } else {
+            // Hard delete
+            await prisma.product.delete({ where: { id: id as string } });
+
+            await logActivity({
+                action: 'PRODUCT_DELETED',
+                entity: 'PRODUCT',
+                entityId: id as string,
+                adminId: req.user!.id
+            });
+        }
 
         res.json({ message: 'Product deleted successfully' });
     } catch (error) {
@@ -372,20 +398,52 @@ router.post('/products/bulk-delete', async (req: AuthRequest, res: Response) => 
             ids: z.array(z.string())
         }).parse(req.body);
 
-        const result = await prisma.product.deleteMany({
-            where: {
-                id: { in: ids }
-            }
+        // Identify which products have orders
+        const productsWithOrders = await prisma.orderItem.findMany({
+            where: { productId: { in: ids } },
+            select: { productId: true },
+            distinct: ['productId']
         });
 
+        const idsWithOrders = productsWithOrders.map(p => p.productId);
+        const idsWithoutOrders = ids.filter(id => !idsWithOrders.includes(id));
+
+        let softDeletedCount = 0;
+        let hardDeletedCount = 0;
+
+        // Soft delete products with orders
+        if (idsWithOrders.length > 0) {
+            const result = await prisma.product.updateMany({
+                where: { id: { in: idsWithOrders } },
+                data: { status: 'DELETED' }
+            });
+            softDeletedCount = result.count;
+        }
+
+        // Hard delete products without orders
+        if (idsWithoutOrders.length > 0) {
+            const result = await prisma.product.deleteMany({
+                where: { id: { in: idsWithoutOrders } }
+            });
+            hardDeletedCount = result.count;
+        }
+
         await logActivity({
-            action: 'BULK_PRODUCT_DELETE',
+            action: 'BULK_PRODUCT_DELETE_HYBRID',
             entity: 'PRODUCT',
-            details: { count: result.count, ids },
+            details: {
+                softDeleted: softDeletedCount,
+                hardDeleted: hardDeletedCount,
+                ids
+            },
             adminId: req.user!.id
         });
 
-        res.json({ message: `Successfully deleted ${result.count} products`, count: result.count });
+        res.json({
+            message: `Successfully processed ${ids.length} products`,
+            softDeleted: softDeletedCount,
+            hardDeleted: hardDeletedCount
+        });
     } catch (error) {
         console.error('Bulk delete error:', error);
         res.status(500).json({ error: 'Bulk delete failed' });
