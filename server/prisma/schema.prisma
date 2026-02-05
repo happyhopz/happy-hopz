@@ -11,21 +11,21 @@ model User {
   id                 String         @id @default(uuid())
   email              String         @unique
   password           String
-  role               String         @default("USER") // USER, STAFF, ADMIN
+  role               String         @default("USER")
   name               String?
   phone              String?
-  points             Int            @default(0)
   isVerified         Boolean        @default(false)
   verificationCode   String?
   codeExpires        DateTime?
-  isGuest            Boolean        @default(false)
-  refreshToken       String?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @default(now()) @updatedAt
   emailNotifications Boolean        @default(true)
   promoNotifications Boolean        @default(true)
-  resetToken         String?
   resetExpires       DateTime?
+  resetToken         String?
+  points             Int            @default(0)
+  isGuest            Boolean        @default(false)
+  refreshToken       String?
   addresses          Address[]
   cartItems          CartItem[]
   notifications      Notification[]
@@ -47,12 +47,10 @@ model Notification {
 
 model Product {
   id             String      @id @default(uuid())
-  sku            String?     @unique
   name           String
   description    String
   price          Float
   discountPrice  Float?
-  costPrice      Float?      // For profit tracking
   category       String
   ageGroup       String
   sizes          String
@@ -61,15 +59,17 @@ model Product {
   images         String
   status         String      @default("ACTIVE")
   tags           String      @default("[]")
-  seoTitle       String?
-  seoDescription String?
-  isVariant      Boolean     @default(false)
-  parentId       String?     // Link variant to parent product
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  reviews        Review[]
-  orderItems     OrderItem[]
+  costPrice      Float?
+  isVariant      Boolean     @default(false)
+  parentId       String?
+  seoDescription String?
+  seoTitle       String?
+  sku            String?     @unique
   cartItems      CartItem[]
+  orderItems     OrderItem[]
+  reviews        Review[]
 }
 
 model CartItem {
@@ -81,35 +81,35 @@ model CartItem {
   color     String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId, size, color])
 }
 
 model Order {
-  id             String      @id @default(uuid())
-  userId         String?     // Optional for guest orders
-  guestEmail     String?     // For record keeping
-  guestName      String?
-  guestPhone     String?
-  total          Float
-  subtotal       Float?
-  tax            Float?
-  shipping       Float?
+  id                 String      @id @default(uuid())
+  userId             String?
+  total              Float
   status             String      @default("PLACED")
   paymentStatus      String      @default("PENDING")
   trackingNumber     String?
+  addressId          String
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @default(now()) @updatedAt
+  source             String      @default("ONLINE")
+  guestEmail         String?
+  guestName          String?
+  guestPhone         String?
+  shipping           Float?
+  subtotal           Float?
+  tax                Float?
   cancellationReason String?
   returnReason       String?
-  returnStatus       String?     // REQUESTED, APPROVED, REJECTED, COMPLETED
-  addressId          String
-  source         String      @default("ONLINE") // ONLINE, MANUAL (Draft Orders)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @default(now()) @updatedAt
-  address        Address     @relation(fields: [addressId], references: [id])
-  user           User?       @relation(fields: [userId], references: [id])
-  items          OrderItem[]
+  returnStatus       String?
+  address            Address     @relation(fields: [addressId], references: [id])
+  user               User?       @relation(fields: [userId], references: [id])
+  items              OrderItem[]
 }
 
 model OrderItem {
@@ -126,8 +126,8 @@ model OrderItem {
 }
 
 model Address {
-  id      String   @id @default(uuid())
-  userId  String?  // Optional for guest checkout
+  id      String  @id @default(uuid())
+  userId  String?
   name    String
   phone   String
   line1   String
@@ -135,7 +135,7 @@ model Address {
   city    String
   state   String
   pincode String
-  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders  Order[]
 }
 
@@ -159,11 +159,11 @@ model Review {
   userId     String
   rating     Int
   comment    String
-  images     String?  // JSON array of image URLs
-  recommend  Boolean  @default(true)
   isApproved Boolean  @default(false)
   isFeatured Boolean  @default(false)
   createdAt  DateTime @default(now())
+  images     String?
+  recommend  Boolean  @default(true)
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -193,19 +193,19 @@ model ContactForm {
   email     String
   subject   String
   message   String
-  status    String   @default("UNREAD") // UNREAD, READ, REPLIED
+  status    String   @default("UNREAD")
   createdAt DateTime @default(now())
 }
 
 model FlashSale {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   name          String
   discountValue Float
-  discountType  String    @default("PERCENTAGE")
+  discountType  String   @default("PERCENTAGE")
   startTime     DateTime
   endTime       DateTime
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
 }
 
 model MarketingPopup {
@@ -214,7 +214,7 @@ model MarketingPopup {
   content   String
   image     String?
   link      String?
-  type      String   @default("NEWSLETTER") // NEWSLETTER, SALE, ANNOUNCEMENT
+  type      String   @default("NEWSLETTER")
   active    Boolean  @default(false)
   createdAt DateTime @default(now())
 }

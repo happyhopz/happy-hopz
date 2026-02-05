@@ -337,8 +337,11 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
         } = req.body;
 
         // Deep Analysis Fix: Ensure all numeric fields are properly sanitised
+        // Ensure SKU is never just an empty string if provided but blank
+        const finalSku = (sku && sku.trim() !== '') ? sku : undefined;
+
         const updateData: any = {
-            sku,
+            sku: finalSku,
             name,
             description,
             price: parseFloat(String(price)) || 0,
@@ -355,7 +358,7 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             seoTitle,
             seoDescription,
             isVariant: Boolean(isVariant),
-            parentId
+            parentId: (parentId && parentId.trim() !== '') ? parentId : null
         };
 
         const product = await (prisma.product as any).update({
@@ -371,12 +374,19 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             adminId: req.user!.id
         });
 
+        // Helper to safely parse strings that might be arrays
+        const safeParse = (str: any) => {
+            if (typeof str !== 'string') return str;
+            try { return JSON.parse(str); }
+            catch (e) { return str.split(',').map((s: string) => s.trim()); }
+        };
+
         res.json({
             ...product,
-            sizes: JSON.parse(product.sizes),
-            colors: JSON.parse(product.colors),
-            images: JSON.parse(product.images),
-            tags: JSON.parse(product.tags || '[]')
+            sizes: safeParse(product.sizes),
+            colors: safeParse(product.colors),
+            images: safeParse(product.images),
+            tags: safeParse(product.tags)
         });
     } catch (error: any) {
         console.error('CRITICAL: Product Update Failed', {

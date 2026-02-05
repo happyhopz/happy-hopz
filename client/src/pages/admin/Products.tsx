@@ -321,7 +321,10 @@ const AdminProducts = () => {
             toast.success('Product created successfully');
             setIsDialogOpen(false);
         },
-        onError: () => toast.error('Failed to create product')
+        onError: (error: any) => {
+            const details = error.response?.data?.details || 'Failed to create product';
+            toast.error(details);
+        }
     });
 
     const updateMutation = useMutation({
@@ -332,7 +335,10 @@ const AdminProducts = () => {
             setIsDialogOpen(false);
             setEditingProduct(null);
         },
-        onError: () => toast.error('Failed to update product')
+        onError: (error: any) => {
+            const details = error.response?.data?.details || 'Failed to update product';
+            toast.error(details);
+        }
     });
 
     const deleteMutation = useMutation({
