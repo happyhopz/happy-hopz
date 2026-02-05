@@ -252,7 +252,8 @@ router.get('/products', async (req: AuthRequest, res: Response) => {
             ...p,
             sizes: JSON.parse(p.sizes),
             colors: JSON.parse(p.colors),
-            images: JSON.parse(p.images)
+            images: JSON.parse(p.images),
+            tags: JSON.parse(p.tags || '[]')
         }));
 
         res.json(formattedProducts);
@@ -264,7 +265,7 @@ router.get('/products', async (req: AuthRequest, res: Response) => {
 // Create product
 router.post('/products', async (req: AuthRequest, res: Response) => {
     try {
-        const { sku, name, description, price, discountPrice, category, ageGroup, sizes, colors, stock, images, status, seoTitle, seoDescription } = req.body;
+        const { sku, name, description, price, discountPrice, costPrice, category, ageGroup, sizes, colors, stock, images, status, tags, seoTitle, seoDescription } = req.body;
 
         const product = await (prisma.product as any).create({
             data: {
@@ -273,6 +274,7 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
                 description,
                 price: parseFloat(price),
                 discountPrice: discountPrice ? parseFloat(discountPrice) : null,
+                costPrice: costPrice ? parseFloat(costPrice) : null,
                 category,
                 ageGroup,
                 sizes: JSON.stringify(sizes),
@@ -280,6 +282,7 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
                 stock: parseInt(stock),
                 images: JSON.stringify(images),
                 status: status || 'ACTIVE',
+                tags: JSON.stringify(tags || []),
                 seoTitle,
                 seoDescription
             }
@@ -297,7 +300,8 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
             ...product,
             sizes: JSON.parse(product.sizes),
             colors: JSON.parse(product.colors),
-            images: JSON.parse(product.images)
+            images: JSON.parse(product.images),
+            tags: JSON.parse(product.tags || '[]')
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to create product' });
@@ -308,7 +312,7 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
 router.put('/products/:id', async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { sku, name, description, price, discountPrice, category, ageGroup, sizes, colors, stock, images, status, seoTitle, seoDescription } = req.body;
+        const { sku, name, description, price, discountPrice, costPrice, category, ageGroup, sizes, colors, stock, images, status, tags, seoTitle, seoDescription } = req.body;
 
         const product = await (prisma.product as any).update({
             where: { id: id as string },
@@ -318,6 +322,7 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
                 description,
                 price: parseFloat(price),
                 discountPrice: discountPrice ? parseFloat(discountPrice) : null,
+                costPrice: costPrice ? parseFloat(costPrice) : null,
                 category,
                 ageGroup,
                 sizes: JSON.stringify(sizes),
@@ -325,6 +330,7 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
                 stock: parseInt(stock),
                 images: JSON.stringify(images),
                 status,
+                tags: JSON.stringify(tags || []),
                 seoTitle,
                 seoDescription
             }
@@ -342,7 +348,8 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             ...product,
             sizes: JSON.parse(product.sizes),
             colors: JSON.parse(product.colors),
-            images: JSON.parse(product.images)
+            images: JSON.parse(product.images),
+            tags: JSON.parse(product.tags || '[]')
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to update product' });
