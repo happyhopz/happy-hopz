@@ -61,11 +61,20 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit({
+
+        // Comprehensive Fix: Ensure all types are correct before sending to API
+        const submissionData = {
             ...formData,
-            sizes: formData.sizes.split(',').map((s: any) => s.trim()),
-            colors: formData.colors.split(',').map((c: any) => c.trim())
-        });
+            price: formData.price === '' ? 0 : parseFloat(String(formData.price)),
+            discountPrice: formData.discountPrice === '' ? null : parseFloat(String(formData.discountPrice)),
+            costPrice: formData.costPrice === '' ? null : parseFloat(String(formData.costPrice)),
+            stock: formData.stock === '' ? 0 : parseInt(String(formData.stock)),
+            sizes: typeof formData.sizes === 'string' ? formData.sizes.split(',').map((s: any) => s.trim()) : formData.sizes,
+            colors: typeof formData.colors === 'string' ? formData.colors.split(',').map((c: any) => c.trim()) : formData.colors,
+            tags: formData.tags || []
+        };
+
+        onSubmit(submissionData);
     };
 
     return (

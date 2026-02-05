@@ -265,27 +265,36 @@ router.get('/products', async (req: AuthRequest, res: Response) => {
 // Create product
 router.post('/products', async (req: AuthRequest, res: Response) => {
     try {
-        const { sku, name, description, price, discountPrice, costPrice, category, ageGroup, sizes, colors, stock, images, status, tags, seoTitle, seoDescription } = req.body;
+        const {
+            sku, name, description, price, discountPrice, costPrice,
+            category, ageGroup, sizes, colors, stock, images,
+            status, tags, seoTitle, seoDescription,
+            isVariant, parentId
+        } = req.body;
+
+        const productData: any = {
+            sku: sku || `HH-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+            name,
+            description,
+            price: parseFloat(String(price)) || 0,
+            discountPrice: (discountPrice !== undefined && discountPrice !== null && discountPrice !== '') ? parseFloat(String(discountPrice)) : null,
+            costPrice: (costPrice !== undefined && costPrice !== null && costPrice !== '') ? parseFloat(String(costPrice)) : null,
+            category,
+            ageGroup,
+            sizes: Array.isArray(sizes) ? JSON.stringify(sizes) : sizes,
+            colors: Array.isArray(colors) ? JSON.stringify(colors) : colors,
+            stock: parseInt(String(stock)) || 0,
+            images: Array.isArray(images) ? JSON.stringify(images) : images,
+            status: status || 'ACTIVE',
+            tags: Array.isArray(tags) ? JSON.stringify(tags) : (tags || "[]"),
+            seoTitle,
+            seoDescription,
+            isVariant: Boolean(isVariant),
+            parentId
+        };
 
         const product = await (prisma.product as any).create({
-            data: {
-                sku: sku || `HH-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
-                name,
-                description,
-                price: parseFloat(price),
-                discountPrice: discountPrice ? parseFloat(discountPrice) : null,
-                costPrice: costPrice ? parseFloat(costPrice) : null,
-                category,
-                ageGroup,
-                sizes: JSON.stringify(sizes),
-                colors: JSON.stringify(colors),
-                stock: parseInt(stock),
-                images: JSON.stringify(images),
-                status: status || 'ACTIVE',
-                tags: JSON.stringify(tags || []),
-                seoTitle,
-                seoDescription
-            }
+            data: productData
         });
 
         await logActivity({
@@ -303,8 +312,16 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
             images: JSON.parse(product.images),
             tags: JSON.parse(product.tags || '[]')
         });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create product' });
+    } catch (error: any) {
+        console.error('CRITICAL: Product Creation Failed', {
+            error: error.message,
+            stack: error.stack,
+            body: { ...req.body, images: '[REDACTED]' }
+        });
+        res.status(500).json({
+            error: 'Failed to create product',
+            details: error.message
+        });
     }
 });
 
@@ -312,28 +329,38 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
 router.put('/products/:id', async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { sku, name, description, price, discountPrice, costPrice, category, ageGroup, sizes, colors, stock, images, status, tags, seoTitle, seoDescription } = req.body;
+        const {
+            sku, name, description, price, discountPrice, costPrice,
+            category, ageGroup, sizes, colors, stock, images,
+            status, tags, seoTitle, seoDescription,
+            isVariant, parentId
+        } = req.body;
+
+        // Deep Analysis Fix: Ensure all numeric fields are properly sanitised
+        const updateData: any = {
+            sku,
+            name,
+            description,
+            price: parseFloat(String(price)) || 0,
+            discountPrice: (discountPrice !== undefined && discountPrice !== null && discountPrice !== '') ? parseFloat(String(discountPrice)) : null,
+            costPrice: (costPrice !== undefined && costPrice !== null && costPrice !== '') ? parseFloat(String(costPrice)) : null,
+            category,
+            ageGroup,
+            sizes: Array.isArray(sizes) ? JSON.stringify(sizes) : sizes,
+            colors: Array.isArray(colors) ? JSON.stringify(colors) : colors,
+            stock: parseInt(String(stock)) || 0,
+            images: Array.isArray(images) ? JSON.stringify(images) : images,
+            status: status || 'ACTIVE',
+            tags: Array.isArray(tags) ? JSON.stringify(tags) : (tags || "[]"),
+            seoTitle,
+            seoDescription,
+            isVariant: Boolean(isVariant),
+            parentId
+        };
 
         const product = await (prisma.product as any).update({
             where: { id: id as string },
-            data: {
-                sku,
-                name,
-                description,
-                price: parseFloat(price),
-                discountPrice: discountPrice ? parseFloat(discountPrice) : null,
-                costPrice: costPrice ? parseFloat(costPrice) : null,
-                category,
-                ageGroup,
-                sizes: JSON.stringify(sizes),
-                colors: JSON.stringify(colors),
-                stock: parseInt(stock),
-                images: JSON.stringify(images),
-                status,
-                tags: JSON.stringify(tags || []),
-                seoTitle,
-                seoDescription
-            }
+            data: updateData
         });
 
         await logActivity({
@@ -351,8 +378,17 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             images: JSON.parse(product.images),
             tags: JSON.parse(product.tags || '[]')
         });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update product' });
+    } catch (error: any) {
+        console.error('CRITICAL: Product Update Failed', {
+            error: error.message,
+            stack: error.stack,
+            params: req.params,
+            body: { ...req.body, images: '[REDACTED]' } // Redact images to keep logs clean
+        });
+        res.status(500).json({
+            error: 'Failed to update product',
+            details: error.message
+        });
     }
 });
 
