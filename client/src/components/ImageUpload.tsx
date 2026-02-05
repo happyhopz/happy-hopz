@@ -10,6 +10,45 @@ interface ImageUploadProps {
 
 const ImageUpload = ({ images, onChange, maxImages = 5 }: ImageUploadProps) => {
     const [isDragging, setIsDragging] = useState(false);
+    const [isCompressing, setIsCompressing] = useState(false);
+
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(dataUrl);
+                };
+            };
+        });
+    };
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -19,7 +58,7 @@ const ImageUpload = ({ images, onChange, maxImages = 5 }: ImageUploadProps) => {
         handleFiles(files);
     }, [images]);
 
-    const handleFiles = (files: File[]) => {
+    const handleFiles = async (files: File[]) => {
         const imageFiles = files.filter(file => file.type.startsWith('image/'));
 
         if (images.length + imageFiles.length > maxImages) {
@@ -27,14 +66,19 @@ const ImageUpload = ({ images, onChange, maxImages = 5 }: ImageUploadProps) => {
             return;
         }
 
-        imageFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const base64 = e.target?.result as string;
-                onChange([...images, base64]);
-            };
-            reader.readAsDataURL(file);
-        });
+        setIsCompressing(true);
+        try {
+            const newImages = [...images];
+            for (const file of imageFiles) {
+                const compressedBase64 = await compressImage(file);
+                newImages.push(compressedBase64);
+            }
+            onChange(newImages);
+        } catch (error) {
+            console.error('Compression failed:', error);
+        } finally {
+            setIsCompressing(false);
+        }
     };
 
     const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,10 +117,10 @@ const ImageUpload = ({ images, onChange, maxImages = 5 }: ImageUploadProps) => {
                 <label htmlFor="image-upload" className="cursor-pointer">
                     <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                     <p className="text-sm font-nunito font-semibold mb-1">
-                        Click to upload or drag and drop
+                        {isCompressing ? 'Optimizing Images...' : 'Click to upload or drag and drop'}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                        PNG, JPG, GIF up to 10MB (Max {maxImages} images)
+                        High-quality optimization enabled (Max {maxImages} images)
                     </p>
                 </label>
             </div>
