@@ -16,52 +16,90 @@ const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_defau
 const ImageUpload = ({ images, onChange, maxImages = 5 }: ImageUploadProps) => {
     const [isUploading, setIsUploading] = useState(false);
 
+    const reloadScript = () => {
+        const id = 'cloudinary-widget-script';
+        const existing = document.getElementById(id);
+        if (existing) existing.remove();
+
+        const script = document.createElement('script');
+        script.id = id;
+        script.src = "https://upload-widget.cloudinary.com/global/all.js";
+        script.type = "text/javascript";
+        script.onload = () => toast.success("Media library ready! 📸");
+        document.body.appendChild(script);
+    };
+
     const openWidget = () => {
         if (images.length >= maxImages) {
             toast.error(`You can only upload up to ${maxImages} images`);
             return;
         }
 
+        // Check if Cloudinary library is loaded
         // @ts-ignore
-        const widget = window.cloudinary.createUploadWidget(
-            {
-                cloudName: CLOUD_NAME,
-                uploadPreset: UPLOAD_PRESET,
-                sources: ['local', 'url', 'camera', 'google_drive'],
-                multiple: true,
-                maxFiles: maxImages - images.length,
-                styles: {
-                    palette: {
-                        window: "#FFFFFF",
-                        windowBorder: "#90A0B3",
-                        tabIcon: "#0078FF",
-                        menuIcons: "#5A616A",
-                        textDark: "#000000",
-                        textLight: "#FFFFFF",
-                        link: "#0078FF",
-                        action: "#FF620C",
-                        inactiveTabIcon: "#0E2F5A",
-                        error: "#F44235",
-                        inProgress: "#0078FF",
-                        complete: "#20B832",
-                        sourceBg: "#E4EBF1"
+        if (!window.cloudinary) {
+            toast.error("Cloudinary library not loaded.", {
+                description: "Attempting to reload. Please wait a moment and try again."
+            });
+            reloadScript();
+            return;
+        }
+
+        // Validate basic credentials
+        if (CLOUD_NAME === "demo" || UPLOAD_PRESET === "ml_default") {
+            toast.warning("Using demo credentials", {
+                description: "Google Drive and multiple uploads may be restricted. Please set your own CLOUD_NAME and UPLOAD_PRESET in .env"
+            });
+        }
+
+        try {
+            // @ts-ignore
+            const widget = window.cloudinary.createUploadWidget(
+                {
+                    cloudName: CLOUD_NAME,
+                    uploadPreset: UPLOAD_PRESET,
+                    sources: ['local', 'url', 'camera', 'google_drive'],
+                    multiple: true,
+                    maxFiles: maxImages - images.length,
+                    clientAllowedFormats: ["png", "jpg", "jpeg", "webp", "gif"],
+                    styles: {
+                        palette: {
+                            window: "#FFFFFF",
+                            windowBorder: "#90A0B3",
+                            tabIcon: "#0078FF",
+                            menuIcons: "#5A616A",
+                            textDark: "#000000",
+                            textLight: "#FFFFFF",
+                            link: "#0078FF",
+                            action: "#FF620C",
+                            inactiveTabIcon: "#0E2F5A",
+                            error: "#F44235",
+                            inProgress: "#0078FF",
+                            complete: "#20B832",
+                            sourceBg: "#E4EBF1"
+                        }
+                    }
+                },
+                (error: any, result: any) => {
+                    if (!error && result && result.event === "success") {
+                        const newImageUrl = result.info.secure_url;
+                        onChange([...images, newImageUrl]);
+                        toast.success("Image uploaded successfully! ✨");
+                    }
+                    if (error) {
+                        toast.error("Upload widget error", {
+                            description: "Please check your Cloudinary configuration."
+                        });
+                        console.error("Cloudinary Error:", error);
                     }
                 }
-            },
-            (error: any, result: any) => {
-                if (!error && result && result.event === "success") {
-                    const newImageUrl = result.info.secure_url;
-                    onChange([...images, newImageUrl]);
-                    toast.success("Image uploaded successfully! ✨");
-                }
-                if (error) {
-                    toast.error("Upload failed. Please check your credentials.");
-                    console.error("Cloudinary Error:", error);
-                }
-            }
-        );
+            );
 
-        widget.open();
+            widget.open();
+        } catch (e) {
+            toast.error("Failed to initialize upload widget");
+            console.error("Widget initialization failed:", e);
+        }
     };
 
     const removeImage = (index: number) => {
