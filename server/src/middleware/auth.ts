@@ -39,8 +39,11 @@ export const optionalAuthenticate = (req: AuthRequest, res: Response, next: Next
     }
 };
 
+const ADMIN_EMAIL = 'happyhopz308@gmail.com';
+
 export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role !== 'ADMIN') {
+    const isEmailAdmin = req.user?.email === ADMIN_EMAIL;
+    if (req.user?.role !== 'ADMIN' && !isEmailAdmin) {
         return res.status(403).json({ error: 'Admin access required' });
     }
     next();
@@ -48,7 +51,8 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
 
 export const requireStaff = (req: AuthRequest, res: Response, next: NextFunction) => {
     const roles = ['ADMIN', 'STAFF'];
-    if (!req.user || !roles.includes(req.user.role)) {
+    const isEmailAdmin = req.user?.email === ADMIN_EMAIL;
+    if (!req.user || (!roles.includes(req.user.role) && !isEmailAdmin)) {
         return res.status(403).json({ error: 'Staff access required' });
     }
     next();
