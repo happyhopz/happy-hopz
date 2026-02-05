@@ -92,7 +92,7 @@ const Navbar = () => {
             <img
               src={pandaLogo}
               alt="Happy Hopz"
-              className="w-[72px] h-[72px] object-contain transition-transform group-hover:scale-105"
+              className="w-12 h-12 lg:w-[72px] lg:h-[72px] object-contain transition-transform group-hover:scale-105"
             />
             <div className="flex flex-col leading-none">
               <span className="text-base lg:text-lg font-playfair font-bold text-foreground tracking-widest">

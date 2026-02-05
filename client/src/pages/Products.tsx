@@ -313,7 +313,7 @@ const ProductCard = ({
             {isAdmin && (
                 <Link
                     to={`/admin/products?edit=${product.id}`}
-                    className="absolute top-4 right-16 w-10 h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center transition-transform hover:scale-110 z-20"
+                    className="absolute top-2 left-2 md:top-4 md:left-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center transition-transform hover:scale-110 z-20"
                     title="Edit Product"
                 >
                     <Edit className="w-5 h-5 text-white" />

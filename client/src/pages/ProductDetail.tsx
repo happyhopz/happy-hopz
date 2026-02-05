@@ -264,9 +264,9 @@ const ProductDetail = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
                     {/* Left Side - Image Gallery */}
-                    <div className="flex gap-4">
+                    <div className="flex flex-col md:flex-row gap-4">
                         {/* Thumbnail Strip */}
-                        <div className="hidden md:flex flex-col gap-3 w-16">
+                        <div className="flex flex-row md:flex-col gap-3 overflow-x-auto md:overflow-y-visible pb-2 md:pb-0 scrollbar-hide w-full md:w-20">
                             {product.images.map((img: string, idx: number) => (
                                 <button
                                     key={idx}
@@ -294,11 +294,11 @@ const ProductDetail = () => {
 
                         {/* Main Image */}
                         <div className="flex-1 grid grid-cols-1 gap-4">
-                            <div className="relative bg-card rounded-lg overflow-hidden aspect-[3/4] group">
+                            <div className="relative bg-white rounded-lg overflow-hidden aspect-[3/4] group flex items-center justify-center border border-border/50">
                                 <img
                                     src={product.images[selectedImageIndex] || product.images[0]}
                                     alt={product.name}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 p-4 md:p-8"
                                 />
 
                                 {/* Floating Badges */}
@@ -411,11 +411,11 @@ const ProductDetail = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-4 pt-2">
+                        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-2">
                             <Button
                                 onClick={handleAddToCart}
                                 disabled={adding || product.stock === 0}
-                                className="flex-1 h-14 text-base font-bold bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all"
+                                className="w-full sm:flex-1 h-14 text-base font-bold bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all"
                             >
                                 <ShoppingBag className="w-5 h-5 mr-2" />
                                 {adding ? 'ADDING...' : product.stock === 0 ? 'OUT OF STOCK' : 'ADD TO BAG'}
@@ -423,7 +423,7 @@ const ProductDetail = () => {
                             <Button
                                 onClick={handleWishlist}
                                 variant="outline"
-                                className={`flex-1 h-14 text-base font-bold border-2 ${isWishlisted
+                                className={`w-full sm:flex-1 h-14 text-base font-bold border-2 ${isWishlisted
                                     ? 'border-pink-500 text-pink-500 bg-pink-50'
                                     : 'border-muted-foreground/30'
                                     }`}
@@ -433,17 +433,17 @@ const ProductDetail = () => {
                             </Button>
                         </div>
 
-                        <div className="flex gap-4 pt-2">
+                        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-2">
                             <Button
                                 onClick={handleBuyNow}
                                 disabled={product.stock === 0}
                                 variant="outline"
-                                className="flex-[2] h-14 text-base font-bold border-2 border-pink-500 text-pink-500 hover:bg-pink-50"
+                                className="w-full sm:flex-[2] h-14 text-base font-bold border-2 border-pink-500 text-pink-500 hover:bg-pink-50"
                             >
                                 <Zap className="w-5 h-5 mr-2" />
                                 BUY NOW
                             </Button>
-                            <ShareProduct product={product} className="flex-1 h-14 shadow-md" />
+                            <ShareProduct product={product} className="w-full sm:flex-1 h-14 shadow-md" />
                         </div>
 
                         <Separator />

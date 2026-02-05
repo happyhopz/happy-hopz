@@ -205,7 +205,7 @@ const ShoeCard = ({
         <Link
           to={`/admin/products?edit=${product.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-4 right-16 w-10 h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center transition-transform hover:scale-110 z-20"
+          className="absolute top-2 left-2 md:top-4 md:left-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center transition-transform hover:scale-110 z-20"
           title="Edit Product"
         >
           <Edit className="w-5 h-5 text-white" />
@@ -277,7 +277,7 @@ const ShoeCard = ({
         {/* Floating Badges */}
         <span
           style={tag.tag.toLowerCase().includes('sale') || tag.tag.toLowerCase().includes('new') ? { backgroundColor: '#06b6d4' } : {}}
-          className={`absolute top-2 left-2 md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full z-50 shadow-md pointer-events-none`}
+          className={`absolute bottom-2 left-2 md:bottom-auto md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full z-10 shadow-md pointer-events-none`}
         >
           {tag.tag}
         </span>

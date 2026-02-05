@@ -5,6 +5,27 @@
 @tailwind utilities;
 
 @layer base {
+
+  html,
+  body {
+    @apply overflow-x-hidden w-full;
+    max-width: 100vw;
+  }
+}
+
+@layer components {
+  .mobile-touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer base {
   :root {
     /* Soft gradient background matching logo */
     --background: 190 60% 96%;
