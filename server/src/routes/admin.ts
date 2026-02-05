@@ -365,8 +365,8 @@ router.delete('/products/:id', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// Bulk Delete products
-router.delete('/products/bulk', async (req: AuthRequest, res: Response) => {
+// Bulk Delete products (using POST for body support compatibility)
+router.post('/products/bulk-delete', async (req: AuthRequest, res: Response) => {
     try {
         const { ids } = z.object({
             ids: z.array(z.string())

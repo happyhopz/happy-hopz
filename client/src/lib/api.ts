@@ -97,7 +97,7 @@ export const adminAPI = {
     updateProduct: (id: string, data: any) => api.put(`/admin/products/${id}`, data),
     deleteProduct: (id: string) => api.delete(`/admin/products/${id}`),
     bulkCreateProducts: (products: any[]) => api.post('/admin/products/bulk', { products }),
-    bulkDeleteProducts: (ids: string[]) => api.delete('/admin/products/bulk', { data: { ids } }),
+    bulkDeleteProducts: (ids: string[]) => api.post('/admin/products/bulk-delete', { ids }),
     bulkStockUpdate: (updates: { sku: string; stock: number }[]) => api.put('/admin/inventory/bulk-stock', { updates }),
     generateSEO: (id: string) => api.post(`/admin/products/${id}/seo-generate`),
     search: (query: string) => api.get(`/admin/search?q=${query}`),
