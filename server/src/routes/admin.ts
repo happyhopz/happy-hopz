@@ -365,6 +365,33 @@ router.delete('/products/:id', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// Bulk Delete products
+router.delete('/products/bulk', async (req: AuthRequest, res: Response) => {
+    try {
+        const { ids } = z.object({
+            ids: z.array(z.string())
+        }).parse(req.body);
+
+        const result = await prisma.product.deleteMany({
+            where: {
+                id: { in: ids }
+            }
+        });
+
+        await logActivity({
+            action: 'BULK_PRODUCT_DELETE',
+            entity: 'PRODUCT',
+            details: { count: result.count, ids },
+            adminId: req.user!.id
+        });
+
+        res.json({ message: `Successfully deleted ${result.count} products`, count: result.count });
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        res.status(500).json({ error: 'Bulk delete failed' });
+    }
+});
+
 // Global Search
 router.get('/search', async (req: AuthRequest, res: Response) => {
     try {

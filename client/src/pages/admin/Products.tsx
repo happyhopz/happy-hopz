@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle, Sparkles, Box } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle, Sparkles, Box, CheckSquare, Square, Check } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 const ProductForm = ({ product, onSubmit, isLoading }: any) => {
@@ -269,7 +270,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                 </Select>
             </div>
             <Button type="submit" variant="hopz" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Saving...' : product ? 'Update Product' : 'Create Product'}
+                {isLoading ? 'Saving...' : product ? 'Save Product' : 'Create Product'}
             </Button>
         </form>
     );
@@ -282,6 +283,7 @@ const AdminProducts = () => {
     const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [inventoryFile, setInventoryFile] = useState<File | null>(null);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const bulkStockMutation = useMutation({
         mutationFn: (updates: any[]) => adminAPI.bulkStockUpdate(updates),
@@ -329,8 +331,19 @@ const AdminProducts = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-products'] });
             toast.success('Product deleted successfully');
+            setSelectedIds(prev => prev.filter(selectedId => selectedId !== deleteMutation.variables));
         },
         onError: () => toast.error('Failed to delete product')
+    });
+
+    const bulkDeleteMutation = useMutation({
+        mutationFn: (ids: string[]) => adminAPI.bulkDeleteProducts(ids),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            toast.success('Products deleted successfully');
+            setSelectedIds([]);
+        },
+        onError: () => toast.error('Failed to delete products')
     });
 
     const bulkCreateMutation = useMutation({
@@ -482,6 +495,23 @@ const AdminProducts = () => {
                         </DialogContent>
                     </Dialog>
 
+                    {products && products.length > 0 && (
+                        <Button
+                            variant="outline"
+                            className="rounded-xl font-bold border-2 gap-2"
+                            onClick={() => {
+                                if (selectedIds.length === products.length) {
+                                    setSelectedIds([]);
+                                } else {
+                                    setSelectedIds(products.map((p: any) => p.id));
+                                }
+                            }}
+                        >
+                            {selectedIds.length === products?.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                            {selectedIds.length === products?.length ? 'Deselect All' : 'Select All'}
+                        </Button>
+                    )}
+
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button className="rounded-xl px-6 font-bold shadow-lg shadow-primary/20 gap-2" onClick={() => setEditingProduct(null)}>
@@ -522,10 +552,23 @@ const AdminProducts = () => {
                     <p className="text-muted-foreground mb-4">Get started by adding your first product</p>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-4 pb-24">
                     {products?.filter(Boolean).map((product: any) => (
-                        <Card key={product.id} className="p-6">
-                            <div className="flex gap-6">
+                        <Card key={product.id} className={`p-6 transition-all duration-200 border-2 ${selectedIds.includes(product.id) ? 'border-primary bg-primary/5 shadow-md' : 'border-transparent'}`}>
+                            <div className="flex gap-6 items-start">
+                                <div className="pt-2">
+                                    <Checkbox
+                                        checked={selectedIds.includes(product.id)}
+                                        onCheckedChange={(checked) => {
+                                            if (checked) {
+                                                setSelectedIds(prev => [...prev, product.id]);
+                                            } else {
+                                                setSelectedIds(prev => prev.filter(id => id !== product.id));
+                                            }
+                                        }}
+                                        className="h-5 w-5 rounded-md border-2"
+                                    />
+                                </div>
                                 <div className="w-24 h-24 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0">
                                     {product.images?.[0] ? (
                                         <img
@@ -608,6 +651,44 @@ const AdminProducts = () => {
                             </div>
                         </Card>
                     ))}
+                </div>
+            )}
+
+            {/* Bulk Actions Bar */}
+            {selectedIds.length > 0 && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
+                    <Card className="bg-black/90 text-white border-white/10 shadow-2xl px-6 py-4 rounded-3xl flex items-center gap-8 backdrop-blur-xl">
+                        <div className="flex items-center gap-3 pr-8 border-r border-white/20">
+                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-sm font-black text-black">
+                                {selectedIds.length}
+                            </div>
+                            <p className="text-sm font-bold tracking-wide">Products Selected</p>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Button
+                                variant="destructive"
+                                className="rounded-xl font-bold gap-2 px-6 h-11 shadow-lg shadow-red-500/20"
+                                onClick={() => {
+                                    if (confirm(`Are you sure you want to delete ${selectedIds.length} products?`)) {
+                                        bulkDeleteMutation.mutate(selectedIds);
+                                    }
+                                }}
+                                disabled={bulkDeleteMutation.isPending}
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                {bulkDeleteMutation.isPending ? 'Deleting...' : 'Delete Selected'}
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                className="rounded-xl font-bold text-white hover:bg-white/10 px-4 h-11"
+                                onClick={() => setSelectedIds([])}
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                    </Card>
                 </div>
             )}
         </>
