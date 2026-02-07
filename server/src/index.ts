@@ -17,6 +17,8 @@ import contentRoutes from './routes/content';
 import notificationRoutes from './routes/notifications';
 import addressRoutes from './routes/addresses';
 import contactRoutes from './routes/contacts';
+import returnsRoutes from './routes/returns';
+import adminReturnsRoutes from './routes/adminReturns';
 import marketingRoutes from './routes/marketing';
 import searchRoutes from './routes/search';
 import { authenticate, requireAdmin, AuthRequest, checkMaintenance } from './middleware/auth';
@@ -108,6 +110,8 @@ const registerRoutes = (prefix: string) => {
     app.use(`${prefix}/notifications`, notificationRoutes);
     app.use(`${prefix}/addresses`, addressRoutes);
     app.use(`${prefix}/contacts`, contactRoutes);
+    app.use(`${prefix}/returns`, returnsRoutes);
+    app.use(`${prefix}/admin/returns`, adminReturnsRoutes);
     app.use(`${prefix}/marketing`, marketingRoutes);
     app.use(`${prefix}/search`, searchRoutes);
 };
