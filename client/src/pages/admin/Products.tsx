@@ -31,6 +31,10 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         status: product?.status || 'ACTIVE',
         tags: product?.tags || [],
         costPrice: product?.costPrice || '',
+        boxPrice: product?.boxPrice || '',
+        tagPrice: product?.tagPrice || '',
+        shippingCost: product?.shippingCost || '',
+        otherCosts: product?.otherCosts || '',
         sku: product?.sku || '',
         seoTitle: product?.seoTitle || '',
         seoDescription: product?.seoDescription || ''
@@ -68,6 +72,10 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
             price: formData.price === '' ? 0 : parseFloat(String(formData.price)),
             discountPrice: formData.discountPrice === '' ? null : parseFloat(String(formData.discountPrice)),
             costPrice: formData.costPrice === '' ? null : parseFloat(String(formData.costPrice)),
+            boxPrice: formData.boxPrice === '' ? null : parseFloat(String(formData.boxPrice)),
+            tagPrice: formData.tagPrice === '' ? null : parseFloat(String(formData.tagPrice)),
+            shippingCost: formData.shippingCost === '' ? null : parseFloat(String(formData.shippingCost)),
+            otherCosts: formData.otherCosts === '' ? null : parseFloat(String(formData.otherCosts)),
             stock: formData.stock === '' ? 0 : parseInt(String(formData.stock)),
             sizes: typeof formData.sizes === 'string' ? formData.sizes.split(',').map((s: any) => s.trim()) : formData.sizes,
             colors: typeof formData.colors === 'string' ? formData.colors.split(',').map((c: any) => c.trim()) : formData.colors,
@@ -126,6 +134,97 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                         onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
                     />
                 </div>
+            </div>
+
+            {/* Cost Breakdown Section */}
+            <div className="border-t pt-4 mt-2">
+                <Label className="text-base font-semibold mb-3 block">Additional Cost Breakdown (Optional)</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <Label className="text-sm">Box Price (₹)</Label>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.boxPrice}
+                            placeholder="Packaging"
+                            onChange={(e) => setFormData({ ...formData, boxPrice: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <Label className="text-sm">Tag Price (₹)</Label>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.tagPrice}
+                            placeholder="Labels/Tags"
+                            onChange={(e) => setFormData({ ...formData, tagPrice: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <Label className="text-sm">Shipping Cost (₹)</Label>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.shippingCost}
+                            placeholder="Per unit"
+                            onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <Label className="text-sm">Other Costs (₹)</Label>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.otherCosts}
+                            placeholder="Misc."
+                            onChange={(e) => setFormData({ ...formData, otherCosts: e.target.value })}
+                        />
+                    </div>
+                </div>
+                {/* Total Cost Display */}
+                {(formData.costPrice || formData.boxPrice || formData.tagPrice || formData.shippingCost || formData.otherCosts) && (
+                    <div className="mt-3 p-3 bg-primary/5 rounded-lg">
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="font-semibold">Total Cost per Unit:</span>
+                            <span className="font-bold text-primary">
+                                ₹{(
+                                    (parseFloat(formData.costPrice) || 0) +
+                                    (parseFloat(formData.boxPrice) || 0) +
+                                    (parseFloat(formData.tagPrice) || 0) +
+                                    (parseFloat(formData.shippingCost) || 0) +
+                                    (parseFloat(formData.otherCosts) || 0)
+                                ).toFixed(2)}
+                            </span>
+                        </div>
+                        {formData.price && (
+                            <div className="flex justify-between items-center text-sm mt-1">
+                                <span className="font-semibold">Estimated Profit per Unit:</span>
+                                <span className={`font-bold ${(parseFloat(formData.price) - (
+                                        (parseFloat(formData.costPrice) || 0) +
+                                        (parseFloat(formData.boxPrice) || 0) +
+                                        (parseFloat(formData.tagPrice) || 0) +
+                                        (parseFloat(formData.shippingCost) || 0) +
+                                        (parseFloat(formData.otherCosts) || 0)
+                                    )) > 0 ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                    ₹{(
+                                        parseFloat(formData.price) - (
+                                            (parseFloat(formData.costPrice) || 0) +
+                                            (parseFloat(formData.boxPrice) || 0) +
+                                            (parseFloat(formData.tagPrice) || 0) +
+                                            (parseFloat(formData.shippingCost) || 0) +
+                                            (parseFloat(formData.otherCosts) || 0)
+                                        )
+                                    ).toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
             <div>
                 <Label>SKU (Stock Keeping Unit)</Label>

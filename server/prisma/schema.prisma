@@ -62,6 +62,10 @@ model Product {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   costPrice      Float?
+  boxPrice       Float?      // Packaging cost per unit
+  tagPrice       Float?      // Tag/sticker cost per unit
+  shippingCost   Float?      // Shipping cost per unit
+  otherCosts     Float?      // Miscellaneous costs per unit
   isVariant      Boolean     @default(false)
   parentId       String?
   seoDescription String?

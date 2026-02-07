@@ -76,12 +76,39 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
         });
 
         let totalProfit = 0;
+        let totalProductCost = 0;
+        let totalPackagingCost = 0;
+        let totalLabelingCost = 0;
+        let totalShippingCost = 0;
+        let totalOtherCosts = 0;
+
         completedOrders.forEach((order: any) => {
             order.items?.forEach((item: any) => {
-                const cost = item.product?.costPrice || (item.price * 0.6); // Default 60% if cost missing
-                totalProfit += (item.price - cost) * item.quantity;
+                const product = item.product;
+
+                // Calculate total cost per unit (all components)
+                const productCost = product?.costPrice || (item.price * 0.6); // Default 60% if cost missing
+                const boxCost = product?.boxPrice || 0;
+                const tagCost = product?.tagPrice || 0;
+                const shipCost = product?.shippingCost || 0;
+                const otherCost = product?.otherCosts || 0;
+
+                const totalUnitCost = productCost + boxCost + tagCost + shipCost + otherCost;
+                const quantity = item.quantity;
+
+                // Accumulate costs by category
+                totalProductCost += productCost * quantity;
+                totalPackagingCost += boxCost * quantity;
+                totalLabelingCost += tagCost * quantity;
+                totalShippingCost += shipCost * quantity;
+                totalOtherCosts += otherCost * quantity;
+
+                // Calculate profit
+                totalProfit += (item.price - totalUnitCost) * quantity;
             });
         });
+
+        console.log(`[Dashboard Stats] Delivered Orders: ${completedOrders.length}, Net Profit: ₹${totalProfit.toFixed(2)}, Total Costs: ₹${(totalProductCost + totalPackagingCost + totalLabelingCost + totalShippingCost + totalOtherCosts).toFixed(2)}`);
 
         // Calculate daily revenue (last 7 days)
         const sevenDaysAgo = new Date();
@@ -113,6 +140,13 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             totalOrders: deliveredOrders,
             totalRevenue,
             totalProfit,
+            totalProductCost,
+            totalPackagingCost,
+            totalLabelingCost,
+            totalShippingCost,
+            totalOtherCosts,
+            totalCosts: totalProductCost + totalPackagingCost + totalLabelingCost + totalShippingCost + totalOtherCosts,
+            profitMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0,
             averageOrderValue: deliveredOrders > 0 ? totalRevenue / deliveredOrders : 0,
             recentOrders,
             lowStockProducts: lowStockProducts.map(p => ({
@@ -343,6 +377,7 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
         const {
             sku, name, description, price, discountPrice, costPrice,
+            boxPrice, tagPrice, shippingCost, otherCosts,
             category, ageGroup, sizes, colors, stock, images,
             status, tags, seoTitle, seoDescription,
             isVariant, parentId
@@ -359,6 +394,10 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             price: parseFloat(String(price)) || 0,
             discountPrice: (discountPrice !== undefined && discountPrice !== null && discountPrice !== '') ? parseFloat(String(discountPrice)) : null,
             costPrice: (costPrice !== undefined && costPrice !== null && costPrice !== '') ? parseFloat(String(costPrice)) : null,
+            boxPrice: (boxPrice !== undefined && boxPrice !== null && boxPrice !== '') ? parseFloat(String(boxPrice)) : null,
+            tagPrice: (tagPrice !== undefined && tagPrice !== null && tagPrice !== '') ? parseFloat(String(tagPrice)) : null,
+            shippingCost: (shippingCost !== undefined && shippingCost !== null && shippingCost !== '') ? parseFloat(String(shippingCost)) : null,
+            otherCosts: (otherCosts !== undefined && otherCosts !== null && otherCosts !== '') ? parseFloat(String(otherCosts)) : null,
             category,
             ageGroup,
             sizes: Array.isArray(sizes) ? JSON.stringify(sizes) : sizes,
