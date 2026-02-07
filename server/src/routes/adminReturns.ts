@@ -77,7 +77,7 @@ router.get('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
 
         const returnRequest = await prisma.returnRequest.findUnique({
-            where: { id },
+            where: { id: id as string },
             include: {
                 items: true,
                 order: {
@@ -130,7 +130,7 @@ router.patch('/:id/approve', requireAdmin, async (req: AuthRequest, res: Respons
         }
 
         const updated = await prisma.returnRequest.update({
-            where: { id },
+            where: { id: id as string },
             data: {
                 status: 'APPROVED',
                 pickupScheduled: pickupScheduled ? new Date(pickupScheduled) : null,
@@ -188,7 +188,7 @@ router.patch('/:id/reject', requireAdmin, async (req: AuthRequest, res: Response
         }
 
         const updated = await prisma.returnRequest.update({
-            where: { id },
+            where: { id: id as string },
             data: {
                 status: 'REJECTED',
                 adminNotes: `Rejection reason: ${reason}${adminNotes ? `\n${adminNotes}` : ''}`,
@@ -255,7 +255,7 @@ router.patch('/:id/complete', requireAdmin, async (req: AuthRequest, res: Respon
         }
 
         const updated = await prisma.returnRequest.update({
-            where: { id },
+            where: { id: id as string },
             data: {
                 status: 'COMPLETED',
                 refundMethod: refundMethod || returnRequest.refundMethod,
