@@ -127,221 +127,182 @@ const AdminOrderDetail = () => {
             {/* Final High-Fidelity Tax Invoice - Visible ONLY on Print */}
             <div className="hidden print:block invoice-container max-w-4xl mx-auto p-0 font-sans text-black bg-white leading-relaxed">
                 {/* Header Section - Centered & Professional */}
-                <div className="text-center border-b-4 border-black pb-6 mb-8 avoid-break">
-                    <h1 className="text-5xl font-black uppercase tracking-[0.25em] mb-4">TAX INVOICE</h1>
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-black uppercase tracking-tight">Happy Hopz</h2>
-                        <p className="text-sm font-bold uppercase tracking-widest text-gray-600">Premium Kids Footwear & Lifestyle Store</p>
-                        <div className="flex justify-center gap-8 text-[11px] uppercase font-black text-black pt-2">
+                <div className="text-center border-b-4 border-black pb-4 mb-4 avoid-break">
+                    <h1 className="text-3xl font-black uppercase tracking-[0.25em] mb-2">TAX INVOICE</h1>
+                    <div className="space-y-1">
+                        <h2 className="text-xl font-black uppercase tracking-tight">Happy Hopz</h2>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Premium Kids Footwear & Lifestyle Store</p>
+                        <div className="flex justify-center gap-6 text-[10px] uppercase font-black text-black pt-1">
                             <span>Proprietorship Firm</span>
                             <span className="opacity-40">|</span>
                             <span>GSTIN: XXXXXXXXXXXXXXX</span>
                         </div>
-                        <div className="flex justify-center gap-6 text-[10px] uppercase font-bold text-gray-500">
+                        <div className="flex justify-center gap-4 text-[9px] uppercase font-bold text-gray-500">
                             <span>Email: support@happyhopz.com</span>
+                            <span>|</span>
                             <span>Website: www.happyhopz.com</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-10 mb-8 avoid-break">
+                <div className="grid grid-cols-2 gap-6 mb-4 avoid-break">
                     {/* Invoice & Order Details */}
-                    <div className="border border-black p-6 rounded-none">
-                        <h3 className="text-[11px] font-black uppercase mb-5 tracking-[0.2em] border-b border-black pb-1">
+                    <div className="border border-black p-4 rounded-none">
+                        <h3 className="text-[10px] font-black uppercase mb-3 tracking-[0.2em] border-b border-black pb-1">
                             Invoice Details
                         </h3>
-                        <div className="grid grid-cols-2 gap-y-2.5 text-xs">
-                            <span className="font-bold uppercase opacity-60">Invoice No:</span>
+                        <div className="grid grid-cols-2 gap-y-1.5 text-[11px]">
+                            <span className="font-bold uppercase opacity-60">Invoice:</span>
                             <span className="font-black uppercase tracking-wider">HHZ-{String(order.id).slice(0, 6).toUpperCase()}</span>
 
                             <span className="font-bold uppercase opacity-60">Order ID:</span>
-                            <span className="font-black uppercase tracking-wider">HHZ-ORD-{String(order.id).slice(6, 12).toUpperCase()}</span>
+                            <span className="font-black uppercase tracking-wider">ORD-{String(order.id).slice(18).toUpperCase()}</span>
 
-                            <span className="font-bold uppercase opacity-60">Invoice Date:</span>
-                            <span className="font-black">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                            <span className="font-bold uppercase opacity-60">Date:</span>
+                            <span className="font-black">{new Date().toLocaleDateString('en-IN')}</span>
 
-                            <span className="font-bold uppercase opacity-60">Order Date:</span>
-                            <span className="font-black">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-
-                            <span className="font-bold uppercase opacity-60">Payment Method:</span>
-                            <span className="font-black uppercase">{order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod}</span>
-
-                            <span className="font-bold uppercase opacity-60">Ref ID:</span>
-                            <span className="font-medium truncate">{order.paymentId || 'N/A'}</span>
+                            <span className="font-bold uppercase opacity-60">Method:</span>
+                            <span className="font-black uppercase">{order.paymentMethod}</span>
                         </div>
                     </div>
 
                     {/* Customer Details */}
-                    <div className="border border-black p-6 rounded-none">
-                        <h3 className="text-[11px] font-black uppercase mb-5 tracking-[0.2em] border-b border-black pb-1">
+                    <div className="border border-black p-4 rounded-none">
+                        <h3 className="text-[10px] font-black uppercase mb-3 tracking-[0.2em] border-b border-black pb-1">
                             Shipping Details
                         </h3>
-                        <div className="text-xs space-y-2">
-                            <p className="font-black text-base uppercase tracking-tight">{order.address?.name}</p>
-                            <div className="font-bold text-gray-800 leading-snug">
-                                <p>{order.address?.line1}</p>
-                                {order.address?.line2 && <p>{order.address.line2}</p>}
-                                <p className="uppercase">{order.address?.city}, {order.address?.state} - {order.address?.pincode}</p>
+                        <div className="text-[11px] space-y-1">
+                            <p className="font-black uppercase tracking-tight">{order.address?.name}</p>
+                            <div className="font-bold text-gray-800 leading-tight">
+                                <p>{order.address?.line1}, {order.address?.city}</p>
+                                <p className="uppercase">{order.address?.state} - {order.address?.pincode}</p>
                             </div>
-                            <div className="pt-4 border-t border-gray-100 space-y-1">
-                                <p><span className="font-bold uppercase opacity-40 mr-3">Phone:</span> <span className="font-black">{order.address?.phone}</span></p>
-                                <p><span className="font-bold uppercase opacity-40 mr-3">Email:</span> <span className="font-black lowercase">{order.user?.email || 'N/A'}</span></p>
+                            <div className="pt-2 border-t border-gray-100 flex gap-4">
+                                <p><span className="font-black uppercase opacity-40">P:</span> {order.address?.phone}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Product Table */}
-                <div className="mb-8 avoid-break">
-                    <h3 className="text-[11px] font-black uppercase mb-4 tracking-[0.2em] px-1">
-                        Product Particulars
-                    </h3>
-                    <table className="w-full border-collapse border-y-2 border-black text-xs">
+                <div className="mb-4 avoid-break">
+                    <table className="w-full border-collapse border-y-2 border-black text-[11px]">
                         <thead>
                             <tr className="bg-gray-50 border-b border-black font-black uppercase text-[10px] tracking-widest">
-                                <th className="py-4 px-4 text-left w-12">#</th>
-                                <th className="py-4 px-4 text-left">Description</th>
-                                <th className="py-4 px-4 text-center w-24">Size</th>
-                                <th className="py-4 px-4 text-center w-20">Qty</th>
-                                <th className="py-4 px-4 text-right w-32 border-l border-black/5 bg-white">MRP (₹)</th>
-                                <th className="py-4 px-4 text-right w-36 border-l border-black bg-gray-100">Price (₹)</th>
+                                <th className="py-2 px-4 text-left w-12">#</th>
+                                <th className="py-2 px-4 text-left">Description</th>
+                                <th className="py-2 px-4 text-center w-24">Size</th>
+                                <th className="py-2 px-4 text-center w-20">Qty</th>
+                                <th className="py-2 px-4 text-right w-36 border-l border-black bg-gray-100">Price (₹)</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {order.items?.map((item: any, idx: number) => {
-                                const mrp = item.mrp || (item.price * 1.2);
-                                return (
-                                    <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                                        <td className="py-5 px-4 text-center font-bold text-gray-400">{String(idx + 1).padStart(2, '0')}</td>
-                                        <td className="py-5 px-4">
-                                            <p className="font-black uppercase text-sm tracking-tight">{item.name}</p>
-                                        </td>
-                                        <td className="py-5 px-4 text-center font-black italic">{item.size}</td>
-                                        <td className="py-5 px-4 text-center font-black">{item.quantity}</td>
-                                        <td className="py-5 px-4 text-right font-bold text-gray-300 border-l border-black/5">₹{mrp.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                                        <td className="py-5 px-4 text-right font-black border-l border-black bg-gray-50/50">₹{(item.price * item.quantity).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                                    </tr>
-                                );
-                            })}
+                            {order.items?.map((item: any, idx: number) => (
+                                <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
+                                    <td className="py-2 px-4 text-center font-bold text-gray-400">{String(idx + 1).padStart(2, '0')}</td>
+                                    <td className="py-2 px-4 font-black uppercase">{item.name}</td>
+                                    <td className="py-2 px-4 text-center font-black italic">{item.size}</td>
+                                    <td className="py-2 px-4 text-center font-black">{item.quantity}</td>
+                                    <td className="py-2 px-4 text-right font-black border-l border-black bg-gray-50/50">{(item.price * item.quantity).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Totals & Shipping */}
-                <div className="grid grid-cols-2 gap-10 mb-8 avoid-break">
-                    {/* Left Side: Shipping & Declaration */}
-                    <div className="space-y-6">
-                        <div className="border border-black p-6 rounded-none">
-                            <h3 className="text-[11px] font-black uppercase mb-5 tracking-[0.2em] border-b border-black pb-1">
-                                Shipping Logistics
+                <div className="grid grid-cols-2 gap-6 mb-4 avoid-break">
+                    {/* Left Column - Shipping & Declaration */}
+                    <div className="space-y-4">
+                        <div className="border border-black p-4 rounded-none">
+                            <h3 className="text-[10px] font-black uppercase mb-3 tracking-[0.2em] border-b border-black pb-1">
+                                Logistics
                             </h3>
-                            <div className="grid grid-cols-2 gap-y-3 text-xs">
-                                <span className="font-bold uppercase opacity-50">Logistics Partner:</span>
-                                <span className="font-black uppercase tracking-tight">ECOM EXPRESS / DELHIVERY</span>
+                            <div className="grid grid-cols-2 gap-y-1.5 text-[10px]">
+                                <span className="font-bold uppercase opacity-50">Logistics:</span>
+                                <span className="font-black uppercase">ECOM / DELHIVERY</span>
 
-                                <span className="font-bold uppercase opacity-50">AWB / Tracking:</span>
-                                <span className="font-black underline tracking-widest">{order.trackingNumber || 'PENDING ASSIGNMENT'}</span>
-
-                                <span className="font-bold uppercase opacity-50">Manifest Date:</span>
-                                <span className="font-black">{order.trackingNumber ? new Date().toLocaleDateString('en-IN') : 'AWAITING PICKUP'}</span>
+                                <span className="font-bold uppercase opacity-50">AWB No:</span>
+                                <span className="font-black underline tracking-widest">{order.trackingNumber || 'PENDING'}</span>
                             </div>
                         </div>
 
-                        <div className="p-6 border-2 border-dashed border-black bg-gray-50/20">
-                            <h4 className="text-[11px] font-black uppercase mb-3 tracking-[0.2em]">
-                                Declaration
-                            </h4>
-                            <p className="text-[10px] font-bold leading-relaxed uppercase text-gray-700">
-                                We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
+                        <div className="p-4 border-2 border-dashed border-black">
+                            <p className="text-[9px] font-bold leading-relaxed uppercase text-gray-500">
+                                * We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
                             </p>
                         </div>
                     </div>
 
-                    {/* Right Side: Financial Summary */}
-                    <div className="border-2 border-black p-8 bg-gray-100/10">
-                        <h3 className="text-[11px] font-black uppercase mb-6 tracking-[0.2em] border-b-2 border-black pb-1">
-                            Price Summary
-                        </h3>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center text-xs">
+                    {/* Right Column - Totals */}
+                    <div className="border-2 border-black p-6 bg-gray-100/10">
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-[11px]">
                                 <span className="font-bold uppercase opacity-50">Subtotal</span>
                                 <span className="font-black">₹{(order.subtotal || (order.total - (order.tax || 0))).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="font-bold uppercase opacity-50 text-gray-400">Trade Discount</span>
+                            <div className="flex justify-between items-center text-[11px]">
+                                <span className="font-bold uppercase opacity-50 text-gray-400">Discount</span>
                                 <span className="font-black text-gray-400">-₹{(order.discount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="font-bold uppercase opacity-50">Shipping & Handling</span>
+                            <div className="flex justify-between items-center text-[11px]">
+                                <span className="font-bold uppercase opacity-50">Shipping</span>
                                 <span className="font-black">{order.shipping > 0 ? `₹${order.shipping.toLocaleString('en-IN')}` : '0.00'}</span>
                             </div>
 
-                            <div className="border-t border-black/10 my-6 pt-6 space-y-3">
+                            <div className="border-t border-black/10 my-2 pt-2 space-y-1.5">
                                 {(() => {
                                     const tax = order.tax || (order.total * 0.18);
                                     const halfTax = tax / 2;
-                                    // Logic: If state is Delhi (where business is), show CGST/SGST. Else show IGST.
                                     const isInterstate = order.address?.state.toLowerCase() !== 'delhi';
 
                                     if (isInterstate) {
                                         return (
-                                            <div className="flex justify-between items-center text-xs font-black text-black/80">
-                                                <span className="uppercase tracking-widest">IGST (18.00%)</span>
+                                            <div className="flex justify-between items-center text-[10px] font-black">
+                                                <span className="uppercase opacity-50">IGST (18%)</span>
                                                 <span>₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                             </div>
                                         );
                                     }
                                     return (
                                         <>
-                                            <div className="flex justify-between items-center text-xs font-black text-black/80">
-                                                <span className="uppercase tracking-widest">CGST (9.00%)</span>
-                                                <span className="font-black">₹{halfTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                            <div className="flex justify-between items-center text-[10px] font-black">
+                                                <span className="uppercase opacity-50">CGST (9%)</span>
+                                                <span>₹{halfTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                             </div>
-                                            <div className="flex justify-between items-center text-xs font-black text-black/80">
-                                                <span className="uppercase tracking-widest">SGST (9.00%)</span>
-                                                <span className="font-black">₹{halfTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                            <div className="flex justify-between items-center text-[10px] font-black">
+                                                <span className="uppercase opacity-50">SGST (9%)</span>
+                                                <span>₹{halfTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                             </div>
                                         </>
                                     );
                                 })()}
                             </div>
 
-                            <div className="pt-8 border-t-4 border-black flex justify-between items-end">
-                                <div className="space-y-1">
-                                    <span className="text-[10px] font-black uppercase block leading-none opacity-40">Net Amount Payable</span>
-                                    <span className="text-2xl font-black uppercase tracking-tighter block leading-none">GRAND TOTAL</span>
-                                </div>
-                                <span className="text-4xl font-black leading-none tracking-tighter">₹{order.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <div className="pt-4 border-t-2 border-black flex justify-between items-end">
+                                <span className="text-xl font-black uppercase tracking-tighter">TOTAL</span>
+                                <span className="text-3xl font-black tracking-tighter">₹{order.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
-                            <p className="text-[8px] text-right font-black text-gray-400 uppercase mt-6">
-                                * Prices are inclusive of all applicable taxes
-                            </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Signatory Section */}
-                <div className="flex justify-between items-end mb-12 px-4 h-32 avoid-break">
-                    <div className="text-[10px] font-black text-gray-300 leading-tight w-1/3 italic uppercase tracking-widest">
-                        Little Feet. Big Adventures.<br />
-                        Providing premium comfort for<br />
-                        every growing step.
-                    </div>
+                <div className="flex justify-end items-end mb-6 px-4 h-24 avoid-break">
                     <div className="text-right w-1/2 flex flex-col justify-end">
-                        <div className="mb-4">
-                            <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-12">Authorized Signatory</p>
-                            <div className="border-b-2 border-black w-64 ml-auto"></div>
+                        <div className="mb-2">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-8">Authorized Signatory</p>
+                            <div className="border-b border-black w-48 ml-auto"></div>
                         </div>
-                        <p className="font-black text-2xl uppercase tracking-tighter">Happy Hopz</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Computer Generated - No Signature Required</p>
+                        <p className="font-black text-xl uppercase tracking-tighter">Happy Hopz</p>
+                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Computer Generated - No Signature Required</p>
                     </div>
                 </div>
 
                 {/* Final Professional Footer */}
-                <div className="text-center border-t-4 border-black pt-8 pb-4 avoid-break">
-                    <p className="text-xl font-black uppercase tracking-[0.6em] mb-4">Thank You</p>
-                    <div className="flex justify-center gap-12 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <div className="text-center border-t-2 border-black pt-4 pb-2 avoid-break">
+                    <div className="flex justify-center gap-8 text-[9px] font-black uppercase tracking-widest text-gray-400">
                         <span>Delhi, India</span>
                         <span>|</span>
                         <span>www.happyhopz.com</span>
