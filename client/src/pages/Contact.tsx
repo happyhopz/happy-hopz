@@ -38,14 +38,14 @@ const Contact = () => {
         <div className="min-h-screen bg-background">
             <Navbar />
 
-            <main className="pt-8">
+            <main className="pt-4">
                 {/* Back Button */}
                 <div className="container mx-auto px-4 mb-4">
                     <BackButton />
                 </div>
 
                 {/* Header */}
-                <section className="bg-gradient-to-br from-pink-50 via-cyan-50 to-purple-50 py-16">
+                <section className="bg-gradient-to-br from-pink-50 via-cyan-50 to-purple-50 py-10">
                     <div className="container mx-auto px-4 text-center">
                         <h1 className="text-4xl md:text-5xl font-fredoka font-bold text-foreground mb-4">
                             Get in <span className="text-primary">Touch</span>
@@ -57,7 +57,7 @@ const Contact = () => {
                 </section>
 
                 {/* Contact Content */}
-                <section className="py-16">
+                <section className="py-10">
                     <div className="container mx-auto px-4">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
                             {/* Contact Form */}

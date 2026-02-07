@@ -9,14 +9,14 @@ const Returns = () => {
         <div className="min-h-screen bg-background">
             <Navbar />
 
-            <main className="pt-8">
+            <main className="pt-4">
                 {/* Back Button */}
                 <div className="container mx-auto px-4 mb-4">
                     <BackButton />
                 </div>
 
                 {/* Header */}
-                <section className="bg-gradient-to-br from-pink-50 via-cyan-50 to-purple-50 py-16">
+                <section className="bg-gradient-to-br from-pink-50 via-cyan-50 to-purple-50 py-10">
                     <div className="container mx-auto px-4 text-center">
                         <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
                             <RotateCcw className="w-10 h-10 text-primary" />
@@ -31,7 +31,7 @@ const Returns = () => {
                 </section>
 
                 {/* Returns Policy */}
-                <section className="py-16">
+                <section className="py-10">
                     <div className="container mx-auto px-4 max-w-4xl">
                         {/* Highlights */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">

@@ -6,7 +6,7 @@ const Privacy = () => {
     return (
         <div className="min-h-screen bg-background">
             <Navbar />
-            <main className="container mx-auto px-4 py-8">
+            <main className="container mx-auto px-4 py-4">
                 <BackButton />
                 <h1 className="text-4xl font-fredoka font-bold mb-8">Privacy Policy</h1>
                 <div className="prose prose-lg font-nunito text-muted-foreground max-w-none">

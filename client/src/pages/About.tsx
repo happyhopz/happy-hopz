@@ -9,14 +9,14 @@ const About = () => {
         <div className="min-h-screen bg-background">
             <Navbar />
 
-            <main className="pt-8">
+            <main className="pt-4">
                 {/* Back Button */}
                 <div className="container mx-auto px-4 mb-4">
                     <BackButton />
                 </div>
 
                 {/* Hero Section */}
-                <section className="bg-gradient-to-br from-pink-50 via-cyan-50 to-purple-50 py-16">
+                <section className="bg-gradient-to-br from-pink-50 via-cyan-50 to-purple-50 py-10">
                     <div className="container mx-auto px-4 text-center">
                         <img
                             src={pandaLogo}
@@ -33,7 +33,7 @@ const About = () => {
                 </section>
 
                 {/* Our Story */}
-                <section className="py-16">
+                <section className="py-10">
                     <div className="container mx-auto px-4">
                         <div className="max-w-4xl mx-auto">
                             <h2 className="text-3xl font-fredoka font-bold text-center mb-8">Our Story</h2>
@@ -58,7 +58,7 @@ const About = () => {
                 </section>
 
                 {/* Values */}
-                <section className="py-16 bg-secondary/30">
+                <section className="py-10 bg-secondary/30">
                     <div className="container mx-auto px-4">
                         <h2 className="text-3xl font-fredoka font-bold text-center mb-12">Why Choose Happy Hopz?</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -97,7 +97,7 @@ const About = () => {
                 </section>
 
                 {/* CTA */}
-                <section className="py-16 bg-primary text-white text-center">
+                <section className="py-10 bg-primary text-white text-center">
                     <div className="container mx-auto px-4">
                         <h2 className="text-3xl font-fredoka font-bold mb-4">
                             Ready to Find the Perfect Pair?
