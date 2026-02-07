@@ -83,18 +83,21 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
         let totalOtherCosts = 0;
 
         completedOrders.forEach((order: any) => {
-            order.items?.forEach((item: any) => {
-                const product = item.product;
+            if (!order.items || !Array.isArray(order.items)) return;
 
-                // Calculate total cost per unit (all components)
-                const productCost = product?.costPrice || (item.price * 0.6); // Default 60% if cost missing
-                const boxCost = product?.boxPrice || 0;
-                const tagCost = product?.tagPrice || 0;
-                const shipCost = product?.shippingCost || 0;
-                const otherCost = product?.otherCosts || 0;
+            order.items.forEach((item: any) => {
+                const product = item.product;
+                if (!product || !item.price || !item.quantity) return;
+
+                // Calculate total cost per unit (all components) with safe defaults
+                const productCost = parseFloat(product.costPrice) || (item.price * 0.6);
+                const boxCost = parseFloat(product.boxPrice) || 0;
+                const tagCost = parseFloat(product.tagPrice) || 0;
+                const shipCost = parseFloat(product.shippingCost) || 0;
+                const otherCost = parseFloat(product.otherCosts) || 0;
 
                 const totalUnitCost = productCost + boxCost + tagCost + shipCost + otherCost;
-                const quantity = item.quantity;
+                const quantity = parseInt(item.quantity) || 0;
 
                 // Debug logging
                 console.log(`[Profit Calc] Product: ${product?.name || 'Unknown'}, Price: ₹${item.price}, Cost: ₹${productCost}, Box: ₹${boxCost}, Tag: ₹${tagCost}, Ship: ₹${shipCost}, Other: ₹${otherCost}, Total Cost: ₹${totalUnitCost}, Qty: ${quantity}, Profit: ₹${((item.price - totalUnitCost) * quantity).toFixed(2)}`);
