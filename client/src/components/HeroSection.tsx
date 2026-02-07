@@ -71,7 +71,7 @@ const HeroSection = () => {
               {content.title}
             </h1>
 
-            <p className="mt-3 text-sm sm:text-base animate-fade-up opacity-0 delay-200 italic font-bold text-[#26252b] font-nunito max-w-sm mx-auto">
+            <p className="mt-3 text-sm sm:text-base animate-fade-up opacity-0 delay-200 italic text-[#26252b] font-nunito max-w-sm mx-auto">
               {content.subtitle}
             </p>
           </div>
@@ -124,7 +124,7 @@ const HeroSection = () => {
               {content.title}
             </h1>
 
-            <p className="mt-6 text-xl md:text-2xl font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic font-bold !text-black">
+            <p className="mt-6 text-xl md:text-2xl font-nunito max-w-xl animate-fade-up opacity-0 delay-200 italic !text-black">
               {content.subtitle}
             </p>
 
