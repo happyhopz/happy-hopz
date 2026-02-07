@@ -121,6 +121,81 @@ const AdminDashboard = () => {
                         </Card>
                     </div>
 
+                    {/* Cost Breakdown Section */}
+                    {stats?.totalRevenue > 0 && (
+                        <Card className="mb-8 border-2 border-primary/20">
+                            <CardHeader>
+                                <CardTitle className="font-fredoka flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-primary" />
+                                    Profit Analysis (Delivered Orders Only)
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {/* Gross Revenue */}
+                                    <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
+                                        <p className="text-sm text-blue-700 font-semibold mb-1">Gross Revenue</p>
+                                        <p className="text-2xl font-fredoka font-bold text-blue-900 flex items-center gap-1">
+                                            <IndianRupee className="w-5 h-5" />
+                                            {(stats?.totalRevenue || 0).toFixed(2)}
+                                        </p>
+                                    </div>
+
+                                    {/* Total Costs */}
+                                    <div className="p-4 bg-red-50/50 border border-red-100 rounded-lg">
+                                        <p className="text-sm text-red-700 font-semibold mb-1">Total Costs</p>
+                                        <p className="text-2xl font-fredoka font-bold text-red-900 flex items-center gap-1">
+                                            <IndianRupee className="w-5 h-5" />
+                                            {(stats?.totalCosts || 0).toFixed(2)}
+                                        </p>
+                                        <div className="mt-2 space-y-1 text-xs text-red-700">
+                                            <div className="flex justify-between">
+                                                <span>Product:</span>
+                                                <span className="font-semibold">₹{(stats?.totalProductCost || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Packaging:</span>
+                                                <span className="font-semibold">₹{(stats?.totalPackagingCost || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Labels/Tags:</span>
+                                                <span className="font-semibold">₹{(stats?.totalLabelingCost || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Shipping:</span>
+                                                <span className="font-semibold">₹{(stats?.totalShippingCost || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Other:</span>
+                                                <span className="font-semibold">₹{(stats?.totalOtherCosts || 0).toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Net Profit */}
+                                    <div className="p-4 bg-green-50/50 border border-green-100 rounded-lg">
+                                        <p className="text-sm text-green-700 font-semibold mb-1">Net Profit</p>
+                                        <p className="text-2xl font-fredoka font-bold text-green-900 flex items-center gap-1">
+                                            <IndianRupee className="w-5 h-5" />
+                                            {(stats?.totalProfit || 0).toFixed(2)}
+                                        </p>
+                                    </div>
+
+                                    {/* Profit Margin */}
+                                    <div className="p-4 bg-purple-50/50 border border-purple-100 rounded-lg">
+                                        <p className="text-sm text-purple-700 font-semibold mb-1">Profit Margin</p>
+                                        <p className="text-2xl font-fredoka font-bold text-purple-900">
+                                            {stats?.profitMargin || 0}%
+                                        </p>
+                                        <p className="text-xs text-purple-600 mt-1">
+                                            {parseFloat(stats?.profitMargin || 0) > 30 ? '🎉 Excellent!' : parseFloat(stats?.profitMargin || 0) > 20 ? '✅ Good' : '⚠️ Low margin'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Quick Navigation */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <Link to="/admin/products">
