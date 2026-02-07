@@ -173,16 +173,18 @@ const AdminSettings = () => {
                                     <CardContent className="p-6">
                                         <div className="space-y-2">
                                             <Label htmlFor="gst_percentage">GST Percentage (%)</Label>
-                                            <div className="relative">
+                                            <div className="flex rounded-xl overflow-hidden border-2 focus-within:border-primary transition-all">
                                                 <Input
                                                     id="gst_percentage"
                                                     name="gst_percentage"
                                                     type="number"
                                                     step="0.1"
-                                                    className="pr-8"
+                                                    className="border-none focus-visible:ring-0 rounded-none h-11"
                                                     defaultValue={dynamicSettings?.gst_percentage || 18}
                                                 />
-                                                <div className="absolute right-3 top-3 text-muted-foreground font-bold">%</div>
+                                                <div className="bg-muted px-4 flex items-center justify-center border-l-2 text-muted-foreground font-black">
+                                                    %
+                                                </div>
                                             </div>
                                             <p className="text-[10px] text-muted-foreground italic">Standard footwear GST is usually 12% or 18%.</p>
                                         </div>
@@ -200,28 +202,32 @@ const AdminSettings = () => {
                                     <CardContent className="p-6 space-y-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="delivery_charge">Standard Delivery Charge (₹)</Label>
-                                            <div className="relative">
+                                            <div className="flex rounded-xl overflow-hidden border-2 focus-within:border-primary transition-all">
+                                                <div className="bg-muted px-4 flex items-center justify-center border-r-2 text-muted-foreground font-bold">
+                                                    ₹
+                                                </div>
                                                 <Input
                                                     id="delivery_charge"
                                                     name="delivery_charge"
                                                     type="number"
-                                                    className="pl-8"
+                                                    className="border-none focus-visible:ring-0 rounded-none h-11"
                                                     defaultValue={dynamicSettings?.delivery_charge || 99}
                                                 />
-                                                <div className="absolute left-3 top-3 text-muted-foreground">₹</div>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="free_delivery_threshold">Free Delivery Threshold (₹)</Label>
-                                            <div className="relative">
+                                            <div className="flex rounded-xl overflow-hidden border-2 focus-within:border-primary transition-all">
+                                                <div className="bg-muted px-4 flex items-center justify-center border-r-2 text-muted-foreground font-bold">
+                                                    ₹
+                                                </div>
                                                 <Input
                                                     id="free_delivery_threshold"
                                                     name="free_delivery_threshold"
                                                     type="number"
-                                                    className="pl-8"
+                                                    className="border-none focus-visible:ring-0 rounded-none h-11"
                                                     defaultValue={dynamicSettings?.free_delivery_threshold || 999}
                                                 />
-                                                <div className="absolute left-3 top-3 text-muted-foreground">₹</div>
                                             </div>
                                             <p className="text-[10px] text-muted-foreground italic">Orders above this amount get free shipping.</p>
                                         </div>
