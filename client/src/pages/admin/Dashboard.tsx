@@ -421,15 +421,22 @@ const AdminDashboard = () => {
                             <CardContent>
                                 <div className="space-y-4">
                                     {Array.isArray(stats?.topSellingProducts) && stats.topSellingProducts.map((item: any) => (
-                                        <div key={item.productId} className="flex items-center justify-between">
+                                        <div key={item.productId || item.id} className="flex items-center justify-between">
                                             <div className="flex-1">
-                                                <p className="font-nunito font-bold text-sm truncate">{item.name}</p>
-                                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{item._sum.quantity} Sold</p>
+                                                <p className="font-nunito font-bold text-sm truncate">{item.name || item.product?.name || 'Unknown Product'}</p>
+                                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                                                    {item._sum?.quantity || item.quantity || 0} Sold
+                                                </p>
                                             </div>
                                             <div className="flex gap-1 h-1.5 w-24 bg-secondary rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full bg-green-500"
-                                                    style={{ width: `${stats.topSellingProducts[0]?._sum.quantity > 0 ? (item._sum.quantity / stats.topSellingProducts[0]._sum.quantity) * 100 : 0}%` }}
+                                                    style={{
+                                                        width: `${stats.topSellingProducts[0]?._sum?.quantity > 0
+                                                                ? ((item._sum?.quantity || 0) / stats.topSellingProducts[0]._sum.quantity) * 100
+                                                                : 0
+                                                            }%`
+                                                    }}
                                                 />
                                             </div>
                                         </div>
