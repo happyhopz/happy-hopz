@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsAPI, cartAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -108,6 +109,12 @@ const Products = () => {
 
     return (
         <div className="min-h-screen bg-background">
+            <Helmet>
+                <title>Shop Kids Shoes | Happy Hopz - Premium Footwear</title>
+                <meta name="description" content="Explore our wide collection of premium, comfortable, and stylish kids footwear. From sneakers to sandals, find the perfect pair at Happy Hopz." />
+                <meta property="og:title" content="Shop Kids Shoes | Happy Hopz" />
+                <meta property="og:description" content="Explore our wide collection of premium, comfortable, and stylish kids footwear." />
+            </Helmet>
             <Navbar />
 
             <main className="container mx-auto px-4 py-8">

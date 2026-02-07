@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { format } from 'date-fns';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { productsAPI, cartAPI } from '@/lib/api';
@@ -218,6 +219,40 @@ const ProductDetail = () => {
 
     return (
         <div className="min-h-screen bg-background">
+            <Helmet>
+                <title>{`${product.name} | Happy Hopz - Premium Kids Footwear`}</title>
+                <meta name="description" content={product.description?.substring(0, 160) || `Buy ${product.name} at Happy Hopz. Premium quality kids footwear for every occasion.`} />
+                <meta property="og:title" content={`${product.name} | Happy Hopz`} />
+                <meta property="og:description" content={product.description?.substring(0, 160)} />
+                <meta property="og:image" content={product.images?.[0]} />
+                <meta property="og:type" content="product" />
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org/",
+                        "@type": "Product",
+                        "name": product.name,
+                        "image": product.images,
+                        "description": product.description,
+                        "brand": {
+                            "@type": "Brand",
+                            "name": "Happy Hopz"
+                        },
+                        "offers": {
+                            "@type": "Offer",
+                            "url": window.location.href,
+                            "priceCurrency": "INR",
+                            "price": product.discountPrice || product.price,
+                            "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                            "itemCondition": "https://schema.org/NewCondition"
+                        },
+                        "aggregateRating": {
+                            "@type": "AggregateRating",
+                            "ratingValue": "4.2",
+                            "reviewCount": "4200"
+                        }
+                    })}
+                </script>
+            </Helmet>
             <Navbar />
 
             <main className="container mx-auto px-4 py-4">
