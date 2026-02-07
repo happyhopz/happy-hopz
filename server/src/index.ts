@@ -49,12 +49,16 @@ app.use(cors({
         const allowedOrigins = [
             'http://localhost:5173',
             'http://localhost:8080',
+            'http://localhost:3000', // Added by user instruction
             'https://happy-hopz.vercel.app',
+            'https://happyhopz.com', // Added by user instruction
+            'https://www.happyhopz.com', // Added by user instruction
             process.env.CLIENT_URL
         ].filter(Boolean);
 
         // Allow requests with no origin (like mobile apps or curl) or matching origins
-        if (!origin || allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
+        // Also allow any vercel.app subdomain
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
             callback(null, true);
         } else {
             console.log('Blocked by CORS:', origin);
