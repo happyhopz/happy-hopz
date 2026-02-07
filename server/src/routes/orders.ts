@@ -26,6 +26,7 @@ const createOrderSchema = z.object({
     guestEmail: z.string().email().nullable().optional(),
     guestName: z.string().nullable().optional(),
     guestPhone: z.string().nullable().optional(),
+    paymentStatus: z.enum(['PENDING', 'COMPLETED']).optional(),
     address: z.object({
         name: z.string(),
         phone: z.string(),
@@ -76,6 +77,7 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     tax: data.tax,
                     shipping: data.shipping,
                     total: data.total,
+                    paymentStatus: data.paymentStatus || 'PENDING',
                     addressId: finalAddressId,
                     items: {
                         create: data.items

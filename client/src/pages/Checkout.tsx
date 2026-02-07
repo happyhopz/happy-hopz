@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import upiQr from '@/assets/upi-qr.jpg';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { cartAPI, ordersAPI, addressAPI } from '@/lib/api';
+import { cartAPI, ordersAPI, addressAPI, paymentAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -226,37 +226,87 @@ const Checkout = () => {
 
         setIsProcessing(true);
         try {
-            const orderData = {
-                items: cartItems.map((item: any) => ({
-                    productId: item.productId,
-                    name: item.product.name,
-                    price: item.product.discountPrice || item.product.price,
-                    quantity: item.quantity,
-                    size: item.size,
-                    color: item.color
-                })),
+            const orderItems = cartItems.map((item: any) => ({
+                productId: item.productId,
+                name: item.product.name,
+                price: item.product.discountPrice || item.product.price,
+                quantity: item.quantity,
+                size: item.size,
+                color: item.color
+            }));
+
+            const baseOrderData = {
+                items: orderItems,
                 subtotal: subtotal,
                 tax: tax,
                 shipping: shipping,
                 total: total,
                 addressId: selectedAddressId,
-                // Guest Info
                 isGuest: isGuest,
                 guestEmail: isGuest ? guestInfo.email : null,
                 guestName: isGuest ? guestInfo.name : null,
                 guestPhone: isGuest ? guestInfo.phone : null,
-                // Transient address if guest
                 address: isGuest ? address : null
             };
 
-            await createOrderMutation.mutateAsync(orderData);
+            if (paymentMethod === 'COD') {
+                await createOrderMutation.mutateAsync(baseOrderData);
+                if (isGuest) localStorage.removeItem('cart');
+            } else {
+                // Online Payment Flow (Razorpay)
+                const tempOrderId = `tmp_${Date.now()}`;
+                const intentRes = await paymentAPI.createIntent({
+                    amount: total,
+                    orderId: tempOrderId
+                });
 
-            if (isGuest) {
-                localStorage.removeItem('cart');
+                const options = {
+                    key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+                    amount: intentRes.data.amount,
+                    currency: intentRes.data.currency,
+                    name: 'Happy Hopz',
+                    description: 'Order Payment',
+                    order_id: intentRes.data.id,
+                    handler: async (response: any) => {
+                        try {
+                            // Verify Signature
+                            await paymentAPI.verify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            });
+
+                            // Create Order on Success
+                            await createOrderMutation.mutateAsync({
+                                ...baseOrderData,
+                                paymentStatus: 'COMPLETED'
+                            });
+
+                            if (isGuest) localStorage.removeItem('cart');
+                        } catch (err) {
+                            toast.error('Payment verification failed. Please contact support.');
+                        }
+                    },
+                    prefill: {
+                        name: user?.name || guestInfo.name,
+                        email: user?.email || guestInfo.email,
+                        contact: user?.phone || guestInfo.phone
+                    },
+                    theme: {
+                        color: '#DB2777' // pink-600
+                    },
+                    modal: {
+                        ondismiss: () => {
+                            setIsProcessing(false);
+                        }
+                    }
+                };
+
+                const rzp = new (window as any).Razorpay(options);
+                rzp.open();
             }
         } catch (error) {
             console.error('Order placement failed:', error);
-        } finally {
             setIsProcessing(false);
         }
     };

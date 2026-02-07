@@ -1,10 +1,18 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 const router = Router();
 
-// Create payment intent (Mock implementation)
+// Initialize Razorpay
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder'
+});
+
+// Create payment intent (Razorpay Order)
 const paymentIntentSchema = z.object({
     amount: z.number().positive(),
     orderId: z.string()
@@ -14,18 +22,26 @@ router.post('/intent', authenticate, async (req: AuthRequest, res: Response) => 
     try {
         const { amount, orderId } = paymentIntentSchema.parse(req.body);
 
-        // Mock payment intent - in production, integrate with Stripe/Razorpay
-        const paymentIntent = {
-            id: `pi_mock_${Date.now()}`,
-            amount,
+        // Convert amount to paise (INR)
+        const options = {
+            amount: Math.round(amount * 100),
             currency: 'INR',
-            status: 'requires_payment_method',
-            orderId,
-            clientSecret: `secret_${Date.now()}`
+            receipt: `receipt_${orderId.slice(0, 10)}`,
+            notes: {
+                orderId: orderId
+            }
         };
 
-        res.json(paymentIntent);
+        const rzpOrder = await razorpay.orders.create(options);
+
+        res.json({
+            id: rzpOrder.id,
+            amount: rzpOrder.amount,
+            currency: rzpOrder.currency,
+            orderId: orderId // Internal Order ID
+        });
     } catch (error) {
+        console.error('Razorpay order creation failed:', error);
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Validation failed', details: error.errors });
         }
@@ -33,38 +49,56 @@ router.post('/intent', authenticate, async (req: AuthRequest, res: Response) => 
     }
 });
 
-// Payment webhook (Mock implementation)
-router.post('/webhook', async (req: Request, res: Response) => {
+// Verify Payment Signature
+const verifySchema = z.object({
+    razorpay_order_id: z.string(),
+    razorpay_payment_id: z.string(),
+    razorpay_signature: z.string()
+});
+
+router.post('/verify', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        // In production, verify webhook signature from payment provider
-        const { orderId, status } = req.body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = verifySchema.parse(req.body);
 
-        // Update order payment status based on webhook
-        // This would typically update the database
-        console.log(`Payment webhook received for order ${orderId}: ${status}`);
+        const body = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSignature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder')
+            .update(body.toString())
+            .digest('hex');
 
-        res.json({ received: true });
+        if (expectedSignature === razorpay_signature) {
+            res.json({ verified: true });
+        } else {
+            res.status(400).json({ error: 'Invalid payment signature' });
+        }
     } catch (error) {
-        res.status(500).json({ error: 'Webhook processing failed' });
+        res.status(500).json({ error: 'Payment verification failed' });
     }
 });
 
-// Confirm payment (Mock - for testing)
-router.post('/confirm', authenticate, async (req: AuthRequest, res: Response) => {
+// Payment webhook (Razorpay implementation ready)
+router.post('/webhook', async (req: Request, res: Response) => {
     try {
-        const { paymentIntentId } = req.body;
+        const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        if (secret) {
+            const signature = req.headers['x-razorpay-signature'] as string;
+            const expectedSignature = crypto
+                .createHmac('sha256', secret)
+                .update(JSON.stringify(req.body))
+                .digest('hex');
 
-        // Mock successful payment
-        const payment = {
-            id: paymentIntentId,
-            status: 'succeeded',
-            amount: 0,
-            currency: 'INR'
-        };
+            if (expectedSignature !== signature) {
+                return res.status(400).json({ error: 'Invalid signature' });
+            }
+        }
 
-        res.json(payment);
+        const { event, payload } = req.body;
+        console.log(`Razorpay webhook: ${event}`, payload);
+
+        // Handle events like order.paid or payment.authorized
+        res.json({ received: true });
     } catch (error) {
-        res.status(500).json({ error: 'Payment confirmation failed' });
+        res.status(500).json({ error: 'Webhook processing failed' });
     }
 });
 

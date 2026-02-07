@@ -82,7 +82,9 @@ export const paymentAPI = {
     createIntent: (data: { amount: number; orderId: string }) =>
         api.post('/payment/intent', data),
     confirm: (paymentIntentId: string) =>
-        api.post('/payment/confirm', { paymentIntentId })
+        api.post('/payment/confirm', { paymentIntentId }),
+    verify: (data: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
+        api.post('/payment/verify', data)
 };
 
 // Admin API
