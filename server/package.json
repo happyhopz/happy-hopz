@@ -11,7 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed": "tsx src/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "postbuild": "echo 'Build complete. Remember to run: npx prisma db push'"
   },
   "keywords": [
     "ecommerce",
