@@ -218,11 +218,11 @@ const ShoeCard = ({
         style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
       >
         {/* Product Image */}
-        <div className="relative h-40 md:h-64 flex items-center justify-center mb-3 md:mb-6 overflow-hidden rounded-2xl border border-muted/30 bg-white">
+        <div className="relative h-40 md:h-64 flex items-center justify-center mb-3 md:mb-6 overflow-hidden rounded-2xl border border-muted/30 bg-white p-4">
           <img
             src={product.images[0]}
             alt={product.name}
-            className="relative w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="relative w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
           />
         </div>
 
