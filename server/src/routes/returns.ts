@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // Customer Endpoints
 
 // POST /api/returns/create - Create a new return/exchange request
-router.post('/create', auth, async (req, res) => {
+router.post('/create', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user!.id;
         const { orderId, type, items, comments, pickupAddress } = req.body;
@@ -138,7 +138,7 @@ router.post('/create', auth, async (req, res) => {
 });
 
 // GET /api/returns/my-requests - Get user's return requests
-router.get('/my-requests', auth, async (req, res) => {
+router.get('/my-requests', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user!.id;
 
@@ -167,7 +167,7 @@ router.get('/my-requests', auth, async (req, res) => {
 });
 
 // GET /api/returns/:id - Get specific return request details
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user!.id;
         const { id } = req.params;
@@ -211,7 +211,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // PATCH /api/returns/:id/cancel - Cancel a pending return request
-router.patch('/:id/cancel', auth, async (req, res) => {
+router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user!.id;
         const { id } = req.params;

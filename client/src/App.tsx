@@ -40,6 +40,8 @@ import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import MyReturns from './pages/MyReturns';
+import AdminReturns from './pages/admin/AdminReturns';
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +77,7 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/my-returns" element={<MyReturns />} />
               <Route element={<AdminLayout><Outlet /></AdminLayout>}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
@@ -86,6 +89,7 @@ const App = () => (
                 <Route path="/admin/cms" element={<AdminCMS />} />
                 <Route path="/admin/contacts" element={<AdminContacts />} />
                 <Route path="/admin/marketing" element={<AdminMarketing />} />
+                <Route path="/admin/returns" element={<AdminReturns />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

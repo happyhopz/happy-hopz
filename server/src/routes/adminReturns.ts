@@ -6,7 +6,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/admin/returns - Get all return requests with filters
-router.get('/', adminAuth, async (req, res) => {
+router.get('/', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { status, type, page = '1', limit = '20', search } = req.query;
 
@@ -72,7 +72,7 @@ router.get('/', adminAuth, async (req, res) => {
 });
 
 // GET /api/admin/returns/:id - Get return request details
-router.get('/:id', adminAuth, async (req, res) => {
+router.get('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
 
@@ -110,7 +110,7 @@ router.get('/:id', adminAuth, async (req, res) => {
 });
 
 // PATCH /api/admin/returns/:id/approve - Approve return request
-router.patch('/:id/approve', adminAuth, async (req, res) => {
+router.patch('/:id/approve', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { pickupScheduled, adminNotes } = req.body;
@@ -165,7 +165,7 @@ router.patch('/:id/approve', adminAuth, async (req, res) => {
 });
 
 // PATCH /api/admin/returns/:id/reject - Reject return request
-router.patch('/:id/reject', adminAuth, async (req, res) => {
+router.patch('/:id/reject', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { reason, adminNotes } = req.body;
@@ -221,7 +221,7 @@ router.patch('/:id/reject', adminAuth, async (req, res) => {
 });
 
 // PATCH /api/admin/returns/:id/complete - Mark return as completed
-router.patch('/:id/complete', adminAuth, async (req, res) => {
+router.patch('/:id/complete', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { refundMethod, trackingNumber, adminNotes, restockItems = true } = req.body;
@@ -290,7 +290,7 @@ router.patch('/:id/complete', adminAuth, async (req, res) => {
 });
 
 // GET /api/admin/returns/stats - Get return statistics
-router.get('/stats/summary', adminAuth, async (req, res) => {
+router.get('/stats/summary', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const [
             totalReturns,
