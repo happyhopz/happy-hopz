@@ -183,24 +183,6 @@ const ProductDetail = () => {
         }
     };
 
-    const handleWishlist = () => {
-        const stored = localStorage.getItem('wishlist');
-        let list = stored ? JSON.parse(stored) : [];
-        if (isWishlisted) {
-            list = list.filter((p: any) => p.id !== product.id);
-            toast.success('Removed from wishlist');
-        } else {
-            list.push({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                images: product.images
-            });
-            toast.success('Added to wishlist!');
-        }
-        localStorage.setItem('wishlist', JSON.stringify(list));
-        setIsWishlisted(!isWishlisted);
-    };
 
     useEffect(() => {
     }, [product]);
@@ -598,12 +580,6 @@ const ProductDetail = () => {
                                                 {Math.round((1 - p.discountPrice / p.price) * 100)}% OFF
                                             </Badge>
                                         )}
-                                        <button
-                                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white shadow flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={(e) => { e.preventDefault(); toast.success('Added to wishlist!'); }}
-                                        >
-                                            <Heart className="w-4 h-4 text-gray-400" />
-                                        </button>
                                     </div>
                                     <div className="space-y-1">
                                         <h4 className="font-bold text-sm text-foreground truncate">Happy Hopz</h4>
