@@ -115,20 +115,19 @@ const AdminOrderDetail = () => {
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @media print {
-                    @page { size: A4; margin: 20mm; }
+                    @page { size: A4; margin: 10mm; }
                     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; }
                     .print-hidden { display: none !important; }
                     .print-only { display: block !important; }
                     .invoice-container { color: black !important; background: white !important; }
-                    .border-print { border: 1px solid #000 !important; }
-                    .border-b-print { border-bottom: 1px solid #000 !important; }
+                    .avoid-break { break-inside: avoid !important; page-break-inside: avoid !important; }
                 }
             ` }} />
 
             {/* Final High-Fidelity Tax Invoice - Visible ONLY on Print */}
             <div className="hidden print:block invoice-container max-w-4xl mx-auto p-0 font-sans text-black bg-white leading-relaxed">
                 {/* Header Section - Centered & Professional */}
-                <div className="text-center border-b-4 border-black pb-8 mb-10">
+                <div className="text-center border-b-4 border-black pb-6 mb-8 avoid-break">
                     <h1 className="text-5xl font-black uppercase tracking-[0.25em] mb-4">TAX INVOICE</h1>
                     <div className="space-y-2">
                         <h2 className="text-3xl font-black uppercase tracking-tight">Happy Hopz</h2>
@@ -146,7 +145,7 @@ const AdminOrderDetail = () => {
                 </div>
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-10 mb-10">
+                <div className="grid grid-cols-2 gap-10 mb-8 avoid-break">
                     {/* Invoice & Order Details */}
                     <div className="border border-black p-6 rounded-none">
                         <h3 className="text-[11px] font-black uppercase mb-5 tracking-[0.2em] border-b border-black pb-1">
@@ -194,7 +193,7 @@ const AdminOrderDetail = () => {
                 </div>
 
                 {/* Product Table */}
-                <div className="mb-12">
+                <div className="mb-8 avoid-break">
                     <h3 className="text-[11px] font-black uppercase mb-4 tracking-[0.2em] px-1">
                         Product Particulars
                     </h3>
@@ -229,8 +228,8 @@ const AdminOrderDetail = () => {
                     </table>
                 </div>
 
-                {/* Price Summary & Details */}
-                <div className="grid grid-cols-2 gap-10 mb-10">
+                {/* Totals & Shipping */}
+                <div className="grid grid-cols-2 gap-10 mb-8 avoid-break">
                     {/* Left Side: Shipping & Declaration */}
                     <div className="space-y-6">
                         <div className="border border-black p-6 rounded-none">
@@ -323,7 +322,7 @@ const AdminOrderDetail = () => {
                 </div>
 
                 {/* Signatory Section */}
-                <div className="flex justify-between items-end mb-20 px-4 h-40">
+                <div className="flex justify-between items-end mb-12 px-4 h-32 avoid-break">
                     <div className="text-[10px] font-black text-gray-300 leading-tight w-1/3 italic uppercase tracking-widest">
                         Little Feet. Big Adventures.<br />
                         Providing premium comfort for<br />
@@ -340,7 +339,7 @@ const AdminOrderDetail = () => {
                 </div>
 
                 {/* Final Professional Footer */}
-                <div className="text-center border-t-4 border-black pt-12 pb-6">
+                <div className="text-center border-t-4 border-black pt-8 pb-4 avoid-break">
                     <p className="text-xl font-black uppercase tracking-[0.6em] mb-4">Thank You</p>
                     <div className="flex justify-center gap-12 text-[10px] font-black uppercase tracking-widest text-gray-400">
                         <span>Delhi, India</span>
