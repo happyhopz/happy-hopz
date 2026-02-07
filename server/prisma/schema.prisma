@@ -8,29 +8,30 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(uuid())
-  email              String         @unique
+  id                 String          @id @default(uuid())
+  email              String          @unique
   password           String
-  role               String         @default("USER")
+  role               String          @default("USER")
   name               String?
   phone              String?
-  isVerified         Boolean        @default(false)
+  isVerified         Boolean         @default(false)
   verificationCode   String?
   codeExpires        DateTime?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @default(now()) @updatedAt
-  emailNotifications Boolean        @default(true)
-  promoNotifications Boolean        @default(true)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @default(now()) @updatedAt
+  emailNotifications Boolean         @default(true)
+  promoNotifications Boolean         @default(true)
   resetExpires       DateTime?
   resetToken         String?
-  points             Int            @default(0)
-  isGuest            Boolean        @default(false)
+  points             Int             @default(0)
+  isGuest            Boolean         @default(false)
   refreshToken       String?
   addresses          Address[]
   cartItems          CartItem[]
   notifications      Notification[]
   orders             Order[]
   reviews            Review[]
+  returnRequests     ReturnRequest[]
 }
 
 model Notification {
@@ -62,10 +63,10 @@ model Product {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   costPrice      Float?
-  boxPrice       Float?      // Packaging cost per unit
-  tagPrice       Float?      // Tag/sticker cost per unit
-  shippingCost   Float?      // Shipping cost per unit
-  otherCosts     Float?      // Miscellaneous costs per unit
+  boxPrice       Float? // Packaging cost per unit
+  tagPrice       Float? // Tag/sticker cost per unit
+  shippingCost   Float? // Shipping cost per unit
+  otherCosts     Float? // Miscellaneous costs per unit
   isVariant      Boolean     @default(false)
   parentId       String?
   seoDescription String?
@@ -92,16 +93,16 @@ model CartItem {
 }
 
 model Order {
-  id                 String      @id @default(uuid())
+  id                 String          @id @default(uuid())
   userId             String?
   total              Float
-  status             String      @default("PLACED")
-  paymentStatus      String      @default("PENDING")
+  status             String          @default("PLACED")
+  paymentStatus      String          @default("PENDING")
   trackingNumber     String?
   addressId          String
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @default(now()) @updatedAt
-  source             String      @default("ONLINE")
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @default(now()) @updatedAt
+  source             String          @default("ONLINE")
   guestEmail         String?
   guestName          String?
   guestPhone         String?
@@ -111,9 +112,10 @@ model Order {
   cancellationReason String?
   returnReason       String?
   returnStatus       String?
-  address            Address     @relation(fields: [addressId], references: [id])
-  user               User?       @relation(fields: [userId], references: [id])
+  address            Address         @relation(fields: [addressId], references: [id])
+  user               User?           @relation(fields: [userId], references: [id])
   items              OrderItem[]
+  returnRequests     ReturnRequest[]
 }
 
 model OrderItem {
@@ -220,5 +222,63 @@ model MarketingPopup {
   link      String?
   type      String   @default("NEWSLETTER")
   active    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ReturnRequest {
+  id      String @id @default(uuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+
+  type     String // 'RETURN' or 'EXCHANGE'
+  status   String  @default("PENDING") // PENDING, APPROVED, REJECTED, COMPLETED, CANCELLED
+  reason   String
+  comments String?
+
+  items ReturnItem[]
+
+  // Pricing
+  itemsTotal   Float // Total value of returned items
+  pickupCharge Float  @default(50) // ₹50 for returns, ₹0 for exchanges
+  refundAmount Float? // itemsTotal - pickupCharge (for returns)
+
+  refundMethod String? // 'ORIGINAL_PAYMENT', 'BANK_TRANSFER', 'STORE_CREDIT'
+  refundStatus String? // 'PENDING', 'PROCESSED', 'FAILED'
+
+  // Exchange specific
+  exchangeOrderId String? // New order created for exchange
+  exchangeItems   String? // JSON array of exchange items
+
+  pickupScheduled DateTime?
+  pickupAddress   String?
+  trackingNumber  String?
+
+  adminNotes  String?
+  processedBy String?
+  processedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReturnItem {
+  id              String        @id @default(uuid())
+  returnRequestId String
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  orderItemId String
+  productId   String
+  productName String
+  quantity    Int
+  price       Float
+  size        String
+  color       String
+
+  reason    String
+  condition String? // 'UNUSED', 'USED', 'DAMAGED'
+  images    String? // JSON array of image URLs
+
   createdAt DateTime @default(now())
 }
