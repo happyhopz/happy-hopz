@@ -126,33 +126,6 @@ const SizeGuide = () => {
                             </p>
                         </div>
 
-                        {/* Tips */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                            <Card className="p-6 border-green-200 bg-green-50">
-                                <h3 className="font-fredoka font-bold text-green-700 mb-4 flex items-center gap-2">
-                                    <HelpCircle className="w-5 h-5" />
-                                    Quick Tips
-                                </h3>
-                                <ul className="space-y-2 text-sm font-nunito text-green-700">
-                                    <li>✓ Measure feet at the end of the day when they're largest</li>
-                                    <li>✓ Your child should be wearing socks they'd normally wear</li>
-                                    <li>✓ For growing feet, leave 0.5-1 cm of room at the toe</li>
-                                    <li>✓ When in doubt, size up!</li>
-                                </ul>
-                            </Card>
-                            <Card className="p-6 border-yellow-200 bg-yellow-50">
-                                <h3 className="font-fredoka font-bold text-yellow-700 mb-4 flex items-center gap-2">
-                                    <AlertCircle className="w-5 h-5" />
-                                    Good to Know
-                                </h3>
-                                <ul className="space-y-2 text-sm font-nunito text-yellow-700">
-                                    <li>• Kids' feet grow approximately 2 sizes per year</li>
-                                    <li>• Check their shoe size every 2-3 months</li>
-                                    <li>• Proper fit is essential for healthy foot development</li>
-                                    <li>• Our shoes are true to size</li>
-                                </ul>
-                            </Card>
-                        </div>
 
                         {/* Wrong Size CTA */}
                         <div className="p-8 bg-primary/5 rounded-2xl text-center">
