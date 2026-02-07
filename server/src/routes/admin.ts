@@ -162,9 +162,31 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             ordersByStatus,
             topSellingProducts: topSellingItems
         });
-    } catch (error) {
-        console.error('Stats error:', error);
-        res.status(500).json({ error: 'Failed to fetch stats' });
+    } catch (error: any) {
+        console.error('[Dashboard Stats] Error:', error.message);
+        console.error('[Dashboard Stats] Stack:', error.stack);
+
+        // Return safe defaults to prevent dashboard from breaking
+        res.status(200).json({
+            totalUsers: 0,
+            totalOrders: 0,
+            totalRevenue: 0,
+            totalProfit: 0,
+            totalProductCost: 0,
+            totalPackagingCost: 0,
+            totalLabelingCost: 0,
+            totalShippingCost: 0,
+            totalOtherCosts: 0,
+            totalCosts: 0,
+            profitMargin: 0,
+            averageOrderValue: 0,
+            recentOrders: [],
+            lowStockProducts: [],
+            dailyRevenue: [],
+            ordersByStatus: [],
+            topSellingProducts: [],
+            error: 'Failed to load statistics'
+        });
     }
 });
 
