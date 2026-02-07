@@ -8,6 +8,7 @@ import WhatsAppButton from "./components/WhatsAppButton";
 import { AuthProvider } from "@/hooks/useAuth";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import Index from "./pages/Index";
+import ScrollToTop from "./components/ScrollToTop";
 import Login from "./pages/Login";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
