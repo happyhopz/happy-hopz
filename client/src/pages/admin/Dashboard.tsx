@@ -12,13 +12,14 @@ import { format } from 'date-fns';
 const AdminDashboard = () => {
     const { user, isAdmin, loading } = useAuth();
 
-    const { data: stats, isLoading } = useQuery({
+    const { data: stats, isLoading, error: statsError } = useQuery({
         queryKey: ['admin-stats'],
         queryFn: async () => {
             const response = await adminAPI.getStats();
             return response.data;
         },
-        enabled: isAdmin
+        enabled: isAdmin,
+        retry: 1
     });
 
     const { data: auditLogs } = useQuery({
@@ -53,9 +54,30 @@ const AdminDashboard = () => {
                 <div className="text-center py-20">
                     <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
+            ) : statsError ? (
+                <div className="text-center py-20">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-2xl mx-auto">
+                        <h2 className="text-xl font-bold text-red-700 mb-2">Dashboard Error</h2>
+                        <p className="text-red-600 mb-4">
+                            {statsError instanceof Error ? statsError.message : 'Failed to load dashboard statistics'}
+                        </p>
+                        <details className="text-left">
+                            <summary className="cursor-pointer text-sm text-red-500 hover:text-red-700">Technical Details</summary>
+                            <pre className="mt-2 p-3 bg-red-100 rounded text-xs overflow-auto">
+                                {JSON.stringify(statsError, null, 2)}
+                            </pre>
+                        </details>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                        >
+                            Reload Page
+                        </button>
+                    </div>
+                </div>
             ) : !stats ? (
                 <div className="text-center py-20 text-muted-foreground">
-                    Failed to load dashboard statistics. Please try again.
+                    No data available. Please try again.
                 </div>
             ) : (
                 <>
