@@ -326,12 +326,11 @@ const ProductCard = ({
                 style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
             >
                 {/* Product Image */}
-                <div className="relative h-32 md:h-48 flex items-center justify-center mb-3 md:mb-6">
-                    <div className="absolute inset-0 bg-white rounded-2xl border border-muted/30" />
+                <div className="relative h-40 md:h-64 flex items-center justify-center mb-3 md:mb-6 overflow-hidden rounded-2xl border border-muted/30 bg-white">
                     <img
                         src={product.images[0]}
                         alt={product.name}
-                        className="relative h-28 w-28 md:h-40 md:w-40 object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                        className="relative w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                 </div>
 
