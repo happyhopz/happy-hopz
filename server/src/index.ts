@@ -21,6 +21,7 @@ import returnsRoutes from './routes/returns';
 import adminReturnsRoutes from './routes/adminReturns';
 import marketingRoutes from './routes/marketing';
 import searchRoutes from './routes/search';
+import settingsRoutes from './routes/settings';
 import { authenticate, requireAdmin, AuthRequest, checkMaintenance } from './middleware/auth';
 import { PrismaClient } from '@prisma/client';
 import { prisma } from './lib/prisma';
@@ -114,6 +115,7 @@ const registerRoutes = (prefix: string) => {
     app.use(`${prefix}/admin/returns`, adminReturnsRoutes);
     app.use(`${prefix}/marketing`, marketingRoutes);
     app.use(`${prefix}/search`, searchRoutes);
+    app.use(`${prefix}/settings`, settingsRoutes);
 };
 
 registerRoutes('/api');

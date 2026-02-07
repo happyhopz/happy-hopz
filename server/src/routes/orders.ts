@@ -7,6 +7,18 @@ import { sendOrderConfirmationEmail } from '../utils/email';
 
 const router = Router();
 
+// Helper to get site settings
+const getSiteSettings = async () => {
+    const settings = await prisma.siteSettings.findMany();
+    const settingsMap: Record<string, any> = {};
+    settings.forEach(s => {
+        if (s.type === 'number') settingsMap[s.key] = parseFloat(s.value);
+        else if (s.type === 'boolean') settingsMap[s.key] = s.value === 'true';
+        else settingsMap[s.key] = s.value;
+    });
+    return settingsMap;
+};
+
 // Create order
 const createOrderSchema = z.object({
     items: z.array(z.object({
@@ -42,6 +54,18 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
     try {
         const data = createOrderSchema.parse(req.body);
 
+        // Fetch current site settings for verification
+        const settings = await getSiteSettings();
+        const gstRate = (settings.gst_percentage || 18) / 100;
+        const deliveryCharge = settings.delivery_charge || 99;
+        const freeThreshold = settings.free_delivery_threshold || 999;
+
+        // Recalculate on server to prevent client manipulation
+        const serverSubtotal = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const serverTax = Math.round(serverSubtotal * gstRate);
+        const serverShipping = serverSubtotal >= freeThreshold ? 0 : deliveryCharge;
+        const serverTotal = serverSubtotal + serverTax + serverShipping;
+
         // Run as transaction
         const result = await prisma.$transaction(async (tx) => {
             let finalAddressId = data.addressId;
@@ -73,10 +97,10 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     guestEmail: data.guestEmail,
                     guestName: data.guestName,
                     guestPhone: data.guestPhone,
-                    subtotal: data.subtotal,
-                    tax: data.tax,
-                    shipping: data.shipping,
-                    total: data.total,
+                    subtotal: serverSubtotal,
+                    tax: serverTax,
+                    shipping: serverShipping,
+                    total: serverTotal,
                     paymentStatus: data.paymentStatus || 'PENDING',
                     addressId: finalAddressId,
                     items: {

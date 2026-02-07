@@ -142,6 +142,11 @@ export const marketingAPI = {
     getActivePopup: () => api.get('/marketing/popups/active')
 };
 
+export const settingsAPI = {
+    get: () => api.get('/settings'),
+    updateAsAdmin: (settings: Record<string, any>) => api.patch('/settings', { settings })
+};
+
 export const contentAPI = {
     get: (key: string) => api.get(`/content/${key}`),
     update: (key: string, content: any) => api.put(`/content/${key}`, { content })

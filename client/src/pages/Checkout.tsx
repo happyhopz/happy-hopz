@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import upiQr from '@/assets/upi-qr.jpg';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { cartAPI, ordersAPI, addressAPI, paymentAPI } from '@/lib/api';
+import { cartAPI, ordersAPI, addressAPI, paymentAPI, settingsAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -134,6 +134,15 @@ const Checkout = () => {
         enabled: !loading
     });
 
+    // Fetch dynamic site settings (GST, Delivery)
+    const { data: dynamicSettings } = useQuery({
+        queryKey: ['site-settings-public'],
+        queryFn: async () => {
+            const response = await settingsAPI.get();
+            return response.data;
+        }
+    });
+
     const createOrderMutation = useMutation({
         mutationFn: async (orderData: any) => {
             const response = await ordersAPI.create(orderData);
@@ -155,8 +164,13 @@ const Checkout = () => {
         return sum + (price * item.quantity);
     }, 0) || 0;
 
-    const tax = subtotal * 0.18; // 18% GST (Footwear industry standard)
-    const shipping = subtotal > 999 ? 0 : 99; // Free shipping above 999
+    // Use dynamic settings with fallbacks
+    const gstRate = (dynamicSettings?.gst_percentage || 18) / 100;
+    const deliveryCharge = dynamicSettings?.delivery_charge || 99;
+    const freeThreshold = dynamicSettings?.free_delivery_threshold || 999;
+
+    const tax = Math.round(subtotal * gstRate);
+    const shipping = subtotal >= freeThreshold ? 0 : deliveryCharge;
     const total = subtotal + tax + shipping;
 
     const itemCount = cartItems?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
@@ -678,12 +692,12 @@ const Checkout = () => {
                                     <div className="space-y-4 text-sm font-medium">
                                         <div className="flex justify-between text-gray-600"><span>Bag Total ({itemCount} items)</span><span>₹{subtotal.toFixed(0)}</span></div>
                                         {savings > 0 && <div className="flex justify-between text-green-600"><span>Bag Discount</span><span>-₹{savings.toFixed(0)}</span></div>}
-                                        <div className="flex justify-between text-gray-600"><span>GST (18%)</span><span>₹{tax.toFixed(0)}</span></div>
+                                        <div className="flex justify-between text-gray-600"><span>GST ({dynamicSettings?.gst_percentage || 18}%)</span><span>₹{tax.toFixed(0)}</span></div>
                                         <div className="flex justify-between text-gray-600"><span>Delivery Charges</span>{shipping === 0 ? <span className="text-green-600 font-bold">FREE</span> : <span>₹{shipping}</span>}</div>
                                         <Separator />
                                         <div className="flex justify-between font-black text-xl text-gray-900 pt-2"><span>Order Total</span><span>₹{total.toFixed(0)}</span></div>
                                     </div>
-                                    {shipping > 0 && <p className="mt-4 text-[10px] text-orange-600 font-bold bg-orange-50 p-2 rounded text-center">Add ₹{(999 - subtotal).toFixed(0)} more for FREE delivery!</p>}
+                                    {shipping > 0 && <p className="mt-4 text-[10px] text-orange-600 font-bold bg-orange-50 p-2 rounded text-center">Add ₹{(freeThreshold - subtotal).toFixed(0)} more for FREE delivery!</p>}
                                 </div>
                                 <div className="px-5 py-4 bg-gray-50 text-[10px] text-gray-400 flex justify-between font-bold border-t italic uppercase tracking-widest">
                                     <div className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</div>
