@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Heart, ShoppingCart, Search, SlidersHorizontal, Edit } from 'lucide-react';
+import { ShoppingCart, Search, SlidersHorizontal, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import ShareProduct from '@/components/ShareProduct';
 
@@ -417,36 +417,6 @@ const ProductCard = ({
                 </div>
 
                 <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col gap-2 z-50">
-                    <button
-                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink-50`}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-
-                            const stored = localStorage.getItem('wishlist');
-                            let list = stored ? JSON.parse(stored) : [];
-                            const isExist = list.some((item: any) => item.id === product.id);
-
-                            if (isExist) {
-                                list = list.filter((item: any) => item.id !== product.id);
-                                localStorage.setItem('wishlist', JSON.stringify(list));
-                                toast.info('Removed from wishlist');
-                            } else {
-                                list.push(product);
-                                localStorage.setItem('wishlist', JSON.stringify(list));
-                                toast.success('Added to wishlist!');
-                            }
-                        }}
-                    >
-                        <Heart className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${(() => {
-                            const stored = localStorage.getItem('wishlist');
-                            const list = stored ? JSON.parse(stored) : [];
-                            return list.some((item: any) => item.id === product.id)
-                                ? 'text-pink-500 fill-pink-500'
-                                : 'text-gray-400 hover:text-pink-500'
-                        })()
-                            }`} />
-                    </button>
                     <ShareProduct product={product} iconOnly className="!w-8 !h-8 md:!w-10 md:!h-10 shadow-lg" />
                 </div>
             </Link>

@@ -1,4 +1,4 @@
-import { ShoppingCart, User, Menu, X, ChevronDown, ShoppingBag, Bell, Heart } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, ChevronDown, ShoppingBag, Bell } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -331,11 +331,6 @@ const Navbar = () => {
                 </button>
               </Link>
             )}
-            <Link to="/wishlist">
-              <button className="p-2 rounded-full border-2 border-pink-400/50 hover:border-pink-500 transition-colors">
-                <Heart className="w-5 h-5 text-pink-500" />
-              </button>
-            </Link>
             <Link to="/cart">
               <button className="p-2 rounded-full border-2 border-primary/50 hover:border-primary transition-colors relative">
                 <ShoppingBag className="w-5 h-5 text-primary" />

@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
     ShoppingBag,
-    Heart,
     Truck,
     RotateCcw,
     Star,
@@ -42,7 +41,6 @@ const ProductDetail = () => {
     const [selectedColor, setSelectedColor] = useState('');
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [adding, setAdding] = useState(false);
-    const [isWishlisted, setIsWishlisted] = useState(false);
     const [pincode, setPincode] = useState('');
     const [showProductDetails, setShowProductDetails] = useState(true);
     const [showDeliveryDetails, setShowDeliveryDetails] = useState(false);
@@ -205,11 +203,6 @@ const ProductDetail = () => {
     };
 
     useEffect(() => {
-        if (product) {
-            const stored = localStorage.getItem('wishlist');
-            const list = stored ? JSON.parse(stored) : [];
-            setIsWishlisted(list.some((p: any) => p.id === product.id));
-        }
     }, [product]);
 
     const discountPercent = product?.discountPrice
@@ -310,14 +303,7 @@ const ProductDetail = () => {
                                         SALE {discountPercent}% OFF
                                     </Badge>
                                 )}
-                                <div className="absolute top-4 right-4 flex flex-col gap-3 z-50">
-                                    <button
-                                        onClick={handleWishlist}
-                                        className={`w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 ${isWishlisted ? 'text-pink-500' : 'text-gray-400'
-                                            }`}
-                                    >
-                                        <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
-                                    </button>
+                                <div className="absolute top-4 right-4 z-50">
                                     <ShareProduct product={product} iconOnly />
                                 </div>
                             </div>
@@ -419,17 +405,6 @@ const ProductDetail = () => {
                             >
                                 <ShoppingBag className="w-5 h-5 mr-2" />
                                 {adding ? 'ADDING...' : product.stock === 0 ? 'OUT OF STOCK' : 'ADD TO BAG'}
-                            </Button>
-                            <Button
-                                onClick={handleWishlist}
-                                variant="outline"
-                                className={`w-full sm:flex-1 h-14 text-base font-bold border-2 ${isWishlisted
-                                    ? 'border-pink-500 text-pink-500 bg-pink-50'
-                                    : 'border-muted-foreground/30'
-                                    }`}
-                            >
-                                <Heart className={`w-5 h-5 mr-2 ${isWishlisted ? 'fill-pink-500' : ''}`} />
-                                WISHLIST
                             </Button>
                         </div>
 

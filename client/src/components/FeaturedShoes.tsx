@@ -1,4 +1,4 @@
-import { Heart, ShoppingCart, Edit, Star } from 'lucide-react';
+import { ShoppingCart, Edit, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsAPI, cartAPI, contentAPI } from '@/lib/api';
@@ -281,13 +281,7 @@ const ShoeCard = ({
           {tag.tag}
         </span>
 
-        <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col gap-2 z-50">
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-card shadow-soft flex items-center justify-center transition-transform hover:scale-110 group-hover:bg-pink/20"
-          >
-            <Heart className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-pink transition-colors" />
-          </button>
+        <div className="absolute top-2 right-2 md:top-4 md:right-4 z-50">
           <ShareProduct product={product} iconOnly className="!w-8 !h-8 md:!w-10 md:!h-10 shadow-soft" />
         </div>
       </Link>

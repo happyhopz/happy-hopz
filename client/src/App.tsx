@@ -39,7 +39,6 @@ import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,7 +73,6 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/notifications" element={<Notifications />} />
-              <Route path="/wishlist" element={<Wishlist />} />
               <Route element={<AdminLayout><Outlet /></AdminLayout>}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
