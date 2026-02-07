@@ -17,7 +17,7 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
     try {
         const [
             totalUsers,
-            totalOrders,
+            deliveredOrders,
             totalRevenueAgg,
             recentOrders,
             lowStockProducts,
@@ -25,10 +25,18 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             topSellingItems
         ] = await Promise.all([
             prisma.user.count(),
-            prisma.order.count(),
+            prisma.order.count({
+                where: {
+                    status: 'DELIVERED',
+                    paymentStatus: 'COMPLETED'
+                }
+            }),
             prisma.order.aggregate({
                 _sum: { total: true },
-                where: { paymentStatus: 'COMPLETED' }
+                where: {
+                    status: 'DELIVERED',
+                    paymentStatus: 'COMPLETED'
+                }
             }),
             prisma.order.findMany({
                 take: 5,
@@ -60,7 +68,10 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 
         // Calculate Total Profit (Revenue - Cost of Sold Items)
         const completedOrders = await (prisma as any).order.findMany({
-            where: { paymentStatus: 'COMPLETED' },
+            where: {
+                status: 'DELIVERED',
+                paymentStatus: 'COMPLETED'
+            },
             include: { items: { include: { product: true } } }
         });
 
@@ -78,6 +89,7 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 
         const orders = await prisma.order.findMany({
             where: {
+                status: 'DELIVERED',
                 paymentStatus: 'COMPLETED',
                 createdAt: { gte: sevenDaysAgo }
             },
@@ -98,10 +110,10 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 
         res.json({
             totalUsers,
-            totalOrders,
+            totalOrders: deliveredOrders,
             totalRevenue,
             totalProfit,
-            averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+            averageOrderValue: deliveredOrders > 0 ? totalRevenue / deliveredOrders : 0,
             recentOrders,
             lowStockProducts: lowStockProducts.map(p => ({
                 ...p,
