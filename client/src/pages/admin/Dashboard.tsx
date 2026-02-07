@@ -321,14 +321,27 @@ const AdminDashboard = () => {
                             </Card>
                         </Link>
                         <Link to="/admin/settings">
+                            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-pink-100 hover:border-pink-500 bg-pink-50/10">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-pink-100 flex items-center justify-center">
+                                        <IndianRupee className="w-6 h-6 text-pink-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-fredoka font-bold text-lg">Pricing & Tax</h3>
+                                        <p className="text-sm text-muted-foreground">GST & Shipping rules</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Link>
+                        <Link to="/admin/settings">
                             <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                                         <Settings className="w-6 h-6 text-primary" />
                                     </div>
                                     <div>
-                                        <h3 className="font-fredoka font-bold text-lg">Settings</h3>
-                                        <p className="text-sm text-muted-foreground">App configuration</p>
+                                        <h3 className="font-fredoka font-bold text-lg">System Settings</h3>
+                                        <p className="text-sm text-muted-foreground">General configuration</p>
                                     </div>
                                 </div>
                             </Card>
@@ -433,8 +446,8 @@ const AdminDashboard = () => {
                                                     className="h-full bg-green-500"
                                                     style={{
                                                         width: `${stats.topSellingProducts[0]?._sum?.quantity > 0
-                                                                ? ((item._sum?.quantity || 0) / stats.topSellingProducts[0]._sum.quantity) * 100
-                                                                : 0
+                                                            ? ((item._sum?.quantity || 0) / stats.topSellingProducts[0]._sum.quantity) * 100
+                                                            : 0
                                                             }%`
                                                     }}
                                                 />
