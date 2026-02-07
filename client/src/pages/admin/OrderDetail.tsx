@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, User, MapPin, IndianRupee, Truck, Printer } from 'lucide-react';
+import { Package, User, MapPin, IndianRupee, Truck, Printer, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminOrderDetail = () => {
@@ -111,49 +111,153 @@ const AdminOrderDetail = () => {
     }
 
     return (
-        <div className="font-sans">
-            <main className="py-8">
+        <div className="font-sans min-h-screen bg-background print:bg-white">
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @media print {
+                    @page { size: A4; margin: 20mm; }
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; }
+                    .print-hidden { display: none !important; }
+                    .print-only { display: block !important; }
+                    .invoice-container { color: black !important; background: white !important; }
+                    .border-print { border: 1px solid #000 !important; }
+                    .border-b-print { border-bottom: 1px solid #000 !important; }
+                }
+            ` }} />
+
+            {/* Formal Invoice - Visible ONLY on Print */}
+            <div className="hidden print:block invoice-container max-w-4xl mx-auto p-0">
+                <div className="flex justify-between items-start mb-10 border-b-4 border-black pb-6">
+                    <div>
+                        <h1 className="text-5xl font-black uppercase tracking-tighter text-black mb-1">Tax Invoice</h1>
+                        <p className="text-sm font-bold text-gray-600">Original for Buyer</p>
+                    </div>
+                    <div className="text-right">
+                        <h2 className="text-3xl font-black text-primary uppercase">Happy Hopz</h2>
+                        <p className="text-sm font-bold mt-1 text-black">Premium Kids Footwear Collection</p>
+                        <p className="text-xs text-gray-600 mt-2">India | +91 97118 64674</p>
+                        <p className="text-xs text-gray-600">happyhopz308@gmail.com</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-12 mb-10">
+                    <div>
+                        <h3 className="text-xs font-black text-gray-400 uppercase mb-3 tracking-widest">Billing & Shipping To:</h3>
+                        <div className="text-black space-y-1">
+                            <p className="text-xl font-black uppercase">{order.address?.name}</p>
+                            <p className="text-sm font-medium">{order.address?.line1}</p>
+                            {order.address?.line2 && <p className="text-sm font-medium">{order.address.line2}</p>}
+                            <p className="text-sm font-medium">{order.address?.city}, {order.address?.state} - {order.address?.pincode}</p>
+                            <p className="text-sm font-bold mt-3">Phone: {order.address?.phone}</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <div className="inline-block text-left">
+                            <h3 className="text-xs font-black text-gray-400 uppercase mb-3 tracking-widest text-right">Invoice Details:</h3>
+                            <div className="space-y-1 text-black">
+                                <p className="text-sm"><span className="font-bold opacity-50 uppercase mr-2">Invoice #:</span> <span className="font-black">{String(order.id).slice(0, 8).toUpperCase()}</span></p>
+                                <p className="text-sm"><span className="font-bold opacity-50 uppercase mr-2">Date:</span> <span className="font-black">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</span></p>
+                                <p className="text-sm"><span className="font-bold opacity-50 uppercase mr-2">Payment:</span> <span className="font-black">{order.paymentStatus === 'COMPLETED' ? 'PAID (ONLINE)' : 'CASH ON DELIVERY'}</span></p>
+                                <p className="text-sm"><span className="font-bold opacity-50 uppercase mr-2">Status:</span> <span className="font-black">{order.status}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <table className="w-full mb-10 border-collapse">
+                    <thead>
+                        <tr className="bg-black text-white">
+                            <th className="py-4 px-3 text-left text-xs font-bold uppercase tracking-widest">Item Description</th>
+                            <th className="py-4 px-3 text-center text-xs font-bold uppercase tracking-widest w-24">Size</th>
+                            <th className="py-4 px-3 text-center text-xs font-bold uppercase tracking-widest w-20">Qty</th>
+                            <th className="py-4 px-3 text-right text-xs font-bold uppercase tracking-widest w-32">Unit Price</th>
+                            <th className="py-4 px-3 text-right text-xs font-bold uppercase tracking-widest w-40">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/10">
+                        {order.items?.map((item: any) => (
+                            <tr key={item.id} className="text-black">
+                                <td className="py-5 px-3">
+                                    <p className="font-black uppercase text-base">{item.name}</p>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Ref ID: {item.productId.slice(0, 6)}</p>
+                                </td>
+                                <td className="py-5 px-3 text-center font-bold">{item.size}</td>
+                                <td className="py-5 px-3 text-center font-black">{item.quantity}</td>
+                                <td className="py-5 px-3 text-right font-medium">₹{item.price.toFixed(2)}</td>
+                                <td className="py-5 px-3 text-right font-black">₹{(item.price * item.quantity).toFixed(2)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                <div className="flex justify-between items-start mb-16">
+                    <div className="w-1/2 border-2 border-dashed border-black/10 p-6 rounded-2xl">
+                        <h4 className="text-xs font-black uppercase text-gray-400 mb-3 tracking-widest">Important Notes:</h4>
+                        <ul className="text-[10px] space-y-1.5 text-black font-medium leading-relaxed">
+                            <li className="flex gap-2"><span>•</span> <span>This is a computer generated invoice and does not require a physical signature.</span></li>
+                            <li className="flex gap-2"><span>•</span> <span>Return/Exchange requests must be initiated within 14 days of delivery.</span></li>
+                            <li className="flex gap-2"><span>•</span> <span>Keep products in original packaging with tags for returns.</span></li>
+                            <li className="flex gap-2"><span>•</span> <span>GST collected at source as per Govt. norms.</span></li>
+                        </ul>
+                    </div>
+                    <div className="w-1/3">
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center text-sm font-bold text-gray-600">
+                                <span className="uppercase tracking-widest">Subtotal</span>
+                                <span>₹{(order.subtotal || order.total - (order.tax || 0)).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm font-bold text-gray-600">
+                                <span className="uppercase tracking-widest">GST (Included)</span>
+                                <span>₹{(order.tax || (order.total * 0.18)).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm font-bold text-gray-600">
+                                <span className="uppercase tracking-widest">Shipping</span>
+                                <span>{order.shipping > 0 ? `₹${order.shipping.toFixed(2)}` : 'FREE'}</span>
+                            </div>
+                            <div className="pt-4 border-t-4 border-black flex justify-between items-center">
+                                <span className="text-xl font-black uppercase tracking-tighter">Grand Total</span>
+                                <span className="text-2xl font-black">₹{order.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="text-center mt-20">
+                    <div className="inline-block bg-black text-white px-8 py-3 rounded-full text-sm font-black uppercase tracking-widest mb-6">
+                        Thank You For Shopping!
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Visit us again at www.happyhopz.com</p>
+                </div>
+            </div>
+
+            <main className="py-8 print:hidden">
                 <div className="print:hidden">
                     <BackButton label="Back to Orders" to="/admin/orders" />
                 </div>
 
-                {/* Print Only Header */}
-                <div className="hidden print:block mb-8 border-b-2 border-black pb-4 text-black">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h1 className="text-3xl font-bold uppercase tracking-tight">Invoice</h1>
-                            <p className="text-sm mt-1">Order Date: {new Date(order.createdAt).toLocaleDateString()}</p>
-                            <p className="text-sm">Order ID: {order.id}</p>
-                        </div>
-                        <div className="text-right">
-                            <h2 className="text-xl font-bold">Happy Hopz</h2>
-                            <p className="text-sm italic">Kids Footwear Premium Collection</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between mb-8 print:mb-4">
+                <div className="flex items-center justify-between mb-8">
                     <div className="text-black">
-                        <h1 className="text-4xl print:text-2xl font-bold">
-                            Order #{String(order.id || '').slice(0, 8)}
-                        </h1>
-                        <p className="text-muted-foreground print:text-black mt-1">
-                            Placed {new Date(order.createdAt).toLocaleString()}
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-4xl font-bold">
+                                Order #{String(order.id || '').slice(0, 8)}
+                            </h1>
+                            <Badge variant="outline" className="border-primary text-primary font-black uppercase tracking-widest px-3">
+                                {order.status}
+                            </Badge>
+                        </div>
+                        <p className="text-muted-foreground mt-1 font-medium">
+                            Created on {new Date(order.createdAt).toLocaleString()}
                         </p>
                     </div>
-                    <div className="flex items-center gap-3 print:hidden">
+                    <div className="flex items-center gap-3">
                         <Button
-                            variant="outline"
-                            size="sm"
+                            variant="hopz"
                             onClick={handlePrint}
-                            className="flex items-center gap-2 border-black text-black hover:bg-black/5"
+                            className="flex items-center gap-2 shadow-lg shadow-primary/20"
                         >
                             <Printer className="w-4 h-4" />
-                            Print Invoice
+                            Generate Formal Invoice
                         </Button>
-                        <Badge variant="outline" className="border-black text-black font-bold">
-                            {order.status}
-                        </Badge>
                     </div>
                 </div>
 
@@ -241,9 +345,31 @@ const AdminOrderDetail = () => {
                             </Card>
                         </div>
 
-                        <div className="hidden print:block mt-12 pt-8 border-t border-black text-sm text-center italic text-black">
-                            <p>Thank you for choosing Happy Hopz! For support, visit www.happyhopz.com or contact us at +91 9876543210.</p>
-                        </div>
+                        <Card className="p-6 border-pink-100 shadow-sm">
+                            <div className="flex items-center gap-2 mb-6 text-pink-600">
+                                <FileText className="w-5 h-5" />
+                                <h2 className="text-xl font-bold">Billing Details</h2>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Subtotal</span>
+                                    <span className="font-bold">₹{order.subtotal?.toFixed(2) || (order.total - (order.tax || 0)).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">GST (Included)</span>
+                                    <span className="font-bold">₹{order.tax?.toFixed(2) || (order.total * 0.18).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Shipping</span>
+                                    <span className="font-bold text-green-600">{order.shipping > 0 ? `₹${order.shipping.toFixed(2)}` : 'FREE'}</span>
+                                </div>
+                                <div className="pt-4 border-t border-dashed border-gray-200 flex justify-between items-center">
+                                    <span className="font-bold text-lg">Total Amount</span>
+                                    <span className="font-black text-2xl text-primary">₹{order.total.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </Card>
                     </div>
 
                     {/* Right Column - Order Management */}
