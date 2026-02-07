@@ -5,6 +5,8 @@ import { requireAdmin, AuthRequest } from '../middleware/auth';
 const router = Router();
 const prisma = new PrismaClient();
 
+// Deployment heartbeat: triggering fresh build after type fixes
+
 // GET /api/admin/returns - Get all return requests with filters
 router.get('/', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
