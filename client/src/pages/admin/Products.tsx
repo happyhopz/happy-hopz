@@ -228,6 +228,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                 <Label>Stock</Label>
                 <Input
                     type="number"
+                    min="0"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                     required
