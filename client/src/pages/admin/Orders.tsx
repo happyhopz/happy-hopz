@@ -94,17 +94,48 @@ const AdminOrders = () => {
                 return;
             }
 
-            const headers = ['Order ID', 'Date', 'Customer Email', 'Customer Name', 'Total', 'Status', 'Payment Status', 'Items Count'];
-            const csvContent = orders.filter(Boolean).map((o: any) => [
-                o?.id || 'N/A',
-                o?.createdAt ? new Date(o.createdAt).toLocaleString() : 'N/A',
-                o?.user?.email || 'N/A',
-                o?.user?.name || 'N/A',
-                (o?.total || 0).toFixed(2),
-                o?.status || 'N/A',
-                o?.paymentStatus || 'N/A',
-                o?.items?.length || 0
-            ].map(val => `"${val}"`).join(','));
+            const headers = [
+                'Order ID', 'Date', 'Source', 'Customer Name', 'Customer Email', 'Customer Phone',
+                'Shipping Address 1', 'Shipping Address 2', 'City', 'State', 'Pincode',
+                'Items Summary', 'Subtotal', 'Shipping', 'Tax', 'Total Amount',
+                'Status', 'Payment Status', 'Tracking Number'
+            ];
+
+            const csvContent = orders.filter(Boolean).map((o: any) => {
+                const customerName = o.user?.name || o.guestName || 'Guest';
+                const customerEmail = o.user?.email || o.guestEmail || 'N/A';
+                const customerPhone = o.user?.phone || o.guestPhone || o.address?.phone || 'N/A';
+
+                const itemsSummary = o.items?.map((item: any) =>
+                    `${item.name} x ${item.quantity} (${item.size}, ${item.color})`
+                ).join('; ') || 'No Items';
+
+                return [
+                    o.id || 'N/A',
+                    o.createdAt ? new Date(o.createdAt).toLocaleString() : 'N/A',
+                    o.source || 'ONLINE',
+                    customerName,
+                    customerEmail,
+                    customerPhone,
+                    o.address?.line1 || 'N/A',
+                    o.address?.line2 || '',
+                    o.address?.city || 'N/A',
+                    o.address?.state || 'N/A',
+                    o.address?.pincode || 'N/A',
+                    itemsSummary,
+                    (o.subtotal || o.total || 0).toFixed(2),
+                    (o.shipping || 0).toFixed(2),
+                    (o.tax || 0).toFixed(2),
+                    (o.total || 0).toFixed(2),
+                    o.status || 'N/A',
+                    o.paymentStatus || 'N/A',
+                    o.trackingNumber || 'N/A'
+                ].map(val => {
+                    // Handle potential commas in values by wrapping in quotes
+                    const str = String(val).replace(/"/g, '""');
+                    return `"${str}"`;
+                }).join(',');
+            });
 
             const csvString = [headers.join(','), ...csvContent].join('\n');
             const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
