@@ -9,7 +9,7 @@ async function check() {
         }
     });
     console.log('Total orders:', orders.length);
-    orders.forEach(o => console.log(`- Order #${o.id} by ${o.user.email} - Status: ${o.status}`));
+    orders.forEach(o => console.log(`- Order #${o.id} by ${o.user?.email || 'Guest'} - Status: ${o.status}`));
 }
 
 check().finally(() => prisma.$disconnect());
