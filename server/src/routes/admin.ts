@@ -415,6 +415,9 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             parentId: (parentId && parentId.trim() !== '') ? parentId : null
         };
 
+        // Debug logging for cost updates
+        console.log(`[Product Update] ID: ${id}, Costs - Product: ${updateData.costPrice}, Box: ${updateData.boxPrice}, Tag: ${updateData.tagPrice}, Ship: ${updateData.shippingCost}, Other: ${updateData.otherCosts}`);
+
         const product = await (prisma.product as any).update({
             where: { id: id as string },
             data: updateData
