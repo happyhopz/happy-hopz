@@ -100,7 +100,7 @@ const FeaturedShoes = () => {
             <div className="h-10 w-64 bg-muted rounded mx-auto mb-4 animate-pulse" />
             <div className="h-6 w-96 bg-muted rounded mx-auto animate-pulse" />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="bg-background rounded-3xl p-6 animate-pulse">
                 <div className="h-48 bg-muted rounded-2xl mb-6" />
@@ -141,7 +141,7 @@ const FeaturedShoes = () => {
         </div>
 
         {/* Shoes Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
           {products.map((product: any, index: number) => (
             <ShoeCard
               key={product.id}
