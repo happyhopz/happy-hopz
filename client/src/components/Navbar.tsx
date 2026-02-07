@@ -84,7 +84,7 @@ const Navbar = () => {
   const cartCount = cartItems?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+    <nav className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-md border-b border-border shadow-sm print:hidden">
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
           {/* LEFT: Logo + Stacked Brand Name */}

@@ -126,107 +126,105 @@ const AdminOrderDetail = () => {
             ` }} />
 
             {/* Formal Invoice - Visible ONLY on Print */}
-            <div className="hidden print:block invoice-container max-w-4xl mx-auto p-0">
-                <div className="flex justify-between items-start mb-10 border-b-4 border-black pb-6">
+            <div className="hidden print:block invoice-container max-w-4xl mx-auto p-0 font-sans text-black">
+                <div className="flex justify-between items-start mb-10 border-b-2 border-black pb-6">
                     <div>
-                        <h1 className="text-5xl font-black uppercase tracking-tighter text-black mb-1">Tax Invoice</h1>
-                        <p className="text-sm font-bold text-gray-600">Original for Buyer</p>
+                        <h1 className="text-4xl font-bold uppercase tracking-tight mb-1">TAX INVOICE</h1>
+                        <p className="text-xs font-bold text-gray-700">Original for Buyer</p>
                     </div>
                     <div className="text-right">
-                        <h2 className="text-3xl font-black text-primary uppercase">Happy Hopz</h2>
-                        <p className="text-sm font-bold mt-1 text-black">Premium Kids Footwear Collection</p>
-                        <p className="text-xs text-gray-600 mt-2">India | +91 97118 64674</p>
-                        <p className="text-xs text-gray-600">happyhopz308@gmail.com</p>
+                        <h2 className="text-3xl font-bold uppercase">Happy Hopz</h2>
+                        <p className="text-sm font-bold mt-1">Premium Kids Footwear Collection</p>
+                        <p className="text-xs text-gray-700 mt-2">India | +91 97118 64674</p>
+                        <p className="text-xs text-gray-700">happyhopz308@gmail.com</p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-12 mb-10">
                     <div>
-                        <h3 className="text-xs font-black text-gray-400 uppercase mb-3 tracking-widest">Billing & Shipping To:</h3>
+                        <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-3 tracking-widest">BILLING & SHIPPING TO:</h3>
                         <div className="text-black space-y-1">
-                            <p className="text-xl font-black uppercase">{order.address?.name}</p>
-                            <p className="text-sm font-medium">{order.address?.line1}</p>
-                            {order.address?.line2 && <p className="text-sm font-medium">{order.address.line2}</p>}
-                            <p className="text-sm font-medium">{order.address?.city}, {order.address?.state} - {order.address?.pincode}</p>
+                            <p className="text-lg font-bold uppercase">{order.address?.name}</p>
+                            <p className="text-sm">{order.address?.line1}</p>
+                            {order.address?.line2 && <p className="text-sm">{order.address.line2}</p>}
+                            <p className="text-sm">{order.address?.city}, {order.address?.state} - {order.address?.pincode}</p>
                             <p className="text-sm font-bold mt-3">Phone: {order.address?.phone}</p>
                         </div>
                     </div>
                     <div className="text-right">
                         <div className="inline-block text-left">
-                            <h3 className="text-xs font-black text-gray-400 uppercase mb-3 tracking-widest text-right">Invoice Details:</h3>
+                            <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-3 tracking-widest text-right">INVOICE DETAILS:</h3>
                             <div className="space-y-1 text-black">
-                                <p className="text-sm"><span className="font-bold opacity-50 uppercase mr-2">Invoice #:</span> <span className="font-black">{String(order.id).slice(0, 8).toUpperCase()}</span></p>
-                                <p className="text-sm"><span className="font-bold opacity-50 uppercase mr-2">Date:</span> <span className="font-black">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</span></p>
-                                <p className="text-sm"><span className="font-bold opacity-50 uppercase mr-2">Payment:</span> <span className="font-black">{order.paymentStatus === 'COMPLETED' ? 'PAID (ONLINE)' : 'CASH ON DELIVERY'}</span></p>
-                                <p className="text-sm"><span className="font-bold opacity-50 uppercase mr-2">Status:</span> <span className="font-black">{order.status}</span></p>
+                                <p className="text-sm font-medium"><span className="opacity-50 uppercase mr-2">Invoice #:</span> <span className="font-bold">{String(order.id).slice(0, 8).toUpperCase()}</span></p>
+                                <p className="text-sm font-medium"><span className="opacity-50 uppercase mr-2">Date:</span> <span className="font-bold">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</span></p>
+                                <p className="text-sm font-medium"><span className="opacity-50 uppercase mr-2">Payment:</span> <span className="font-bold">{order.paymentStatus === 'COMPLETED' ? 'PAID (ONLINE)' : 'CASH ON DELIVERY'}</span></p>
+                                <p className="text-sm font-medium"><span className="opacity-50 uppercase mr-2">Status:</span> <span className="font-bold">{order.status}</span></p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <table className="w-full mb-10 border-collapse">
+                <table className="w-full mb-10 border-collapse border border-black">
                     <thead>
-                        <tr className="bg-black text-white">
-                            <th className="py-4 px-3 text-left text-xs font-bold uppercase tracking-widest">Item Description</th>
-                            <th className="py-4 px-3 text-center text-xs font-bold uppercase tracking-widest w-24">Size</th>
-                            <th className="py-4 px-3 text-center text-xs font-bold uppercase tracking-widest w-20">Qty</th>
-                            <th className="py-4 px-3 text-right text-xs font-bold uppercase tracking-widest w-32">Unit Price</th>
-                            <th className="py-4 px-3 text-right text-xs font-bold uppercase tracking-widest w-40">Amount</th>
+                        <tr className="bg-gray-100 border-b border-black">
+                            <th className="py-3 px-3 text-left text-[10px] font-bold uppercase tracking-widest border-r border-black">Item Description</th>
+                            <th className="py-3 px-3 text-center text-[10px] font-bold uppercase tracking-widest w-24 border-r border-black">Size</th>
+                            <th className="py-3 px-3 text-center text-[10px] font-bold uppercase tracking-widest w-20 border-r border-black">Qty</th>
+                            <th className="py-3 px-3 text-right text-[10px] font-bold uppercase tracking-widest w-32 border-r border-black">Unit Price</th>
+                            <th className="py-3 px-3 text-right text-[10px] font-bold uppercase tracking-widest w-40">Amount</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-black/10">
+                    <tbody>
                         {order.items?.map((item: any) => (
-                            <tr key={item.id} className="text-black">
-                                <td className="py-5 px-3">
-                                    <p className="font-black uppercase text-base">{item.name}</p>
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Ref ID: {item.productId.slice(0, 6)}</p>
+                            <tr key={item.id} className="text-black border-b border-black last:border-b-0">
+                                <td className="py-3 px-3 border-r border-black">
+                                    <p className="font-bold uppercase text-sm">{item.name}</p>
+                                    <p className="text-[9px] text-gray-600 font-medium uppercase mt-0.5">Ref ID: {item.productId.slice(0, 6)}</p>
                                 </td>
-                                <td className="py-5 px-3 text-center font-bold">{item.size}</td>
-                                <td className="py-5 px-3 text-center font-black">{item.quantity}</td>
-                                <td className="py-5 px-3 text-right font-medium">₹{item.price.toFixed(2)}</td>
-                                <td className="py-5 px-3 text-right font-black">₹{(item.price * item.quantity).toFixed(2)}</td>
+                                <td className="py-3 px-3 text-center font-medium border-r border-black text-sm">{item.size}</td>
+                                <td className="py-3 px-3 text-center font-bold border-r border-black text-sm">{item.quantity}</td>
+                                <td className="py-3 px-3 text-right font-medium border-r border-black text-sm">₹{item.price.toFixed(2)}</td>
+                                <td className="py-3 px-3 text-right font-bold text-sm">₹{(item.price * item.quantity).toFixed(2)}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
 
                 <div className="flex justify-between items-start mb-16">
-                    <div className="w-1/2 border-2 border-dashed border-black/10 p-6 rounded-2xl">
-                        <h4 className="text-xs font-black uppercase text-gray-400 mb-3 tracking-widest">Important Notes:</h4>
-                        <ul className="text-[10px] space-y-1.5 text-black font-medium leading-relaxed">
-                            <li className="flex gap-2"><span>•</span> <span>This is a computer generated invoice and does not require a physical signature.</span></li>
-                            <li className="flex gap-2"><span>•</span> <span>Return/Exchange requests must be initiated within 14 days of delivery.</span></li>
-                            <li className="flex gap-2"><span>•</span> <span>Keep products in original packaging with tags for returns.</span></li>
-                            <li className="flex gap-2"><span>•</span> <span>GST collected at source as per Govt. norms.</span></li>
+                    <div className="w-1/2 p-6 border border-black border-dashed">
+                        <h4 className="text-[10px] font-bold uppercase text-gray-500 mb-3 tracking-widest">Important Notes:</h4>
+                        <ul className="text-[10px] space-y-1 text-black font-medium leading-normal">
+                            <li>• This is a computer generated invoice and does not require a physical signature.</li>
+                            <li>• Return/Exchange requests must be initiated within 14 days of delivery.</li>
+                            <li>• Keep products in original packaging with tags for returns.</li>
+                            <li>• GST collected at source as per Govt. norms.</li>
                         </ul>
                     </div>
                     <div className="w-1/3">
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center text-sm font-bold text-gray-600">
-                                <span className="uppercase tracking-widest">Subtotal</span>
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center text-sm font-medium">
+                                <span className="uppercase tracking-widest opacity-60">Subtotal</span>
                                 <span>₹{(order.subtotal || order.total - (order.tax || 0)).toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between items-center text-sm font-bold text-gray-600">
-                                <span className="uppercase tracking-widest">GST (Included)</span>
+                            <div className="flex justify-between items-center text-sm font-medium">
+                                <span className="uppercase tracking-widest opacity-60">GST (Included)</span>
                                 <span>₹{(order.tax || (order.total * 0.18)).toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between items-center text-sm font-bold text-gray-600">
-                                <span className="uppercase tracking-widest">Shipping</span>
+                            <div className="flex justify-between items-center text-sm font-medium">
+                                <span className="uppercase tracking-widest opacity-60">Shipping</span>
                                 <span>{order.shipping > 0 ? `₹${order.shipping.toFixed(2)}` : 'FREE'}</span>
                             </div>
-                            <div className="pt-4 border-t-4 border-black flex justify-between items-center">
-                                <span className="text-xl font-black uppercase tracking-tighter">Grand Total</span>
-                                <span className="text-2xl font-black">₹{order.total.toFixed(2)}</span>
+                            <div className="pt-3 border-t-2 border-black flex justify-between items-center">
+                                <span className="text-lg font-bold uppercase">Grand Total</span>
+                                <span className="text-xl font-bold">₹{order.total.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div className="text-center mt-20">
-                    <div className="inline-block bg-black text-white px-8 py-3 rounded-full text-sm font-black uppercase tracking-widest mb-6">
-                        Thank You For Shopping!
-                    </div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Visit us again at www.happyhopz.com</p>
+                    <p className="text-sm font-bold uppercase tracking-widest border-y border-black py-4">Thank You For Your Business</p>
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-4">www.happyhopz.com</p>
                 </div>
             </div>
 

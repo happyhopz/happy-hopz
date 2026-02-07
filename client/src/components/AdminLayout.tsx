@@ -103,7 +103,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
             <div className="flex">
                 {/* Sidebar */}
-                <aside className="w-64 bg-white border-r h-[calc(100vh-64px)] fixed left-0 hidden lg:block overflow-y-auto">
+                <aside className="w-64 bg-white border-r h-[calc(100vh-64px)] fixed left-0 hidden lg:block overflow-y-auto print:hidden">
                     <div className="p-6">
                         <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">
                             Admin Panel
@@ -156,7 +156,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                     <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
 
                         {/* Global Admin Search */}
-                        <div className="mb-8 relative" ref={searchRef}>
+                        <div className="mb-8 relative print:hidden" ref={searchRef}>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                                 <Input
