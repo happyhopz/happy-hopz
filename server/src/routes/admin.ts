@@ -861,4 +861,83 @@ router.post('/site-settings/payment', async (req: AuthRequest, res: Response) =>
     }
 });
 
+// DELETE /api/admin/orders/:id - Delete single order
+router.delete('/orders/:id', async (req: AuthRequest, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const adminId = req.user!.id;
+
+        // Check if order exists
+        const order = await prisma.order.findUnique({
+            where: { id: id },
+            include: { items: true }
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Delete order (cascade will delete order items if configured, but let's be safe)
+        // Check if OrderItem has a relation with Order that cascades
+        await prisma.order.delete({
+            where: { id: id }
+        });
+
+        // Log audit
+        await prisma.auditLog.create({
+            data: {
+                action: 'DELETE_ORDER',
+                entity: 'Order',
+                entityId: id,
+                details: `Deleted order #${id.slice(0, 8)} with ${(order as any).items?.length || 0} items. Total: ₹${order.total}`,
+                adminId
+            }
+        });
+
+        res.json({ success: true, message: 'Order deleted successfully' });
+
+    } catch (error: any) {
+        console.error('[Delete Order Error]:', error);
+        res.status(500).json({ error: 'Failed to delete order' });
+    }
+});
+
+// DELETE /api/admin/orders/bulk - Delete multiple orders
+router.delete('/orders-bulk', async (req: AuthRequest, res: Response) => {
+    try {
+        const { orderIds } = req.body as { orderIds: string[] };
+        const adminId = req.user!.id;
+
+        if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+            return res.status(400).json({ error: 'Order IDs are required' });
+        }
+
+        // Delete orders
+        const result = await prisma.order.deleteMany({
+            where: { id: { in: orderIds } }
+        });
+
+        // Log audit
+        await prisma.auditLog.create({
+            data: {
+                action: 'BULK_DELETE_ORDERS',
+                entity: 'Order',
+                entityId: 'BULK',
+                details: `Bulk deleted ${result.count} orders. IDs sample: ${orderIds.slice(0, 5).join(', ')}${orderIds.length > 5 ? '...' : ''}`,
+                adminId
+            }
+        });
+
+        res.json({
+            success: true,
+            message: `${result.count} order(s) deleted successfully`,
+            deletedCount: result.count
+        });
+
+    } catch (error: any) {
+        console.error('[Bulk Delete Orders Error]:', error);
+        res.status(500).json({ error: 'Failed to delete orders' });
+    }
+});
+
 export default router;

@@ -117,7 +117,7 @@ router.patch('/:id/approve', requireAdmin, async (req: AuthRequest, res: Respons
         const adminId = req.user!.id;
 
         const returnRequest = await prisma.returnRequest.findUnique({
-            where: { id },
+            where: { id: id as string },
             include: { items: true }
         });
 
@@ -150,7 +150,7 @@ router.patch('/:id/approve', requireAdmin, async (req: AuthRequest, res: Respons
             data: {
                 action: 'APPROVE_RETURN',
                 entity: 'ReturnRequest',
-                entityId: id,
+                entityId: id as string,
                 details: `Approved ${returnRequest.type} request for order ${returnRequest.orderId}`,
                 adminId
             }
@@ -176,7 +176,7 @@ router.patch('/:id/reject', requireAdmin, async (req: AuthRequest, res: Response
         }
 
         const returnRequest = await prisma.returnRequest.findUnique({
-            where: { id }
+            where: { id: id as string }
         });
 
         if (!returnRequest) {
@@ -206,7 +206,7 @@ router.patch('/:id/reject', requireAdmin, async (req: AuthRequest, res: Response
             data: {
                 action: 'REJECT_RETURN',
                 entity: 'ReturnRequest',
-                entityId: id,
+                entityId: id as string,
                 details: `Rejected ${returnRequest.type} request. Reason: ${reason}`,
                 adminId
             }
@@ -228,7 +228,7 @@ router.patch('/:id/complete', requireAdmin, async (req: AuthRequest, res: Respon
         const adminId = req.user!.id;
 
         const returnRequest = await prisma.returnRequest.findUnique({
-            where: { id },
+            where: { id: id as string },
             include: { items: true, order: true }
         });
 
@@ -242,7 +242,7 @@ router.patch('/:id/complete', requireAdmin, async (req: AuthRequest, res: Respon
 
         // Restore stock if requested
         if (restockItems) {
-            for (const item of returnRequest.items) {
+            for (const item of (returnRequest as any).items) {
                 await prisma.product.update({
                     where: { id: item.productId },
                     data: {
@@ -275,7 +275,7 @@ router.patch('/:id/complete', requireAdmin, async (req: AuthRequest, res: Respon
             data: {
                 action: 'COMPLETE_RETURN',
                 entity: 'ReturnRequest',
-                entityId: id,
+                entityId: id as string,
                 details: `Completed ${returnRequest.type} request. Refund: ₹${returnRequest.refundAmount}. Stock restored: ${restockItems}`,
                 adminId
             }

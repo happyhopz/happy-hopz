@@ -123,13 +123,77 @@ const AdminOrders = () => {
         }
     };
 
+    const toggleSelectOrder = (id: string) => {
+        setSelectedOrders(prev =>
+            prev.includes(id) ? prev.filter(orderId => orderId !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedOrders.length === orders?.length) {
+            setSelectedOrders([]);
+        } else {
+            setSelectedOrders(orders?.map((o: any) => o.id) || []);
+        }
+    };
+
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            return await adminAPI.deleteOrder(id);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            toast.success('Order deleted successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to delete order');
+        }
+    });
+
+    const bulkDeleteMutation = useMutation({
+        mutationFn: async (orderIds: string[]) => {
+            return await adminAPI.bulkDeleteOrders(orderIds);
+        },
+        onSuccess: (data: any) => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            setSelectedOrders([]);
+            toast.success(data.data.message || 'Orders deleted successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to delete orders');
+        }
+    });
+
+    const handleDelete = (id: string) => {
+        if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+            deleteMutation.mutate(id);
+        }
+    };
+
+    const handleBulkDelete = () => {
+        if (window.confirm(`Are you sure you want to delete ${selectedOrders.length} order(s)? This action cannot be undone.`)) {
+            bulkDeleteMutation.mutate(selectedOrders);
+        }
+    };
+
     return (
         <div className="animate-in fade-in duration-500">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <h1 className="text-4xl font-fredoka font-bold text-foreground">
                     Order Management
                 </h1>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
+                    {selectedOrders.length > 0 && (
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleBulkDelete}
+                            className="flex items-center gap-2 shadow-lg shadow-destructive/20"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Delete ({selectedOrders.length})
+                        </Button>
+                    )}
                     <Button
                         variant="outline"
                         size="sm"
@@ -147,24 +211,31 @@ const AdminOrders = () => {
                         </div>
                     </div>
                 </div>
-                <Button className="gap-2 rounded-xl shadow-lg shadow-primary/20 px-6 font-bold">
-                    <Plus className="w-4 h-4" />
-                    Manual Order
-                </Button>
             </div>
 
 
             {/* Search and Filters */}
             <Card className="p-6 mb-8 border-primary/10 shadow-sm">
                 <div className="space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search by Order ID or Customer Email..."
-                            className="pl-10 border-primary/20 focus-visible:ring-primary"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                                checked={orders?.length > 0 && selectedOrders.length === orders?.length}
+                                onChange={toggleSelectAll}
+                            />
+                            <span className="text-sm font-medium text-muted-foreground">Select All</span>
+                        </div>
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search by Order ID or Customer Email..."
+                                className="pl-10 border-primary/20 focus-visible:ring-primary"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
@@ -250,9 +321,15 @@ const AdminOrders = () => {
             ) : (
                 <div className="grid grid-cols-1 gap-4">
                     {orders.filter(Boolean).map((order: any) => (
-                        <Card key={order.id} className={`p-6 hover:shadow-float transition-all border-primary/5 ${selectedOrders.includes(order.id) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
+                        <Card key={order.id} className={`p-6 hover:shadow-float transition-all border-primary/5 ${selectedOrders.includes(order.id) ? 'ring-2 ring-primary ring-offset-1' : ''}`}>
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                 <div className="flex items-center gap-4">
+                                    <input
+                                        type="checkbox"
+                                        className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                                        checked={selectedOrders.includes(order.id)}
+                                        onChange={() => toggleSelectOrder(order.id)}
+                                    />
                                     <div className="w-12 h-12 rounded-xl bg-gradient-hopz flex items-center justify-center shadow-sm">
                                         <Package className="w-6 h-6 text-white" />
                                     </div>
@@ -261,7 +338,7 @@ const AdminOrders = () => {
                                             Order #{String(order.id || 'N/A').slice(0, 8)}
                                         </h3>
                                         <p className="text-sm text-muted-foreground font-nunito">
-                                            {order.user?.email || 'Guest User'}
+                                            {order.user?.email || order.guestEmail || 'Guest User'}
                                         </p>
                                     </div>
                                 </div>
@@ -296,6 +373,15 @@ const AdminOrders = () => {
                                             Placed on {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}
                                         </p>
                                         <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="font-bold border-primary/20 text-destructive hover:bg-destructive/5"
+                                                onClick={() => handleDelete(order.id)}
+                                            >
+                                                <Trash2 className="w-4 h-4 mr-2" />
+                                                Delete
+                                            </Button>
                                             <Button variant="outline" size="sm" className="font-bold border-primary/20 text-primary hover:bg-primary/5" onClick={() => window.open(`/api/admin/orders/${order.id}/shipping-label`, '_blank')}>
                                                 <FileText className="w-4 h-4 mr-2" />
                                                 Label

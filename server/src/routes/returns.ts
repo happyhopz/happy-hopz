@@ -173,7 +173,7 @@ router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
 
         const returnRequest = await prisma.returnRequest.findUnique({
-            where: { id },
+            where: { id: id as string },
             include: {
                 items: true,
                 order: {
@@ -217,7 +217,7 @@ router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response
         const { id } = req.params;
 
         const returnRequest = await prisma.returnRequest.findUnique({
-            where: { id }
+            where: { id: id as string }
         });
 
         if (!returnRequest) {
@@ -233,7 +233,7 @@ router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response
         }
 
         const updated = await prisma.returnRequest.update({
-            where: { id },
+            where: { id: id as string },
             data: { status: 'CANCELLED' }
         });
 
