@@ -15,6 +15,7 @@ router.use(requireAdmin);
 // Dashboard stats
 router.get('/stats', async (req: AuthRequest, res: Response) => {
     try {
+        console.log('[Dashboard Stats] === STATS REQUEST STARTED ===');
         const [
             totalUsers,
             deliveredOrders,
