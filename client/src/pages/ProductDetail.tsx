@@ -294,11 +294,11 @@ const ProductDetail = () => {
 
                         {/* Main Image */}
                         <div className="flex-1 grid grid-cols-1 gap-4">
-                            <div className="relative bg-white rounded-lg overflow-hidden aspect-[3/2] group flex items-center justify-center border border-border/50">
+                            <div className="relative bg-white rounded-lg overflow-hidden aspect-square group flex items-center justify-center border border-border/50">
                                 <img
                                     src={product.images[selectedImageIndex] || product.images[0]}
                                     alt={product.name}
-                                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 p-2 md:p-4"
+                                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 p-4 md:p-8"
                                 />
 
                                 {/* Floating Badges */}
