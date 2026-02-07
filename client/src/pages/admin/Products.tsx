@@ -589,7 +589,7 @@ const AdminProducts = () => {
                                         <img
                                             src={product.images[0]}
                                             alt={product.name}
-                                            className="w-20 h-20 object-contain"
+                                            className="w-full h-full object-cover rounded-lg"
                                         />
                                     ) : (
                                         <Package className="w-12 h-12 text-muted-foreground" />
