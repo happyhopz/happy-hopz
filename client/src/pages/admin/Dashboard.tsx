@@ -31,17 +31,52 @@ const AdminDashboard = () => {
         enabled: isAdmin,
         refetchInterval: 10000 // Refresh every 10s for "real-time" feel
     });
+    // Debug logging
+    console.log('[Dashboard] Auth State:', { user, isAdmin, loading });
 
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading authentication...</p>
+                </div>
             </div>
         );
     }
 
     if (!user || !isAdmin) {
-        return <Navigate to="/" />;
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-2xl">
+                    <h2 className="text-xl font-bold text-yellow-700 mb-4">Access Denied</h2>
+                    <div className="space-y-2 text-sm">
+                        <p><strong>User:</strong> {user ? user.email : 'Not logged in'}</p>
+                        <p><strong>Role:</strong> {user?.role || 'N/A'}</p>
+                        <p><strong>Is Admin:</strong> {isAdmin ? 'Yes' : 'No'}</p>
+                        <p className="text-yellow-600 mt-4">
+                            {!user ? 'You need to sign in first.' : 'You need admin privileges to access this page.'}
+                        </p>
+                    </div>
+                    <div className="mt-4 space-x-2">
+                        <button
+                            onClick={() => window.location.href = '/'}
+                            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                        >
+                            Go Home
+                        </button>
+                        {!user && (
+                            <button
+                                onClick={() => window.location.href = '/signin'}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Sign In
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
