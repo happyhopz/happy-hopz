@@ -84,13 +84,24 @@ const OrderDetail = () => {
 
     const getStatusColor = (status: string) => {
         const colors: any = {
-            PLACED: 'bg-blue-500',
+            PLACED: 'bg-pink-500',
             PACKED: 'bg-purple-500',
-            SHIPPED: 'bg-cyan-500',
+            SHIPPED: 'bg-indigo-600',
             DELIVERED: 'bg-green-500',
             CANCELLED: 'bg-red-500'
         };
         return colors[status] || 'bg-gray-500';
+    };
+
+    const getStatusLabel = (status: string) => {
+        const labels: any = {
+            PLACED: 'Order Placed',
+            PACKED: 'Packed',
+            SHIPPED: 'Shipped',
+            DELIVERED: 'Delivered',
+            CANCELLED: 'Cancelled'
+        };
+        return labels[status] || status;
     };
 
     const statusSteps = ['PLACED', 'PACKED', 'SHIPPED', 'DELIVERED'];
@@ -166,11 +177,13 @@ const OrderDetail = () => {
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Badge className={`${getStatusColor(order.status)} text-white px-3 py-1`}>
+                            <Badge className={`${getStatusColor(order.status)} text-white px-3 py-1 uppercase tracking-wider font-extrabold`}>
                                 {getStatusIcon(order.status)}
-                                <span className="ml-2">{order.status}</span>
+                                <span className="ml-2">{getStatusLabel(order.status)}</span>
                             </Badge>
-                            <Badge variant="outline">{order.paymentStatus}</Badge>
+                            <Badge variant="outline" className="uppercase font-bold">
+                                {order.paymentStatus === 'PENDING' ? 'Awaiting Payment' : order.paymentStatus}
+                            </Badge>
                         </div>
                     </div>
 

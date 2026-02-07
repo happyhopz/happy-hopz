@@ -25,13 +25,24 @@ const Orders = () => {
 
     const getStatusColor = (status: string) => {
         const colors: any = {
-            PLACED: 'bg-blue-500',
+            PLACED: 'bg-pink-500',
             PACKED: 'bg-purple-500',
-            SHIPPED: 'bg-cyan-500',
+            SHIPPED: 'bg-indigo-600',
             DELIVERED: 'bg-green-500',
             CANCELLED: 'bg-red-500'
         };
         return colors[status] || 'bg-gray-500';
+    };
+
+    const getStatusLabel = (status: string) => {
+        const labels: any = {
+            PLACED: 'Order Placed',
+            PACKED: 'Packed',
+            SHIPPED: 'Shipped',
+            DELIVERED: 'Delivered',
+            CANCELLED: 'Cancelled'
+        };
+        return labels[status] || status;
     };
 
     return (
@@ -82,11 +93,11 @@ const Orders = () => {
                                                 <h3 className="text-xl font-fredoka font-bold">
                                                     Order #{String(order.id || '').slice(0, 8)}
                                                 </h3>
-                                                <Badge className={getStatusColor(order.status)}>
-                                                    {order.status}
+                                                <Badge className={`${getStatusColor(order.status)} text-white`}>
+                                                    {getStatusLabel(order.status)}
                                                 </Badge>
                                                 <Badge variant="outline">
-                                                    {order.paymentStatus}
+                                                    {order.paymentStatus === 'PENDING' ? 'Awaiting Payment' : order.paymentStatus}
                                                 </Badge>
                                             </div>
 
