@@ -96,6 +96,9 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
                 const totalUnitCost = productCost + boxCost + tagCost + shipCost + otherCost;
                 const quantity = item.quantity;
 
+                // Debug logging
+                console.log(`[Profit Calc] Product: ${product?.name || 'Unknown'}, Price: ₹${item.price}, Cost: ₹${productCost}, Box: ₹${boxCost}, Tag: ₹${tagCost}, Ship: ₹${shipCost}, Other: ₹${otherCost}, Total Cost: ₹${totalUnitCost}, Qty: ${quantity}, Profit: ₹${((item.price - totalUnitCost) * quantity).toFixed(2)}`);
+
                 // Accumulate costs by category
                 totalProductCost += productCost * quantity;
                 totalPackagingCost += boxCost * quantity;
