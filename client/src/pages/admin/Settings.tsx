@@ -179,6 +179,7 @@ const AdminSettings = () => {
                                                     name="gst_percentage"
                                                     type="number"
                                                     step="0.1"
+                                                    className="pr-8"
                                                     defaultValue={dynamicSettings?.gst_percentage || 18}
                                                 />
                                                 <div className="absolute right-3 top-3 text-muted-foreground font-bold">%</div>
@@ -204,10 +205,10 @@ const AdminSettings = () => {
                                                     id="delivery_charge"
                                                     name="delivery_charge"
                                                     type="number"
+                                                    className="pl-8"
                                                     defaultValue={dynamicSettings?.delivery_charge || 99}
                                                 />
                                                 <div className="absolute left-3 top-3 text-muted-foreground">₹</div>
-                                                <Input className="hidden" /> {/* Placeholder for padding */}
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -217,6 +218,7 @@ const AdminSettings = () => {
                                                     id="free_delivery_threshold"
                                                     name="free_delivery_threshold"
                                                     type="number"
+                                                    className="pl-8"
                                                     defaultValue={dynamicSettings?.free_delivery_threshold || 999}
                                                 />
                                                 <div className="absolute left-3 top-3 text-muted-foreground">₹</div>
