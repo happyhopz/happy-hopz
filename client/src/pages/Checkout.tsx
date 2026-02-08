@@ -574,12 +574,12 @@ const Checkout = () => {
 
                         {/* 2. Address Step */}
                         <Card className="overflow-hidden border-none shadow-sm">
-                            <div className={`px-6 py-3 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'address' ? 'bg-pink-600' : 'bg-gray-50'}`} onClick={() => setCurrentStep('address')}>
+                            <div className={`px-6 py-3 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'address' ? 'bg-pink-200' : 'bg-gray-50'}`} onClick={() => setCurrentStep('address')}>
                                 <div className="flex items-center gap-3">
-                                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${currentStep === 'address' ? 'bg-white text-pink-600' : selectedAddressId ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'}`}>
+                                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${currentStep === 'address' ? 'bg-pink-600 text-white' : selectedAddressId ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'}`}>
                                         {selectedAddressId && currentStep !== 'address' ? <Check className="w-4 h-4" /> : '2'}
                                     </span>
-                                    <span className={`font-bold text-sm ${currentStep === 'address' ? 'text-white' : 'text-gray-900'}`}>DELIVERY ADDRESS</span>
+                                    <span className={`font-bold text-sm ${currentStep === 'address' ? 'text-gray-900' : 'text-gray-900'}`}>DELIVERY ADDRESS</span>
                                 </div>
                                 {currentStep !== 'address' && selectedAddressId && <Button variant="ghost" size="sm" className="text-pink-600 font-bold hover:bg-pink-50">CHANGE</Button>}
                             </div>
