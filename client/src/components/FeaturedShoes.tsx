@@ -176,6 +176,7 @@ interface Product {
   images: string[];
   sizes: string[];
   colors: string[];
+  tags?: string[];
 }
 
 interface TagInfo {
@@ -205,10 +206,10 @@ const ShoeCard = ({
         <Link
           to={`/admin/products?edit=${product.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-2 left-2 md:top-4 md:left-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center transition-transform hover:scale-110 z-20"
+          className="absolute top-12 right-2 md:top-16 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center transition-transform hover:scale-110 z-50 animate-fade-in"
           title="Edit Product"
         >
-          <Edit className="w-5 h-5 text-white" />
+          <Edit className="w-4 h-4 md:w-5 md:h-5 text-white" />
         </Link>
       )}
 
@@ -246,7 +247,7 @@ const ShoeCard = ({
 
 
           {/* Floating Badges */}
-          <div className={`absolute ${isAdmin ? 'top-12 md:top-16' : 'top-2 md:top-4'} left-2 md:left-4 flex flex-col gap-1 z-[45] transition-all duration-300`}>
+          <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1 z-[45] transition-all duration-300">
             {product.tags && product.tags.map((tag: string, idx: number) => {
               const lowT = tag.toLowerCase();
               const isCyanTag = lowT.includes('sale') || lowT.includes('new');
