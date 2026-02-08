@@ -573,7 +573,7 @@ const Checkout = () => {
 
                         {/* 2. Address Step */}
                         <Card className="overflow-hidden border-none shadow-sm">
-                            <div className={`px-6 py-3 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'address' ? 'bg-pink-600 text-white' : 'bg-white border-b'}`} onClick={() => setCurrentStep('address')}>
+                            <div className={`px-6 py-3 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'address' ? 'bg-pink-600' : 'bg-gray-50'}`} onClick={() => setCurrentStep('address')}>
                                 <div className="flex items-center gap-3">
                                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${currentStep === 'address' ? 'bg-white text-pink-600' : selectedAddressId ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'}`}>
                                         {selectedAddressId && currentStep !== 'address' ? <Check className="w-4 h-4" /> : '2'}
@@ -817,22 +817,84 @@ const Checkout = () => {
                                     </div>
 
                                     {!appliedCoupon ? (
-                                        <div className="mt-3 flex gap-2">
-                                            <Input
-                                                placeholder="Enter coupon code"
-                                                value={couponCode}
-                                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                                className="flex-1 h-10 border-pink-200 focus:border-pink-400 relative z-10"
-                                                disabled={couponLoading}
-                                                autoComplete="off"
-                                            />
-                                            <Button
-                                                onClick={handleApplyCoupon}
-                                                disabled={couponLoading || !couponCode.trim()}
-                                                className="bg-pink-500 hover:bg-pink-600 text-white px-6"
-                                            >
-                                                {couponLoading ? 'Applying...' : 'Apply'}
-                                            </Button>
+                                        <div className="mt-3 space-y-3">
+                                            {/* Available Coupons */}
+                                            <div className="space-y-2">
+                                                <p className="text-xs font-bold text-gray-600 uppercase">Available Offers</p>
+                                                <button
+                                                    onClick={async () => {
+                                                        setCouponCode('FIRST5');
+                                                        setCouponLoading(true);
+                                                        try {
+                                                            const userEmail = user?.email || (isGuest ? guestInfo.email : null);
+                                                            const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/apply`, {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json',
+                                                                    ...(user ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+                                                                },
+                                                                body: JSON.stringify({
+                                                                    code: 'FIRST5',
+                                                                    cartTotal: subtotal,
+                                                                    guestEmail: userEmail
+                                                                })
+                                                            });
+
+                                                            if (!response.ok) {
+                                                                const error = await response.json();
+                                                                throw new Error(error.error || 'Failed to apply coupon');
+                                                            }
+
+                                                            const data = await response.json();
+                                                            setAppliedCoupon(data);
+                                                            setCouponExpiry(new Date(data.expiresAt));
+                                                            localStorage.setItem('appliedCoupon', JSON.stringify(data));
+                                                            toast.success(`Coupon applied! You saved ₹${data.discountAmount}`);
+                                                            setCouponCode('');
+                                                        } catch (error: any) {
+                                                            toast.error(error.message || 'Failed to apply coupon');
+                                                        } finally {
+                                                            setCouponLoading(false);
+                                                        }
+                                                    }}
+                                                    disabled={couponLoading}
+                                                    className="w-full p-3 border-2 border-dashed border-pink-300 rounded-lg hover:border-pink-500 hover:bg-pink-50 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <Tag className="w-4 h-4 text-pink-600" />
+                                                                <span className="font-bold text-pink-600">FIRST5</span>
+                                                                <span className="text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-bold">5% OFF</span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-600 mt-1">First-time purchase discount</p>
+                                                        </div>
+                                                        <ChevronRight className="w-4 h-4 text-pink-400 group-hover:text-pink-600" />
+                                                    </div>
+                                                </button>
+                                            </div>
+
+                                            {/* Manual Input */}
+                                            <div className="pt-2 border-t border-gray-200">
+                                                <p className="text-xs font-bold text-gray-600 uppercase mb-2">Have a code?</p>
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        placeholder="Enter coupon code"
+                                                        value={couponCode}
+                                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                                        className="flex-1 h-10 border-gray-300 focus:border-pink-400"
+                                                        disabled={couponLoading}
+                                                        autoComplete="off"
+                                                    />
+                                                    <Button
+                                                        onClick={handleApplyCoupon}
+                                                        disabled={couponLoading || !couponCode.trim()}
+                                                        className="bg-pink-500 hover:bg-pink-600 text-white px-6"
+                                                    >
+                                                        {couponLoading ? 'Applying...' : 'Apply'}
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
