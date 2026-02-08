@@ -787,7 +787,7 @@ const Checkout = () => {
                                         }
 
                                         return (
-                                            <Link key={item.id} to={`/product/${item.product.id}`}>
+                                            <Link key={item.id} to={`/products/${item.product.id}`}>
                                                 <div className="flex gap-3 items-center p-2 rounded-lg hover:bg-gray-50 transition-colors border border-gray-50 cursor-pointer">
                                                     <div className="w-14 h-14 rounded-md bg-pink-50 overflow-hidden flex-shrink-0 border border-pink-50">
                                                         {imageUrl ? (
