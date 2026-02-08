@@ -39,6 +39,7 @@ const createOrderSchema = z.object({
     guestName: z.string().nullable().optional(),
     guestPhone: z.string().nullable().optional(),
     paymentStatus: z.enum(['PENDING', 'COMPLETED']).optional(),
+    couponCode: z.string().optional(),
     address: z.object({
         name: z.string(),
         phone: z.string(),
@@ -64,7 +65,50 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
         const serverSubtotal = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const serverTax = Math.round(serverSubtotal * gstRate);
         const serverShipping = serverSubtotal >= freeThreshold ? 0 : deliveryCharge;
-        const serverTotal = serverSubtotal + serverTax + serverShipping;
+
+        // Handle coupon validation and discount
+        let couponDiscount = 0;
+        let couponId: string | null = null;
+        let validatedCouponCode: string | null = null;
+
+        if (data.couponCode) {
+            const coupon = await prisma.coupon.findUnique({
+                where: { code: data.couponCode.toUpperCase() }
+            });
+
+            if (!coupon || !coupon.isActive) {
+                throw new Error('Invalid or inactive coupon');
+            }
+
+            // Verify reservation exists and hasn't expired
+            const userEmail = req.user?.email || data.guestEmail;
+            const reservation = await prisma.couponReservation.findFirst({
+                where: {
+                    couponCode: data.couponCode.toUpperCase(),
+                    OR: [
+                        req.user?.id ? { userId: req.user.id } : {},
+                        userEmail ? { userEmail: userEmail } : {}
+                    ].filter(obj => Object.keys(obj).length > 0),
+                    expiresAt: { gt: new Date() }
+                }
+            });
+
+            if (!reservation) {
+                throw new Error('Coupon reservation expired or not found. Please apply the coupon again.');
+            }
+
+            // Calculate discount
+            if (coupon.discountType === 'PERCENTAGE') {
+                couponDiscount = Math.round((serverSubtotal * coupon.discountValue) / 100);
+            } else {
+                couponDiscount = coupon.discountValue;
+            }
+
+            couponId = coupon.id;
+            validatedCouponCode = coupon.code;
+        }
+
+        const serverTotal = serverSubtotal + serverTax + serverShipping - couponDiscount;
 
         // Run as transaction
         const result = await prisma.$transaction(async (tx) => {
@@ -101,6 +145,9 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     tax: serverTax,
                     shipping: serverShipping,
                     total: serverTotal,
+                    couponId: couponId,
+                    couponCode: validatedCouponCode,
+                    couponDiscount: couponDiscount,
                     paymentStatus: data.paymentStatus || 'PENDING',
                     addressId: finalAddressId,
                     items: {
@@ -111,6 +158,37 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     items: true
                 }
             });
+
+            // Create coupon usage record and delete reservation
+            if (couponId && validatedCouponCode) {
+                const userEmail = req.user?.email || data.guestEmail;
+
+                await tx.couponUsage.create({
+                    data: {
+                        couponId: couponId,
+                        userId: req.user?.id || null,
+                        userEmail: userEmail || null,
+                        orderId: order.id
+                    }
+                });
+
+                // Increment coupon usage count
+                await tx.coupon.update({
+                    where: { id: couponId },
+                    data: { currentUses: { increment: 1 } }
+                });
+
+                // Delete the reservation
+                await tx.couponReservation.deleteMany({
+                    where: {
+                        couponCode: validatedCouponCode,
+                        OR: [
+                            req.user?.id ? { userId: req.user.id } : {},
+                            userEmail ? { userEmail: userEmail } : {}
+                        ].filter(obj => Object.keys(obj).length > 0)
+                    }
+                });
+            }
 
             // If user is logged in, create a notification
             if (req.user) {

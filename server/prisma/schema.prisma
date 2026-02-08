@@ -112,10 +112,14 @@ model Order {
   cancellationReason String?
   returnReason       String?
   returnStatus       String?
+  couponId           String?
+  couponCode         String?
+  couponDiscount     Float?          @default(0)
   address            Address         @relation(fields: [addressId], references: [id])
   user               User?           @relation(fields: [userId], references: [id])
   items              OrderItem[]
   returnRequests     ReturnRequest[]
+  couponUsage        CouponUsage?
 }
 
 model OrderItem {
@@ -146,17 +150,47 @@ model Address {
 }
 
 model Coupon {
-  id            String    @id @default(uuid())
-  code          String    @unique
+  id            String        @id @default(uuid())
+  code          String        @unique
   discountType  String
   discountValue Float
   minOrderValue Float?
   expiryDate    DateTime?
   maxUses       Int?
-  currentUses   Int       @default(0)
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+  currentUses   Int           @default(0)
+  isActive      Boolean       @default(true)
+  firstTimeOnly Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
+  usages        CouponUsage[]
+}
+
+model CouponReservation {
+  id         String   @id @default(uuid())
+  couponCode String
+  userId     String?
+  userEmail  String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([couponCode, userId])
+  @@index([couponCode, userEmail])
+  @@index([expiresAt])
+}
+
+model CouponUsage {
+  id        String   @id @default(uuid())
+  couponId  String
+  userId    String?
+  userEmail String?
+  orderId   String   @unique
+  createdAt DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([couponId, userId])
+  @@index([couponId, userEmail])
 }
 
 model Review {

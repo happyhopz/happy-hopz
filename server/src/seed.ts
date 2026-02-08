@@ -297,6 +297,9 @@ async function main() {
                 status: orderStatuses[i % 4],
                 paymentStatus: paymentStatuses[i % 2],
                 addressId: sampleAddress.id,
+                couponId: null,
+                couponCode: null,
+                couponDiscount: 0,
                 items: {
                     create: products.map(p => ({
                         productId: p.id,
@@ -311,6 +314,24 @@ async function main() {
         });
     }
     console.log('✅ Created 5 sample orders');
+
+    // Create FIRST5 first-time purchase coupon
+    await prisma.coupon.upsert({
+        where: { code: 'FIRST5' },
+        update: {},
+        create: {
+            code: 'FIRST5',
+            discountType: 'PERCENTAGE',
+            discountValue: 5,
+            minOrderValue: 0,
+            firstTimeOnly: true,
+            isActive: true,
+            expiryDate: null,
+            maxUses: null
+        }
+    });
+    console.log('✅ Created FIRST5 coupon (5% off for first-time buyers)');
+
 
     console.log('🎉 Seeding completed!');
     console.log('\n📝 Login credentials:');

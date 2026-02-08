@@ -26,7 +26,10 @@ import {
     Shield,
     Truck,
     Plus,
-    Edit2
+    Edit2,
+    Tag,
+    X,
+    Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -67,6 +70,13 @@ const Checkout = () => {
         phone: ''
     });
 
+    // Coupon state
+    const [couponCode, setCouponCode] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponExpiry, setCouponExpiry] = useState<Date | null>(null);
+    const [timeRemaining, setTimeRemaining] = useState<number>(0);
+
     // Fetch payment settings
     useEffect(() => {
         const fetchSettings = async () => {
@@ -83,6 +93,50 @@ const Checkout = () => {
         };
         fetchSettings();
     }, []);
+
+    // Load coupon from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('appliedCoupon');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                const expiry = new Date(data.expiresAt);
+                if (expiry > new Date()) {
+                    setAppliedCoupon(data);
+                    setCouponExpiry(expiry);
+                } else {
+                    localStorage.removeItem('appliedCoupon');
+                }
+            } catch (e) {
+                localStorage.removeItem('appliedCoupon');
+            }
+        }
+    }, []);
+
+    // Countdown timer
+    useEffect(() => {
+        if (!couponExpiry) {
+            setTimeRemaining(0);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const expiry = couponExpiry.getTime();
+            const remaining = Math.max(0, expiry - now);
+
+            setTimeRemaining(remaining);
+
+            if (remaining === 0) {
+                setAppliedCoupon(null);
+                setCouponExpiry(null);
+                localStorage.removeItem('appliedCoupon');
+                toast.error('Coupon expired! Please apply again.');
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [couponExpiry]);
 
     // Fetch addresses from database
     const { data: savedAddresses = [] } = useQuery({
@@ -171,7 +225,8 @@ const Checkout = () => {
 
     const tax = Math.round(subtotal * gstRate);
     const shipping = subtotal >= freeThreshold ? 0 : deliveryCharge;
-    const total = subtotal + tax + shipping;
+    const couponDiscount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+    const total = subtotal + tax + shipping - couponDiscount;
 
     const itemCount = cartItems?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
     const savings = cartItems?.reduce((sum: number, item: any) => {
@@ -232,6 +287,72 @@ const Checkout = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) {
+            toast.error('Please enter a coupon code');
+            return;
+        }
+
+        setCouponLoading(true);
+        try {
+            const userEmail = user?.email || (isGuest ? guestInfo.email : null);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/apply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(user ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+                },
+                body: JSON.stringify({
+                    code: couponCode,
+                    cartTotal: subtotal,
+                    guestEmail: userEmail
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to apply coupon');
+            }
+
+            const data = await response.json();
+            setAppliedCoupon(data);
+            setCouponExpiry(new Date(data.expiresAt));
+            localStorage.setItem('appliedCoupon', JSON.stringify(data));
+            toast.success(`Coupon applied! You saved ₹${data.discountAmount}`);
+            setCouponCode('');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to apply coupon');
+        } finally {
+            setCouponLoading(false);
+        }
+    };
+
+    const handleRemoveCoupon = async () => {
+        if (!appliedCoupon) return;
+
+        try {
+            const userEmail = user?.email || (isGuest ? guestInfo.email : null);
+            await fetch(`${import.meta.env.VITE_API_URL}/coupons/remove`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(user ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
+                },
+                body: JSON.stringify({
+                    code: appliedCoupon.code,
+                    guestEmail: userEmail
+                })
+            });
+
+            setAppliedCoupon(null);
+            setCouponExpiry(null);
+            localStorage.removeItem('appliedCoupon');
+            toast.success('Coupon removed');
+        } catch (error) {
+            toast.error('Failed to remove coupon');
+        }
+    };
+
     const handlePlaceOrder = async () => {
         if (!selectedAddressId && !isGuest) {
             toast.error('Please select a shipping address');
@@ -260,7 +381,8 @@ const Checkout = () => {
                 guestEmail: isGuest ? guestInfo.email : null,
                 guestName: isGuest ? guestInfo.name : null,
                 guestPhone: isGuest ? guestInfo.phone : null,
-                address: isGuest ? address : null
+                address: isGuest ? address : null,
+                couponCode: appliedCoupon ? appliedCoupon.code : undefined
             };
 
             if (paymentMethod === 'COD') {
@@ -456,7 +578,7 @@ const Checkout = () => {
                                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${currentStep === 'address' ? 'bg-white text-pink-600' : selectedAddressId ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'}`}>
                                         {selectedAddressId && currentStep !== 'address' ? <Check className="w-4 h-4" /> : '2'}
                                     </span>
-                                    <span className={`font-bold ${currentStep === 'address' ? 'text-white' : 'text-gray-800'}`}>DELIVERY ADDRESS</span>
+                                    <span className={`font-bold text-sm ${currentStep === 'address' ? 'text-white' : 'text-gray-900'}`}>DELIVERY ADDRESS</span>
                                 </div>
                                 {currentStep !== 'address' && selectedAddressId && <Button variant="ghost" size="sm" className="text-pink-600 font-bold hover:bg-pink-50">CHANGE</Button>}
                             </div>
@@ -686,7 +808,59 @@ const Checkout = () => {
                             </Card>
 
                             <Card className="border-none shadow-sm overflow-hidden">
-                                <div className="p-4 border-b bg-white"><div className="flex items-center justify-between text-gray-900 font-bold"><div className="flex items-center gap-2">🏷️ Coupons</div><ChevronRight className="w-4 h-4 text-gray-400" /></div></div>
+                                <div className="p-4 border-b bg-gradient-to-r from-pink-50 to-purple-50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 font-bold text-gray-900">
+                                            <Tag className="w-4 h-4 text-pink-500" />
+                                            Coupons & Offers
+                                        </div>
+                                    </div>
+
+                                    {!appliedCoupon ? (
+                                        <div className="mt-3 flex gap-2">
+                                            <Input
+                                                placeholder="Enter coupon code"
+                                                value={couponCode}
+                                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                                className="flex-1 h-10 border-pink-200 focus:border-pink-400 relative z-10"
+                                                disabled={couponLoading}
+                                                autoComplete="off"
+                                            />
+                                            <Button
+                                                onClick={handleApplyCoupon}
+                                                disabled={couponLoading || !couponCode.trim()}
+                                                className="bg-pink-500 hover:bg-pink-600 text-white px-6"
+                                            >
+                                                {couponLoading ? 'Applying...' : 'Apply'}
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                                        <Check className="w-5 h-5 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-green-800">{appliedCoupon.code}</p>
+                                                        <p className="text-xs text-green-600">Saved ₹{appliedCoupon.discountAmount}</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={handleRemoveCoupon}
+                                                    className="text-red-500 hover:text-red-700 p-1"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <div className={`flex items-center gap-2 text-xs font-medium ${timeRemaining < 120000 ? 'text-red-600' : 'text-gray-600'
+                                                }`}>
+                                                <Clock className="w-3 h-3" />
+                                                Expires in: {Math.floor(timeRemaining / 60000)}:{String(Math.floor((timeRemaining % 60000) / 1000)).padStart(2, '0')}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="p-5 bg-white">
                                     <h3 className="text-xs font-black text-gray-400 uppercase mb-4 tracking-widest">Price Details</h3>
                                     <div className="space-y-4 text-sm font-medium">
@@ -694,6 +868,7 @@ const Checkout = () => {
                                         {savings > 0 && <div className="flex justify-between text-green-600"><span>Bag Discount</span><span>-₹{savings.toFixed(0)}</span></div>}
                                         <div className="flex justify-between text-gray-600"><span>GST ({dynamicSettings?.gst_percentage || 18}%)</span><span>₹{tax.toFixed(0)}</span></div>
                                         <div className="flex justify-between text-gray-600"><span>Delivery Charges</span>{shipping === 0 ? <span className="text-green-600 font-bold">FREE</span> : <span>₹{shipping}</span>}</div>
+                                        {appliedCoupon && <div className="flex justify-between text-green-600 font-bold"><span>Coupon Discount ({appliedCoupon.code})</span><span>-₹{appliedCoupon.discountAmount}</span></div>}
                                         <Separator />
                                         <div className="flex justify-between font-black text-xl text-gray-900 pt-2"><span>Order Total</span><span>₹{total.toFixed(0)}</span></div>
                                     </div>

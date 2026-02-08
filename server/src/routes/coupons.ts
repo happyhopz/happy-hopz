@@ -128,7 +128,7 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
 router.post('/validate', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { code, cartTotal } = z.object({
-            code: z.string().toUpperCase(),
+            code: z.string().transform(v => v.toUpperCase()),
             cartTotal: z.number()
         }).parse(req.body);
 
@@ -152,6 +152,20 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
             return res.status(400).json({ error: `Minimum order value of ₹${coupon.minOrderValue} required` });
         }
 
+        // Check if first-time only coupon
+        if (coupon.firstTimeOnly) {
+            const userIdentifier = req.user?.id || req.body.guestEmail;
+            const existingOrders = await prisma.order.findMany({
+                where: req.user?.id
+                    ? { userId: req.user.id }
+                    : { guestEmail: req.body.guestEmail }
+            });
+
+            if (existingOrders.length > 0) {
+                return res.status(400).json({ error: 'This coupon is only valid for first-time purchases' });
+            }
+        }
+
         let discount = 0;
         if (coupon.discountType === 'PERCENTAGE') {
             discount = (cartTotal * coupon.discountValue) / 100;
@@ -173,5 +187,173 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
         res.status(500).json({ error: 'Failed to validate coupon' });
     }
 });
+
+// Apply coupon (creates reservation with 10-min timer)
+router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const { code, cartTotal, guestEmail } = z.object({
+            code: z.string().transform(v => v.toUpperCase()),
+            cartTotal: z.number(),
+            guestEmail: z.string().email().optional()
+        }).parse(req.body);
+
+        const coupon = await prisma.coupon.findUnique({
+            where: { code }
+        });
+
+        if (!coupon || !coupon.isActive) {
+            return res.status(404).json({ error: 'Invalid or inactive coupon' });
+        }
+
+        if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+            return res.status(400).json({ error: 'Coupon has expired' });
+        }
+
+        if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
+            return res.status(400).json({ error: 'Coupon usage limit reached' });
+        }
+
+        if (coupon.minOrderValue && cartTotal < coupon.minOrderValue) {
+            return res.status(400).json({ error: `Minimum order value of ₹${coupon.minOrderValue} required` });
+        }
+
+        // Check if first-time only coupon
+        if (coupon.firstTimeOnly) {
+            const userEmail = req.user?.email || guestEmail;
+            if (!userEmail) {
+                return res.status(400).json({ error: 'Email required for first-time coupon validation' });
+            }
+
+            // Check for existing orders by user ID or email
+            const existingOrders = await prisma.order.findMany({
+                where: {
+                    OR: [
+                        req.user?.id ? { userId: req.user.id } : {},
+                        { guestEmail: userEmail }
+                    ].filter(obj => Object.keys(obj).length > 0)
+                }
+            });
+
+            if (existingOrders.length > 0) {
+                return res.status(400).json({ error: 'This coupon is only valid for first-time purchases' });
+            }
+
+            // Check if coupon was already used by this user/email
+            const existingUsage = await prisma.couponUsage.findFirst({
+                where: {
+                    couponId: coupon.id,
+                    OR: [
+                        req.user?.id ? { userId: req.user.id } : {},
+                        { userEmail: userEmail }
+                    ].filter(obj => Object.keys(obj).length > 0)
+                }
+            });
+
+            if (existingUsage) {
+                return res.status(400).json({ error: 'You have already used this coupon' });
+            }
+        }
+
+        // Clean up expired reservations
+        await prisma.couponReservation.deleteMany({
+            where: {
+                expiresAt: { lt: new Date() }
+            }
+        });
+
+        // Check for existing active reservation
+        const userIdentifier = req.user?.id || guestEmail;
+        const existingReservation = await prisma.couponReservation.findFirst({
+            where: {
+                couponCode: code,
+                OR: [
+                    req.user?.id ? { userId: req.user.id } : {},
+                    guestEmail ? { userEmail: guestEmail } : {}
+                ].filter(obj => Object.keys(obj).length > 0),
+                expiresAt: { gt: new Date() }
+            }
+        });
+
+        if (existingReservation) {
+            // Reservation already exists, return existing expiry
+            let discount = 0;
+            if (coupon.discountType === 'PERCENTAGE') {
+                discount = (cartTotal * coupon.discountValue) / 100;
+            } else {
+                discount = coupon.discountValue;
+            }
+
+            return res.json({
+                id: coupon.id,
+                code: coupon.code,
+                discountType: coupon.discountType,
+                discountValue: coupon.discountValue,
+                discountAmount: Math.min(discount, cartTotal),
+                expiresAt: existingReservation.expiresAt.toISOString()
+            });
+        }
+
+        // Create new reservation (10 minutes from now)
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        await prisma.couponReservation.create({
+            data: {
+                couponCode: code,
+                userId: req.user?.id || null,
+                userEmail: guestEmail || null,
+                expiresAt
+            }
+        });
+
+        let discount = 0;
+        if (coupon.discountType === 'PERCENTAGE') {
+            discount = (cartTotal * coupon.discountValue) / 100;
+        } else {
+            discount = coupon.discountValue;
+        }
+
+        res.json({
+            id: coupon.id,
+            code: coupon.code,
+            discountType: coupon.discountType,
+            discountValue: coupon.discountValue,
+            discountAmount: Math.min(discount, cartTotal),
+            expiresAt: expiresAt.toISOString()
+        });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
+        console.error('Apply coupon error:', error);
+        res.status(500).json({ error: 'Failed to apply coupon' });
+    }
+});
+
+// Remove coupon (deletes reservation)
+router.post('/remove', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const { code, guestEmail } = z.object({
+            code: z.string().transform(v => v.toUpperCase()),
+            guestEmail: z.string().email().optional()
+        }).parse(req.body);
+
+        await prisma.couponReservation.deleteMany({
+            where: {
+                couponCode: code,
+                OR: [
+                    req.user?.id ? { userId: req.user.id } : {},
+                    guestEmail ? { userEmail: guestEmail } : {}
+                ].filter(obj => Object.keys(obj).length > 0)
+            }
+        });
+
+        res.json({ message: 'Coupon removed successfully' });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
+        res.status(500).json({ error: 'Failed to remove coupon' });
+    }
+});
+
 
 export default router;
