@@ -263,6 +263,16 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
 @keyframes scale-in {
   from {
     opacity: 0;
@@ -310,6 +320,10 @@
 
   .animate-scale-in {
     animation: scale-in 0.5s ease-out forwards;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s infinite;
   }
 
   .delay-100 {

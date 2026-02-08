@@ -466,9 +466,10 @@ const ProductDetail = () => {
                             <Button
                                 onClick={handleAddToCart}
                                 disabled={adding || product.stock === 0}
-                                className="w-full sm:flex-1 h-14 text-base font-bold bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all"
+                                className="group relative w-full sm:flex-1 h-14 text-base font-bold bg-pink-500 hover:bg-pink-600 text-white shadow-[0_0_20px_rgba(236,72,153,0.3)] hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] transition-all duration-300 hover:scale-[1.02] active:scale-95 overflow-hidden"
                             >
-                                <ShoppingBag className="w-5 h-5 mr-2" />
+                                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity animate-pulse" />
+                                <ShoppingBag className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
                                 {adding ? 'ADDING...' : product.stock === 0 ? 'OUT OF STOCK' : 'ADD TO BAG'}
                             </Button>
                         </div>
@@ -477,13 +478,18 @@ const ProductDetail = () => {
                             <Button
                                 onClick={handleBuyNow}
                                 disabled={product.stock === 0}
-                                variant="outline"
-                                className="w-full sm:flex-[2] h-14 text-base font-bold border-2 border-pink-500 text-pink-500 hover:bg-pink-50"
+                                className="group relative w-full sm:flex-[2] h-14 text-base font-black bg-orange-600 hover:bg-orange-700 text-white shadow-[0_10px_20px_-5px_rgba(234,88,12,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(234,88,12,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-95 overflow-hidden rounded-xl"
                             >
-                                <Zap className="w-5 h-5 mr-2" />
+                                {/* Shimmer Effect */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
+
+                                <Zap className="w-5 h-5 mr-2 fill-current animate-pulse group-hover:scale-125 transition-transform" />
                                 BUY NOW
                             </Button>
-                            <ShareProduct product={product} className="w-full sm:flex-1 h-14 shadow-md" />
+                            <ShareProduct
+                                product={product}
+                                className="w-full sm:flex-1 h-14 shadow-md bg-white border-2 border-primary/20 hover:border-primary/50 hover:bg-pink-50 transition-all hover:scale-[1.02]"
+                            />
                         </div>
 
                         <Separator />
@@ -709,17 +715,23 @@ const ProductDetail = () => {
                 <div className="flex gap-3 max-w-lg mx-auto">
                     <Button
                         variant="outline"
-                        className="flex-1 h-12 rounded-xl font-bold border-2 border-primary/20 hover:border-primary/50 text-foreground"
+                        className="group relative flex-1 h-14 rounded-xl font-bold border-2 border-primary/20 hover:border-primary/50 text-foreground overflow-hidden transition-all active:scale-95"
                         onClick={handleAddToCart}
                         disabled={adding}
                     >
+                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ShoppingBag className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
                         {adding ? '...' : 'ADD TO BAG'}
                     </Button>
                     <Button
                         variant="hopz"
-                        className="flex-[2] h-12 rounded-xl font-black text-lg shadow-lg shadow-primary/20"
+                        className="group relative flex-[2] h-14 rounded-xl font-black text-lg bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-200 overflow-hidden transition-all active:scale-95"
                         onClick={handleBuyNow}
                     >
+                        {/* Shimmer Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
+
+                        <Zap className="w-5 h-5 mr-2 fill-current animate-pulse group-hover:scale-110 transition-transform" />
                         BUY NOW
                     </Button>
                 </div>
