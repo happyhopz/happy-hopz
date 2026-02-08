@@ -757,7 +757,7 @@ const Checkout = () => {
                                         </div>
                                     )}
                                     <Separator className="my-8" />
-                                    <Button onClick={handlePlaceOrder} disabled={createOrderMutation.isPending || isProcessing} className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white text-lg font-black shadow-lg shadow-orange-200">
+                                    <Button onClick={handlePlaceOrder} disabled={createOrderMutation.isPending || isProcessing} className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white text-sm md:text-lg font-black shadow-lg shadow-orange-200">
                                         {createOrderMutation.isPending || isProcessing ? 'PROCESSING...' : paymentMethod === 'COD' ? `PAY ₹${total.toFixed(0)} ON DELIVERY` : `CONFIRM PAYMENT ₹${total.toFixed(0)}`}
                                     </Button>
                                 </div>
