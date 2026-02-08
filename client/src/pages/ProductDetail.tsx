@@ -33,6 +33,33 @@ import { toast } from 'sonner';
 import Reviews from '@/components/Reviews';
 import ShareProduct from '@/components/ShareProduct';
 
+const getColorHex = (colorName: string) => {
+    const colors: { [key: string]: string } = {
+        'red': '#ef4444',
+        'blue': '#3b82f6',
+        'sky blue': '#0ea5e9',
+        'navy blue': '#1e3a8a',
+        'green': '#22c55e',
+        'black': '#000000',
+        'white': '#ffffff',
+        'pink': '#ec4899',
+        'yellow': '#eab308',
+        'orange': '#f97316',
+        'purple': '#a855f7',
+        'grey': '#71717a',
+        'gray': '#71717a',
+        'brown': '#78350f',
+        'beige': '#f5f5dc',
+        'maroon': '#800000',
+        'teal': '#14b8a6',
+        'cyan': '#06b6d4',
+        'lavender': '#e6e6fa',
+        'mint': '#98ffed',
+        'peach': '#ffdab9',
+    };
+    return colors[colorName.toLowerCase()] || '#cbd5e1'; // default to slate-300 if not found
+};
+
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -397,19 +424,40 @@ const ProductDetail = () => {
                             <h3 className="font-bold text-foreground uppercase tracking-wide text-sm">
                                 Select Color: <span className="font-normal text-muted-foreground capitalize">{selectedColor || 'Choose'}</span>
                             </h3>
-                            <div className="flex gap-3 flex-wrap">
-                                {product.colors.map((color: string) => (
-                                    <button
-                                        key={color}
-                                        onClick={() => setSelectedColor(color)}
-                                        className={`px-4 py-2 rounded-full border-2 text-sm font-bold transition-all ${selectedColor === color
-                                            ? 'border-pink-600 text-white bg-pink-500 shadow-lg scale-105'
-                                            : 'border-gray-300 text-foreground hover:border-pink-500 bg-white'
-                                            }`}
-                                    >
-                                        {color}
-                                    </button>
-                                ))}
+                            <div className="flex gap-4 flex-wrap pb-2">
+                                {product.colors.map((color: string) => {
+                                    const bgColor = getColorHex(color);
+                                    const isWhite = bgColor.toLowerCase() === '#ffffff';
+                                    const isSelected = selectedColor === color;
+
+                                    return (
+                                        <button
+                                            key={color}
+                                            onClick={() => setSelectedColor(color)}
+                                            title={color}
+                                            className={`relative group transition-all duration-300 transform ${isSelected ? 'scale-110' : 'hover:scale-105'
+                                                }`}
+                                        >
+                                            {/* Outer Ring */}
+                                            <div className={`absolute -inset-1 rounded-full border-2 transition-opacity duration-300 ${isSelected ? 'border-primary opacity-100' : 'border-transparent opacity-0 group-hover:opacity-30 group-hover:border-primary'
+                                                }`} />
+
+                                            {/* Color Swatch */}
+                                            <div
+                                                className={`w-10 h-10 rounded-full border shadow-sm transition-shadow ${isWhite ? 'border-gray-200' : 'border-transparent'
+                                                    } ${isSelected ? 'shadow-md' : 'hover:shadow'}`}
+                                                style={{ backgroundColor: bgColor }}
+                                            />
+
+                                            {/* Label (Optional, shown on hover if needed or just use title) */}
+                                            {isSelected && (
+                                                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-black uppercase tracking-tighter text-primary animate-in fade-in slide-in-from-top-1">
+                                                    {color}
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
