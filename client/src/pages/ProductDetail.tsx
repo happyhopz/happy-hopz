@@ -466,7 +466,7 @@ const ProductDetail = () => {
                             <Button
                                 onClick={handleAddToCart}
                                 disabled={adding || product.stock === 0}
-                                className="group relative w-full sm:flex-1 h-14 text-base font-extrabold bg-pink-600 hover:bg-pink-700 text-white shadow-[0_0_20px_rgba(236,72,153,0.3)] hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] transition-all duration-300 hover:scale-[1.02] active:scale-95 overflow-hidden"
+                                className="group relative w-full sm:flex-1 h-14 text-base font-extrabold bg-pink-500 hover:bg-pink-600 text-black shadow-[0_0_20px_rgba(236,72,153,0.3)] hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] transition-all duration-300 hover:scale-[1.02] active:scale-95 overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity animate-pulse" />
                                 <ShoppingBag className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
@@ -715,7 +715,7 @@ const ProductDetail = () => {
                 <div className="flex gap-3 max-w-lg mx-auto">
                     <Button
                         variant="outline"
-                        className="group relative flex-1 h-14 rounded-xl font-bold border-2 border-pink-500 text-pink-600 overflow-hidden transition-all active:scale-95 bg-white"
+                        className="group relative flex-1 h-14 rounded-xl font-bold border-2 border-pink-500 text-black overflow-hidden transition-all active:scale-95 bg-white"
                         onClick={handleAddToCart}
                         disabled={adding}
                     >
