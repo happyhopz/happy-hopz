@@ -365,35 +365,38 @@ const Navbar = () => {
               {menuItems.map((item) => (
                 <MobileMenuItem key={item.label} item={item} onClose={() => setIsMobileMenuOpen(false)} />
               ))}
-              <div className="flex gap-3 mt-4 pt-4 border-t border-border">
-                <Link to="/cart" className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full rounded-full">
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Cart {cartCount > 0 && `(${cartCount})`}
-                  </Button>
-                </Link>
-                {user ? (
-                  <div className="flex flex-col gap-2 w-full">
-                    <div className="flex gap-2 w-full">
+              <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-border">
+                <div className="flex gap-2 w-full">
+                  <Link to="/cart" className="flex-1" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" size="sm" className="w-full rounded-full">
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Cart {cartCount > 0 && `(${cartCount})`}
+                    </Button>
+                  </Link>
+                  {user && (
+                    <>
                       <Link to="/orders" className="flex-1" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Button variant="outline" size="sm" className="w-full rounded-full gap-2">
+                        <Button variant="outline" size="sm" className="w-full rounded-full gap-2 px-1">
                           <ShoppingBag className="w-4 h-4" />
                           Orders
                         </Button>
                       </Link>
                       <Link to="/settings" className="flex-1" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Button variant="outline" size="sm" className="w-full rounded-full gap-2">
+                        <Button variant="outline" size="sm" className="w-full rounded-full gap-2 px-1">
                           <User className="w-4 h-4" />
                           Settings
                         </Button>
                       </Link>
-                    </div>
-                    <Button variant="hopz" size="sm" className="w-full" onClick={logout}>
-                      Logout
-                    </Button>
-                  </div>
+                    </>
+                  )}
+                </div>
+
+                {user ? (
+                  <Button variant="hopz" size="sm" className="w-full" onClick={logout}>
+                    Logout
+                  </Button>
                 ) : (
-                  <Link to="/login" className="flex-1">
+                  <Link to="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button variant="hopz" size="sm" className="w-full">
                       <User className="w-4 h-4 mr-2" />
                       Login
