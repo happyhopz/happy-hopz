@@ -435,27 +435,13 @@ const ProductDetail = () => {
                                             key={color}
                                             onClick={() => setSelectedColor(color)}
                                             title={color}
-                                            className={`relative group transition-all duration-300 transform ${isSelected ? 'scale-110' : 'hover:scale-105'
-                                                }`}
-                                        >
-                                            {/* Outer Ring */}
-                                            <div className={`absolute -inset-1 rounded-full border-2 transition-opacity duration-300 ${isSelected ? 'border-primary opacity-100' : 'border-transparent opacity-0 group-hover:opacity-30 group-hover:border-primary'
-                                                }`} />
-
-                                            {/* Color Swatch */}
-                                            <div
-                                                className={`w-10 h-10 rounded-full border shadow-sm transition-shadow ${isWhite ? 'border-gray-200' : 'border-transparent'
-                                                    } ${isSelected ? 'shadow-md' : 'hover:shadow'}`}
-                                                style={{ backgroundColor: bgColor }}
-                                            />
-
-                                            {/* Label (Optional, shown on hover if needed or just use title) */}
-                                            {isSelected && (
-                                                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-black uppercase tracking-tighter text-primary animate-in fade-in slide-in-from-top-1">
-                                                    {color}
-                                                </div>
-                                            )}
-                                        </button>
+                                            className={`w-10 h-10 rounded-full border-2 transition-all duration-300 ${isWhite ? 'border-gray-200' : 'border-transparent'
+                                                } ${isSelected ? 'scale-110 shadow-lg' : 'hover:scale-105'}`}
+                                            style={{
+                                                backgroundColor: bgColor,
+                                                boxShadow: isSelected ? `0 0 15px ${bgColor}88` : undefined
+                                            }}
+                                        />
                                     );
                                 })}
                             </div>
