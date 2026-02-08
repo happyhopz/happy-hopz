@@ -808,6 +808,25 @@ const Checkout = () => {
                                 </div>
                             </Card>
 
+                            <Card className="border-none shadow-sm overflow-hidden">
+                                <div className="p-5 bg-white">
+                                    <h3 className="text-xs font-black text-gray-400 uppercase mb-4 tracking-widest">Price Details</h3>
+                                    <div className="space-y-4 text-sm font-medium">
+                                        <div className="flex justify-between text-gray-600"><span>Bag Total ({itemCount} items)</span><span>₹{subtotal.toFixed(0)}</span></div>
+                                        {savings > 0 && <div className="flex justify-between text-green-600"><span>Bag Discount</span><span>-₹{savings.toFixed(0)}</span></div>}
+                                        <div className="flex justify-between text-gray-600"><span>GST ({dynamicSettings?.gst_percentage || 18}%)</span><span>₹{tax.toFixed(0)}</span></div>
+                                        <div className="flex justify-between text-gray-600"><span>Delivery Charges</span>{shipping === 0 ? <span className="text-green-600 font-bold">FREE</span> : <span>₹{shipping}</span>}</div>
+                                        <Separator />
+                                        <div className="flex justify-between font-black text-xl text-gray-900 pt-2"><span>Order Total</span><span>₹{total.toFixed(0)}</span></div>
+                                    </div>
+                                    {shipping > 0 && <p className="mt-4 text-[10px] text-orange-600 font-bold bg-orange-50 p-2 rounded text-center">Add ₹{(freeThreshold - subtotal).toFixed(0)} more for FREE delivery!</p>}
+                                </div>
+                                <div className="px-5 py-4 bg-gray-50 text-[10px] text-gray-400 flex justify-between font-bold border-t italic uppercase tracking-widest">
+                                    <div className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</div>
+                                    <div className="flex items-center gap-1"><Truck className="w-3 h-3" /> Fast Delivery</div>
+                                </div>
+                            </Card>
+
                         </div>
                     </div>
                 </div>
