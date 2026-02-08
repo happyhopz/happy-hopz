@@ -439,7 +439,7 @@ const AdminOrderDetail = () => {
                                     <span className="font-bold">₹{order.subtotal?.toFixed(2) || (order.total - (order.tax || 0)).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">GST (Included)</span>
+                                    <span className="text-muted-foreground">GST</span>
                                     <span className="font-bold">₹{order.tax?.toFixed(2) || (order.total * 0.18).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">

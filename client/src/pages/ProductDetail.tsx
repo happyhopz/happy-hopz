@@ -389,7 +389,7 @@ const ProductDetail = () => {
                                 </>
                             )}
                         </div>
-                        <p className="text-green-600 text-sm font-medium">inclusive of all taxes</p>
+
 
                         {/* Select Size */}
                         <div className="space-y-3">
@@ -434,8 +434,8 @@ const ProductDetail = () => {
                                             key={color}
                                             onClick={() => setSelectedColor(color)}
                                             className={`min-w-[70px] h-10 px-4 rounded-xl border-2 font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center bg-transparent relative group overflow-hidden ${isSelected
-                                                    ? 'scale-110 -translate-y-1 shadow-xl'
-                                                    : 'hover:scale-105 hover:bg-gray-50'
+                                                ? 'scale-110 -translate-y-1 shadow-xl'
+                                                : 'hover:scale-105 hover:bg-gray-50'
                                                 }`}
                                             style={{
                                                 borderColor: colorHex,
