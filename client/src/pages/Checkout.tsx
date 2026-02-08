@@ -787,22 +787,24 @@ const Checkout = () => {
                                         }
 
                                         return (
-                                            <div key={item.id} className="flex gap-3 items-center p-2 rounded-lg hover:bg-gray-50 transition-colors border border-gray-50">
-                                                <div className="w-14 h-14 rounded-md bg-pink-50 overflow-hidden flex-shrink-0 border border-pink-50">
-                                                    {imageUrl ? (
-                                                        <img src={imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-pink-200">
-                                                            <Package className="w-6 h-6" />
-                                                        </div>
-                                                    )}
+                                            <Link key={item.id} to={`/product/${item.product.id}`}>
+                                                <div className="flex gap-3 items-center p-2 rounded-lg hover:bg-gray-50 transition-colors border border-gray-50 cursor-pointer">
+                                                    <div className="w-14 h-14 rounded-md bg-pink-50 overflow-hidden flex-shrink-0 border border-pink-50">
+                                                        {imageUrl ? (
+                                                            <img src={imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-pink-200">
+                                                                <Package className="w-6 h-6" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="text-[11px] font-bold text-gray-800 truncate leading-tight">{item.product.name}</h4>
+                                                        <p className="text-[10px] text-gray-500 mt-0.5">Size: {item.size} | Qty: {item.quantity}</p>
+                                                        <p className="text-[11px] font-bold text-pink-600">₹{(item.product.discountPrice || item.product.price).toFixed(0)}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="text-[11px] font-bold text-gray-800 truncate leading-tight">{item.product.name}</h4>
-                                                    <p className="text-[10px] text-gray-500 mt-0.5">Size: {item.size} | Qty: {item.quantity}</p>
-                                                    <p className="text-[11px] font-bold text-pink-600">₹{(item.product.discountPrice || item.product.price).toFixed(0)}</p>
-                                                </div>
-                                            </div>
+                                            </Link>
                                         );
                                     })}
                                 </div>
