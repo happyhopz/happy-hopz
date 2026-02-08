@@ -26,6 +26,16 @@ const Products = () => {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
+    interface Product {
+        id: string;
+        name: string;
+        price: number;
+        discountPrice?: number;
+        images: string[];
+        sizes: string[];
+        colors: string[];
+        tags?: string[];
+    }
     const addToCartMutation = useMutation({
         mutationFn: (data: { productId: string; quantity: number; size: string; color: string }) =>
             cartAPI.add(data),
@@ -389,7 +399,7 @@ const ProductCard = ({
                 </div>
 
                 {/* Floating Badges */}
-                <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1 z-50">
+                <div className={`absolute ${isAdmin ? 'top-12 md:top-16' : 'top-2 md:top-4'} left-2 md:left-4 flex flex-col gap-1 z-[45] transition-all duration-300`}>
                     {product.tags && product.tags.map((tag: string, idx: number) => {
                         const lowT = tag.toLowerCase();
                         const isCyanTag = lowT.includes('sale') || lowT.includes('new');
@@ -416,7 +426,7 @@ const ProductCard = ({
                     {product.discountPrice && (!product.tags || product.tags.length === 0) && (
                         <span
                             style={{ backgroundColor: '#06b6d4' }}
-                            className="px-2 py-0.5 md:px-3 md:py-1 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm z-50 pointer-events-none"
+                            className="px-2 py-0.5 md:px-3 md:py-1 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none"
                         >
                             Sale
                         </span>

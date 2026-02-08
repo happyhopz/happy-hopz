@@ -245,6 +245,40 @@ const ShoeCard = ({
 
 
 
+          {/* Floating Badges */}
+          <div className={`absolute ${isAdmin ? 'top-12 md:top-16' : 'top-2 md:top-4'} left-2 md:left-4 flex flex-col gap-1 z-[45] transition-all duration-300`}>
+            {product.tags && product.tags.map((tag: string, idx: number) => {
+              const lowT = tag.toLowerCase();
+              const isCyanTag = lowT.includes('sale') || lowT.includes('new');
+
+              const getTagColor = (t: string) => {
+                if (isCyanTag) return 'bg-[#06b6d4]';
+                if (lowT.includes('best')) return 'bg-orange-500';
+                if (lowT.includes('trending')) return 'bg-purple-500';
+                if (lowT.includes('hampers')) return 'bg-pink-500';
+                if (lowT.includes('favourite')) return 'bg-indigo-500';
+                return 'bg-cyan-500';
+              };
+
+              return (
+                <span
+                  key={idx}
+                  style={isCyanTag ? { backgroundColor: '#06b6d4' } : {}}
+                  className={`px-2 py-0.5 md:px-3 md:py-1 ${getTagColor(tag)} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none`}
+                >
+                  {lowT.includes('sale') ? 'Sale' : tag}
+                </span>
+              );
+            })}
+            {product.discountPrice && (!product.tags || product.tags.length === 0) && (
+              <span
+                style={{ backgroundColor: '#06b6d4' }}
+                className="px-2 py-0.5 md:px-3 md:py-1 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none"
+              >
+                Sale
+              </span>
+            )}
+          </div>
           {/* Action Buttons */}
           <div className="flex flex-col gap-1.5 md:gap-2 mt-2 md:mt-4">
             <Button
@@ -272,14 +306,6 @@ const ShoeCard = ({
             </Button>
           </div>
         </div>
-
-        {/* Floating Badges */}
-        <span
-          style={tag.tag.toLowerCase().includes('sale') || tag.tag.toLowerCase().includes('new') ? { backgroundColor: '#06b6d4' } : {}}
-          className={`absolute bottom-2 left-2 md:bottom-auto md:top-4 md:left-4 px-2 py-0.5 md:px-3 md:py-1 ${tag.tagColor} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full z-10 shadow-md pointer-events-none`}
-        >
-          {tag.tag}
-        </span>
 
         <div className="absolute top-2 right-2 md:top-4 md:right-4 z-50">
           <ShareProduct product={product} iconOnly className="!w-8 !h-8 md:!w-10 md:!h-10 shadow-soft" />
