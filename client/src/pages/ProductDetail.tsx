@@ -424,24 +424,38 @@ const ProductDetail = () => {
                             <h3 className="font-bold text-foreground uppercase tracking-wide text-sm">
                                 Select Color: <span className="font-normal text-muted-foreground capitalize">{selectedColor || 'Choose'}</span>
                             </h3>
-                            <div className="flex gap-4 flex-wrap pb-2">
+                            <div className="flex gap-4 flex-wrap pb-4">
                                 {product.colors.map((color: string) => {
-                                    const bgColor = getColorHex(color);
-                                    const isWhite = bgColor.toLowerCase() === '#ffffff';
+                                    const colorHex = getColorHex(color);
                                     const isSelected = selectedColor === color;
 
                                     return (
                                         <button
                                             key={color}
                                             onClick={() => setSelectedColor(color)}
-                                            title={color}
-                                            className={`w-10 h-10 rounded-full border-2 transition-all duration-300 ${isWhite ? 'border-gray-200' : 'border-transparent'
-                                                } ${isSelected ? 'scale-110 shadow-lg' : 'hover:scale-105'}`}
+                                            className={`min-w-[70px] h-10 px-4 rounded-xl border-2 font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center bg-transparent relative group overflow-hidden ${isSelected
+                                                    ? 'scale-110 -translate-y-1 shadow-xl'
+                                                    : 'hover:scale-105 hover:bg-gray-50'
+                                                }`}
                                             style={{
-                                                backgroundColor: bgColor,
-                                                boxShadow: isSelected ? `0 0 15px ${bgColor}88` : undefined
+                                                borderColor: colorHex,
+                                                color: colorHex,
+                                                boxShadow: isSelected ? `0 10px 20px -5px ${colorHex}55, 0 0 15px ${colorHex}33` : undefined,
                                             }}
-                                        />
+                                        >
+                                            {/* Glossy Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                            <span className="relative z-10">{color}</span>
+
+                                            {/* Selection Indicator Dot */}
+                                            {isSelected && (
+                                                <div
+                                                    className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white shadow-sm"
+                                                    style={{ backgroundColor: colorHex }}
+                                                />
+                                            )}
+                                        </button>
                                     );
                                 })}
                             </div>
