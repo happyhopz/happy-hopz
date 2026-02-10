@@ -43,6 +43,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import MyReturns from './pages/MyReturns';
 import AdminReturns from './pages/admin/AdminReturns';
+import AdminNotifications from './pages/admin/Notifications';
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ const App = () => (
                   <Route path="/admin/contacts" element={<AdminContacts />} />
                   <Route path="/admin/marketing" element={<AdminMarketing />} />
                   <Route path="/admin/returns" element={<AdminReturns />} />
+                  <Route path="/admin/notifications" element={<AdminNotifications />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                 </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

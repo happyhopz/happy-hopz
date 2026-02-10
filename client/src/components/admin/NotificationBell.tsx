@@ -203,7 +203,7 @@ export const AdminNotificationBell = () => {
                 </Tabs>
 
                 <div className="p-3 bg-muted/30 border-t flex justify-center">
-                    <Link to="/admin/dashboard" onClick={() => setIsOpen(false)} className="text-[10px] font-black text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">
+                    <Link to="/admin/notifications" onClick={() => setIsOpen(false)} className="text-[10px] font-black text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">
                         View All Activity Log
                     </Link>
                 </div>
