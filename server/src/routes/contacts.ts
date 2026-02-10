@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authenticate } from '../middleware/auth';
+import { NotificationService } from '../services/notificationService';
 
 const router = Router();
 
@@ -16,6 +17,11 @@ router.post('/', async (req: Request, res: Response) => {
         const contact = await prisma.contactForm.create({
             data: { name, email, subject, message }
         });
+
+        // Trigger Admin Notification for the Query
+        NotificationService.notifyNewQuery(name, subject, message).catch(err =>
+            console.error('Failed to trigger query notification:', err)
+        );
 
         res.status(201).json(contact);
     } catch (error) {

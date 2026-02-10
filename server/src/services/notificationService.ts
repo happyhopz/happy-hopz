@@ -2,7 +2,7 @@ import { prisma } from '../lib/prisma';
 import { sendAdminAlertEmail } from '../utils/email';
 import { sendAdminWhatsApp } from '../utils/whatsapp';
 
-export type NotificationType = 'ORDER' | 'SECURITY' | 'SYSTEM' | 'PAYMENT' | 'ORDER_STATUS';
+export type NotificationType = 'ORDER' | 'SECURITY' | 'SYSTEM' | 'PAYMENT' | 'ORDER_STATUS' | 'QUERY';
 export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH';
 
 interface CreateNotificationParams {
@@ -103,6 +103,20 @@ export class NotificationService {
             type: 'SECURITY',
             priority: 'NORMAL',
             metadata: { userId, ...details }
+        });
+    }
+
+    /**
+     * Create an admin notification for a new contact form submission.
+     */
+    static async notifyNewQuery(name: string, subject: string, message: string) {
+        return this.create({
+            isAdmin: true,
+            title: 'New Customer Query 📩',
+            message: `New message from ${name}: "${subject}"`,
+            type: 'QUERY',
+            priority: 'NORMAL',
+            metadata: { name, subject, message }
         });
     }
 

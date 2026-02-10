@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, ShoppingBag, ShieldAlert, Settings, CheckCheck, Trash2, Calendar, User } from 'lucide-react';
+import { Bell, ShoppingBag, ShieldAlert, Settings, CheckCheck, Trash2, Calendar, User, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { notificationsAPI } from '@/lib/api';
@@ -17,7 +17,8 @@ export default function AdminNotifications() {
         unread: 0,
         orders: 0,
         security: 0,
-        system: 0
+        system: 0,
+        queries: 0
     });
 
     const fetchNotifications = async () => {
@@ -32,7 +33,8 @@ export default function AdminNotifications() {
                 unread: data.filter((n: any) => !n.isRead).length,
                 orders: data.filter((n: any) => n.type === 'ORDER' || n.type === 'ORDER_STATUS').length,
                 security: data.filter((n: any) => n.type === 'SECURITY').length,
-                system: data.filter((n: any) => n.type === 'SYSTEM').length
+                system: data.filter((n: any) => n.type === 'SYSTEM').length,
+                queries: data.filter((n: any) => n.type === 'QUERY').length
             });
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
@@ -78,6 +80,8 @@ export default function AdminNotifications() {
                 return <ShieldAlert className="w-5 h-5 text-orange-500" />;
             case 'SYSTEM':
                 return <Settings className="w-5 h-5 text-purple-500" />;
+            case 'QUERY':
+                return <MessageSquare className="w-5 h-5 text-green-500" />;
             default:
                 return <Bell className="w-5 h-5 text-gray-400" />;
         }
@@ -239,6 +243,16 @@ export default function AdminNotifications() {
                         <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Infrastructure</p>
                     </CardContent>
                 </Card>
+                <Card className="bg-white/50 backdrop-blur-sm border-green-100 transition-transform hover:scale-[1.02]">
+                    <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+                        <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Queries</CardTitle>
+                        <MessageSquare className="w-4 h-4 text-green-500" />
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                        <p className="text-2xl font-black text-green-600">{stats.queries}</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Customer Inquiries</p>
+                    </CardContent>
+                </Card>
             </div>
 
             <Tabs defaultValue="ALL" className="w-full">
@@ -255,9 +269,12 @@ export default function AdminNotifications() {
                     <TabsTrigger value="SYSTEM" className="rounded-xl px-8 h-full data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold text-xs uppercase tracking-widest">
                         System <Badge variant="secondary" className="ml-2 h-4 px-1 text-[9px]">{stats.system}</Badge>
                     </TabsTrigger>
+                    <TabsTrigger value="QUERY" className="rounded-xl px-8 h-full data-[state=active]:bg-green-600 data-[state=active]:text-white font-bold text-xs uppercase tracking-widest">
+                        Queries <Badge variant="secondary" className="ml-2 h-4 px-1 text-[9px]">{stats.queries}</Badge>
+                    </TabsTrigger>
                 </TabsList>
 
-                {['ALL', 'ORDER', 'SECURITY', 'SYSTEM'].map((tab) => (
+                {['ALL', 'ORDER', 'SECURITY', 'SYSTEM', 'QUERY'].map((tab) => (
                     <TabsContent key={tab} value={tab} className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center py-20">
