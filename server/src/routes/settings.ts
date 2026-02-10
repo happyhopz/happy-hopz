@@ -8,7 +8,10 @@ const router = Router();
 const DEFAULT_SETTINGS = [
     { key: 'gst_percentage', value: '18', type: 'number' },
     { key: 'delivery_charge', value: '99', type: 'number' },
-    { key: 'free_delivery_threshold', value: '999', type: 'number' }
+    { key: 'free_delivery_threshold', value: '999', type: 'number' },
+    { key: 'whatsapp_number', value: '919711864674', type: 'string' },
+    { key: 'whatsapp_notifications_enabled', value: 'false', type: 'boolean' },
+    { key: 'callmebot_apikey', value: '', type: 'string' }
 ];
 
 // Initialize default settings if they don't exist

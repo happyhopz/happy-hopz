@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { sendAdminAlertEmail } from '../utils/email';
+import { sendAdminWhatsApp } from '../utils/whatsapp';
 
 export type NotificationType = 'ORDER' | 'SECURITY' | 'SYSTEM' | 'PAYMENT' | 'ORDER_STATUS';
 export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH';
@@ -48,6 +49,11 @@ export class NotificationService {
                 // Don't await email to avoid blocking response
                 sendAdminAlertEmail(title, message, metadata).catch(err =>
                     console.error('Failed to send admin alert email from service:', err)
+                );
+
+                // Trigger WhatsApp Notification
+                sendAdminWhatsApp(`${title}\n${message}`).catch(err =>
+                    console.error('Failed to send WhatsApp alert from service:', err)
                 );
             }
 

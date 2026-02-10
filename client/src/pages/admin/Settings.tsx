@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Globe, Info, Phone, Mail, Instagram, Facebook, CreditCard, Smartphone, Landmark, Banknote, Percent, Truck, IndianRupee } from 'lucide-react';
+import { Save, Globe, Info, Phone, Mail, Instagram, Facebook, CreditCard, Smartphone, Landmark, Banknote, Percent, Truck, IndianRupee, MessageSquare, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -127,6 +127,17 @@ const AdminSettings = () => {
         updateSettingsMutation.mutate(data);
     };
 
+    const handleSaveWhatsApp = (e: React.FormEvent) => {
+        e.preventDefault();
+        const formData = new FormData(e.target as HTMLFormElement);
+        const data = {
+            whatsapp_number: formData.get('whatsapp_number'),
+            whatsapp_notifications_enabled: formData.get('whatsapp_notifications_enabled') === 'on',
+            callmebot_apikey: formData.get('callmebot_apikey')
+        };
+        updateSettingsMutation.mutate(data);
+    };
+
     const isPageLoading = isContentLoading || isSettingsLoading || isPaymentLoading;
 
     return (
@@ -156,6 +167,10 @@ const AdminSettings = () => {
                         <TabsTrigger value="payments" className="flex items-center gap-2 rounded-lg">
                             <CreditCard className="w-4 h-4" />
                             Payments
+                        </TabsTrigger>
+                        <TabsTrigger value="notifications" className="flex items-center gap-2 rounded-lg">
+                            <Bell className="w-4 h-4" />
+                            Notifications
                         </TabsTrigger>
                     </TabsList>
 
@@ -318,6 +333,79 @@ const AdminSettings = () => {
                                 ))}
                             </CardContent>
                         </Card>
+                    </TabsContent>
+                    <TabsContent value="notifications" className="space-y-6">
+                        <form onSubmit={handleSaveWhatsApp} className="space-y-6">
+                            <Card className="border-none shadow-md overflow-hidden">
+                                <CardHeader className="bg-green-50/50 border-b">
+                                    <CardTitle className="flex items-center gap-2 text-green-600">
+                                        <MessageSquare className="w-5 h-5" />
+                                        WhatsApp Alerts
+                                    </CardTitle>
+                                    <CardDescription>Receive instant notifications on your phone for new orders and cancellations.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-6 space-y-4">
+                                    <div className="flex items-center justify-between p-4 border rounded-xl bg-green-50/20">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-base font-bold">Enable WhatsApp Notifications</Label>
+                                            <p className="text-xs text-muted-foreground">Turn on automated alerts for your phone number.</p>
+                                        </div>
+                                        <Switch
+                                            id="whatsapp_notifications_enabled"
+                                            name="whatsapp_notifications_enabled"
+                                            defaultChecked={dynamicSettings?.whatsapp_notifications_enabled === true}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="whatsapp_number">Your WhatsApp Number (with Country Code)</Label>
+                                        <div className="flex rounded-xl overflow-hidden border-2 focus-within:border-primary transition-all">
+                                            <div className="bg-muted px-4 flex items-center justify-center border-r-2 text-muted-foreground font-bold">
+                                                <Phone className="w-4 h-4" />
+                                            </div>
+                                            <Input
+                                                id="whatsapp_number"
+                                                name="whatsapp_number"
+                                                placeholder="919711864674"
+                                                className="border-none focus-visible:ring-0 rounded-none h-11"
+                                                defaultValue={dynamicSettings?.whatsapp_number || "919711864674"}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground italic">Use international format without '+' (e.g., 91 for India).</p>
+                                    </div>
+
+                                    <div className="space-y-2 pt-4 border-t">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Label htmlFor="callmebot_apikey" className="text-pink-600 font-bold">CallMeBot API Key (Optional)</Label>
+                                            <a
+                                                href="https://www.callmebot.com/blog/free-api-whatsapp-messages/"
+                                                target="_blank"
+                                                className="text-[10px] text-blue-500 underline flex items-center gap-1"
+                                            >
+                                                <Info className="w-3 h-3" /> Get free key here
+                                            </a>
+                                        </div>
+                                        <Input
+                                            id="callmebot_apikey"
+                                            name="callmebot_apikey"
+                                            placeholder="Enter your CallMeBot API key"
+                                            defaultValue={dynamicSettings?.callmebot_apikey || ""}
+                                            className="rounded-xl border-2 h-11"
+                                        />
+                                        <p className="text-[10px] text-muted-foreground italic">
+                                            Happy Hopz uses CallMeBot as a default free provider for your personal alerts.
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <div className="flex justify-end">
+                                <Button type="submit" variant="hopz" disabled={updateSettingsMutation.isPending} size="lg">
+                                    <Save className="w-4 h-4 mr-2" />
+                                    {updateSettingsMutation.isPending ? 'Saving...' : 'Save WhatsApp Settings'}
+                                </Button>
+                            </div>
+                        </form>
                     </TabsContent>
                 </Tabs>
             )}
