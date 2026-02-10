@@ -136,8 +136,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     return transporter.sendMail(mailOptions);
 };
 
-export const sendAdminOrderNotification = async (order: any) => {
-    const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
+export const sendAdminOrderNotification = async (order: any) =\u003e {`n    console.log(\" [ADMIN NOTIFICATION] Function called\");`n    const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
 
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.log(`🔔 NEW ORDER NOTIFICATION FOR ADMIN: Order #${order.id.slice(0, 8)} - ₹${order.total}`);
@@ -277,3 +276,4 @@ export const sendAdminOrderNotification = async (order: any) => {
         console.error('❌ Failed to send admin notification:', error);
     }
 };
+

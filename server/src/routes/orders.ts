@@ -237,8 +237,10 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
             }
 
             // Send notification email to admin
+            console.log('📧 [ORDER] Attempting to send admin notification for order:', order.id.slice(0, 8));
+            console.log('📧 [ORDER] Full order data available:', !!fullOrder);
             sendAdminOrderNotification(fullOrder).catch(err =>
-                console.error('Admin notification failed:', err)
+                console.error('❌ [ORDER] Admin notification failed:', err)
             );
 
             return order;
