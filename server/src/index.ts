@@ -81,6 +81,17 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Admin-specific rate limiting (stricter)
+const adminLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per 15 minutes
+    message: 'Too many admin login attempts, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+// Apply to admin login route specifically
+app.use('/api/auth/login', adminLimiter);
+
 // Body parser (Increased to 50MB for large base64 product image arrays)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
