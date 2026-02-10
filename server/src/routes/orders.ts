@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { optionalAuthenticate, authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
-import { sendOrderConfirmationEmail } from '../utils/email';
+import { sendOrderConfirmationEmail, sendAdminOrderNotification } from '../utils/email';
 
 const router = Router();
 
@@ -225,16 +225,21 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
             // Fetch full order for email
             const fullOrder = await tx.order.findUnique({
                 where: { id: order.id },
-                include: { items: true, address: true }
+                include: { items: true, address: true, user: true }
             });
 
-            // Send confirmation email
+            // Send confirmation email to customer
             const recipientEmail = req.user?.email || data.guestEmail;
             if (recipientEmail) {
                 sendOrderConfirmationEmail(recipientEmail, fullOrder).catch(err =>
-                    console.error('Email sending failed:', err)
+                    console.error('Customer email sending failed:', err)
                 );
             }
+
+            // Send notification email to admin
+            sendAdminOrderNotification(fullOrder).catch(err =>
+                console.error('Admin notification failed:', err)
+            );
 
             return order;
         });
