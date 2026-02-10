@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import { sendAdminAlertEmail } from '../utils/email';
 
 export type NotificationType = 'ORDER' | 'SECURITY' | 'SYSTEM' | 'PAYMENT' | 'ORDER_STATUS';
 export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH';
@@ -29,7 +30,7 @@ export class NotificationService {
         metadata
     }: CreateNotificationParams) {
         try {
-            return await prisma.notification.create({
+            const notification = await prisma.notification.create({
                 data: {
                     userId: userId || null,
                     isAdmin,
@@ -41,9 +42,18 @@ export class NotificationService {
                     isRead: false
                 }
             });
+
+            // Trigger Email for High/Normal Priority Admin Notifications
+            if (isAdmin && (priority === 'HIGH' || priority === 'NORMAL')) {
+                // Don't await email to avoid blocking response
+                sendAdminAlertEmail(title, message, metadata).catch(err =>
+                    console.error('Failed to send admin alert email from service:', err)
+                );
+            }
+
+            return notification;
         } catch (error) {
             console.error('Failed to create notification:', error);
-            // We don't throw here to avoid failing the main operation (e.g., order creation)
             return null;
         }
     }

@@ -269,3 +269,57 @@ export const sendAdminOrderNotification = async (order: any) => {
     }
 };
 
+export const sendAdminAlertEmail = async (title: string, message: string, details?: any) => {
+    const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log(`❌ [ADMIN ALERT] Email credentials missing for: ${title}`);
+        return;
+    }
+
+    const mailOptions = {
+        from: '"Happy Hopz Alerts" <alerts@happyhopz.com>',
+        to: adminEmail,
+        subject: `🔔 Admin Alert: ${title}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #ff6b6b; margin-bottom: 20px;">
+                    <h2 style="margin: 0; color: #333;">${title}</h2>
+                </div>
+                
+                <p style="font-size: 16px; color: #444; line-height: 1.5;">${message}</p>
+                
+                ${details ? `
+                <div style="background: #f1f3f5; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #666;">Details:</h4>
+                    <pre style="margin: 0; font-size: 13px; color: #555; white-space: pre-wrap;">${JSON.stringify(details, null, 2)}</pre>
+                </div>
+                ` : ''}
+
+                <p style="text-align: center; margin-top: 30px;">
+                    <a href="https://happy-hopz.vercel.app/admin/notifications" style="background: #333; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; font-size: 14px;">View Activity Log</a>
+                </p>
+
+                <p style="color: #999; font-size: 11px; border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+                    Automated system alert from Happy Hopz Admin Console.
+                </p>
+            </div>
+        `
+    };
+
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            await sgMail.send({
+                to: adminEmail,
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz Alerts' },
+                subject: mailOptions.subject,
+                html: mailOptions.html
+            });
+        } else {
+            await transporter.sendMail(mailOptions);
+        }
+        console.log(`✅ [ADMIN ALERT] Email sent: ${title}`);
+    } catch (error) {
+        console.error(`❌ [ADMIN ALERT] Failed to send:`, error);
+    }
+};
