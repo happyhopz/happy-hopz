@@ -20,49 +20,9 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendVerificationEmail = async (email: string, code: string) => {
-    // If no credentials, log to console
-    if (!process.env.SENDGRID_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
-        console.log('------------------------------------');
-        console.log(`VERIFICATION CODE FOR ${email}: ${code}`);
-        console.log('------------------------------------');
-        return;
-    }
-
-    const mailOptions = {
-        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
-        to: email,
-        subject: 'Verify your Happy Hopz Account',
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                <h2 style="color: #ff6b6b; text-align: center;">Welcome to Happy Hopz! 🎊</h2>
-                <p>Thank you for signing up. Please use the following code to verify your email address:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; padding: 10px 20px; background: #f0f0f0; border-radius: 5px;">${code}</span>
-                </div>
-                <p>This code will expire in 10 minutes.</p>
-                <p style="color: #888; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 20px;">
-                    If you did not request this, please ignore this email.
-                </p>
-            </div>
-        `
-    };
-
-    if (process.env.SENDGRID_API_KEY) {
-        console.log('📧 [SIGNUP] Sending via SendGrid from:', VERIFIED_SENDER);
-        return sgMail.send({
-            ...mailOptions,
-            from: { email: VERIFIED_SENDER, name: 'Happy Hopz' }
-        });
-    }
-
-    try {
-        await transporter.sendMail(mailOptions);
-    } catch (error) {
-        console.error('📧 EMAIL SENDING FAILED (Signup):', error);
-        console.log('------------------------------------');
-        console.log(`FALLBACK: VERIFICATION CODE FOR ${email}: ${code}`);
-        console.log('------------------------------------');
-    }
+    // Disabled at user request - only order emails are active
+    console.log(`[DISABLED] Verification code for ${email}: ${code}`);
+    return;
 };
 
 export const sendOrderConfirmationEmail = async (email: string, order: any) => {
@@ -129,45 +89,9 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log('------------------------------------');
-        console.log(`PASSWORD RESET TOKEN FOR ${email}: ${token}`);
-        console.log('------------------------------------');
-        return;
-    }
-
-    const resetUrl = `https://happy-hopz.vercel.app/reset-password?token=${token}`;
-
-    const mailOptions = {
-        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
-        to: email,
-        subject: 'Reset Your Happy Hopz Password',
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                <h2 style="color: #ff6b6b; text-align: center;">Password Reset Request 🔑</h2>
-                <p>Hello,</p>
-                <p>We received a request to reset the password for your Happy Hopz account. Click the button below to proceed:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="${resetUrl}" style="background: #ff6b6b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">Reset Password</a>
-                </div>
-                <p>This link will expire in 1 hour.</p>
-                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
-                <p style="color: #888; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
-                    For security, never share this link with anyone.
-                </p>
-            </div>
-        `
-    };
-
-    if (process.env.SENDGRID_API_KEY) {
-        console.log('📧 [PASSWORD RESET] Sending via SendGrid from:', VERIFIED_SENDER);
-        return sgMail.send({
-            ...mailOptions,
-            from: { email: VERIFIED_SENDER, name: 'Happy Hopz' }
-        });
-    }
-
-    return transporter.sendMail(mailOptions);
+    // Disabled at user request - only order emails are active
+    console.log(`[DISABLED] Password reset token for ${email}: ${token}`);
+    return;
 };
 
 export const sendAdminOrderNotification = async (order: any) => {
