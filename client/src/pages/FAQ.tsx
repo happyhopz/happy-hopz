@@ -32,7 +32,7 @@ const faqData = [
         questions: [
             {
                 q: 'What are the shipping charges?',
-                a: 'We offer FREE shipping on all orders across India! No minimum purchase required.'
+                a: 'We offer FREE shipping on all orders above ₹999 across India! For orders below ₹999, a nominal delivery charge is applicable.'
             },
             {
                 q: 'How long does delivery take?',

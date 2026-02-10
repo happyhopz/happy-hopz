@@ -80,7 +80,7 @@ const About = () => {
                             <ValueCard
                                 icon={<Truck className="w-8 h-8" />}
                                 title="Free Shipping"
-                                description="Enjoy free delivery across India on all orders. No minimum purchase required."
+                                description="Enjoy free delivery across India on orders above ₹999."
                             />
                             <ValueCard
                                 icon={<Award className="w-8 h-8" />}

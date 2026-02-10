@@ -25,7 +25,7 @@ const Shipping = () => {
                             Shipping <span className="text-primary">Information</span>
                         </h1>
                         <p className="text-xl text-muted-foreground font-nunito max-w-2xl mx-auto">
-                            Free shipping across India on all orders. No minimum purchase required!
+                            Free shipping across India on orders above ₹999.
                         </p>
                     </div>
                 </section>
@@ -38,7 +38,7 @@ const Shipping = () => {
                             <HighlightCard
                                 icon={<Truck className="w-8 h-8" />}
                                 title="Free Shipping"
-                                description="On all orders"
+                                description="On orders above ₹999"
                             />
                             <HighlightCard
                                 icon={<Clock className="w-8 h-8" />}
