@@ -678,7 +678,7 @@ const Checkout = () => {
                                         <Button
                                             onClick={handleContinueToPayment}
                                             disabled={addAddressMutation.isPending}
-                                            className="w-full h-14 bg-primary text-primary-foreground font-bold text-base shadow-xl shadow-primary/10 rounded-2xl uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                                            className="w-full h-14 bg-primary text-primary-foreground font-bold text-sm shadow-xl shadow-primary/10 rounded-2xl uppercase tracking-wide hover:scale-[1.02] active:scale-[0.98] transition-all group px-4"
                                         >
                                             {addAddressMutation.isPending ? 'Saving Address...' : 'Continue to Payment'}
                                             <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
