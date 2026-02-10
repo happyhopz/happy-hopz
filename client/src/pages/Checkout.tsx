@@ -635,7 +635,7 @@ const Checkout = () => {
                                                 : 'border-gray-100 hover:border-pink-200 hover:bg-gray-50/50'}`}>
 
                                             <div className="flex items-start gap-4">
-                                                <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${selectedAddressId === addr.id ? 'border-blue-600 bg-blue-600' : 'border-gray-300 group-hover:border-pink-300'}`}>
+                                                <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${selectedAddressId === addr.id ? 'border-blue-500 bg-blue-500' : 'border-gray-300 group-hover:border-pink-300'}`}>
                                                     {selectedAddressId === addr.id && <Check className="w-3.5 h-3.5 text-white animate-in zoom-in-50 duration-300" strokeWidth={4} />}
                                                 </div>
 
