@@ -238,9 +238,9 @@ const Checkout = () => {
     }, 0) || 0;
 
     const steps = [
-        { id: 'login', label: 'AUTH / GUEST', icon: Check },
-        { id: 'address', label: 'DELIVERY ADDRESS', icon: MapPin },
-        { id: 'payment', label: 'PAYMENT OPTIONS', icon: Wallet },
+        { id: 'login', label: 'AUTH / GUEST', shortLabel: 'LOGIN', icon: Check },
+        { id: 'address', label: 'DELIVERY ADDRESS', shortLabel: 'ADDRESS', icon: MapPin },
+        { id: 'payment', label: 'PAYMENT OPTIONS', shortLabel: 'PAYMENT', icon: Wallet },
     ];
 
     const paymentOptions = [
@@ -496,7 +496,8 @@ const Checkout = () => {
                                         <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${isCompleted ? 'bg-green-600 text-white' : isActive ? 'border-2 border-pink-600 text-pink-600' : 'border border-gray-300'}`}>
                                             {isCompleted ? <Check className="w-3 h-3" /> : index + 1}
                                         </div>
-                                        <span className="text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-normal whitespace-nowrap">{step.label}</span>
+                                        <span className="hidden sm:inline text-xs uppercase tracking-normal">{step.label}</span>
+                                        <span className="sm:hidden text-xs uppercase tracking-tight">{step.shortLabel}</span>
                                     </div>
                                     {index < steps.length - 1 && <div className="w-8 sm:w-16 h-[1px] bg-gray-300 mx-1" />}
                                 </div>
