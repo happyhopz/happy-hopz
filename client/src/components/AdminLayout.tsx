@@ -174,10 +174,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <AdminNotificationBell />
-
-                                <Separator orientation="vertical" className="h-8 mx-2 hidden md:block" />
-
                                 <div className="flex items-center gap-3 bg-white p-1 pr-4 rounded-xl border border-gray-100 shadow-sm">
                                     <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm">
                                         {(user?.name || user?.email || 'A')[0].toUpperCase()}

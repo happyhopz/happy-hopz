@@ -6,6 +6,35 @@ import { z } from 'zod';
 const router = Router();
 
 /**
+ * GET /api/notifications
+ * Fetch notifications for the current user.
+ * If admin, also returns broadcast admin notifications.
+ */
+router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user!.id;
+        const isAdmin = req.user!.role === 'ADMIN';
+
+        const notifications = await prisma.notification.findMany({
+            where: {
+                OR: [
+                    { userId }, // Targeted to this user
+                    { isAdmin: true, userId: null, ...(isAdmin ? {} : { id: 'none' }) } // Admin broadcasts (only if user is admin)
+                ]
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: 50
+        });
+
+        res.json(notifications);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+});
+
+/**
  * GET /api/notifications/admin
  * Fetch notifications for administrators.
  * Returns both broadcast (userId is null) and targeted notifications.

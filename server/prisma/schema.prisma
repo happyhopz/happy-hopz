@@ -30,21 +30,21 @@ model User {
   cartItems          CartItem[]
   notifications      Notification[]
   orders             Order[]
-  reviews            Review[]
   returnRequests     ReturnRequest[]
+  reviews            Review[]
 }
 
 model Notification {
   id        String   @id @default(uuid())
-  userId    String? // Null for broadcast notifications
-  isAdmin   Boolean  @default(false) // If true, visible to all admins
+  userId    String?
   title     String
   message   String
-  type      String // 'ORDER', 'SECURITY', 'SYSTEM', 'PAYMENT'
-  priority  String   @default("NORMAL") // 'LOW', 'NORMAL', 'HIGH'
-  metadata  String? // JSON string for extra data (e.g., orderId, userAgent)
+  type      String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+  isAdmin   Boolean  @default(false)
+  metadata  String?
+  priority  String   @default("NORMAL")
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -65,15 +65,15 @@ model Product {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   costPrice      Float?
-  boxPrice       Float? // Packaging cost per unit
-  tagPrice       Float? // Tag/sticker cost per unit
-  shippingCost   Float? // Shipping cost per unit
-  otherCosts     Float? // Miscellaneous costs per unit
   isVariant      Boolean     @default(false)
   parentId       String?
   seoDescription String?
   seoTitle       String?
   sku            String?     @unique
+  boxPrice       Float?
+  otherCosts     Float?
+  shippingCost   Float?
+  tagPrice       Float?
   cartItems      CartItem[]
   orderItems     OrderItem[]
   reviews        Review[]
@@ -114,14 +114,14 @@ model Order {
   cancellationReason String?
   returnReason       String?
   returnStatus       String?
-  couponId           String?
   couponCode         String?
   couponDiscount     Float?          @default(0)
+  couponId           String?
+  couponUsage        CouponUsage?
   address            Address         @relation(fields: [addressId], references: [id])
   user               User?           @relation(fields: [userId], references: [id])
   items              OrderItem[]
   returnRequests     ReturnRequest[]
-  couponUsage        CouponUsage?
 }
 
 model OrderItem {
@@ -161,9 +161,9 @@ model Coupon {
   maxUses       Int?
   currentUses   Int           @default(0)
   isActive      Boolean       @default(true)
-  firstTimeOnly Boolean       @default(false)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @default(now()) @updatedAt
+  firstTimeOnly Boolean       @default(false)
   usages        CouponUsage[]
 }
 
@@ -187,9 +187,8 @@ model CouponUsage {
   userEmail String?
   orderId   String   @unique
   createdAt DateTime @default(now())
-
-  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
-  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([couponId, userId])
   @@index([couponId, userEmail])
@@ -216,7 +215,7 @@ model SiteSettings {
   id        String   @id @default(uuid())
   key       String   @unique
   value     String
-  type      String   @default("string") // "string", "number", "boolean"
+  type      String   @default("string")
   updatedAt DateTime @updatedAt
 }
 
@@ -270,59 +269,46 @@ model MarketingPopup {
 }
 
 model ReturnRequest {
-  id      String @id @default(uuid())
-  orderId String
-  order   Order  @relation(fields: [orderId], references: [id])
-  userId  String
-  user    User   @relation(fields: [userId], references: [id])
-
-  type     String // 'RETURN' or 'EXCHANGE'
-  status   String  @default("PENDING") // PENDING, APPROVED, REJECTED, COMPLETED, CANCELLED
-  reason   String
-  comments String?
-
-  items ReturnItem[]
-
-  // Pricing
-  itemsTotal   Float // Total value of returned items
-  pickupCharge Float  @default(50) // ₹50 for returns, ₹0 for exchanges
-  refundAmount Float? // itemsTotal - pickupCharge (for returns)
-
-  refundMethod String? // 'ORIGINAL_PAYMENT', 'BANK_TRANSFER', 'STORE_CREDIT'
-  refundStatus String? // 'PENDING', 'PROCESSED', 'FAILED'
-
-  // Exchange specific
-  exchangeOrderId String? // New order created for exchange
-  exchangeItems   String? // JSON array of exchange items
-
+  id              String       @id @default(uuid())
+  orderId         String
+  userId          String
+  type            String
+  status          String       @default("PENDING")
+  reason          String
+  comments        String?
+  itemsTotal      Float
+  pickupCharge    Float        @default(50)
+  refundAmount    Float?
+  refundMethod    String?
+  refundStatus    String?
+  exchangeOrderId String?
+  exchangeItems   String?
   pickupScheduled DateTime?
   pickupAddress   String?
   trackingNumber  String?
-
-  adminNotes  String?
-  processedBy String?
-  processedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  adminNotes      String?
+  processedBy     String?
+  processedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  items           ReturnItem[]
+  order           Order        @relation(fields: [orderId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
 }
 
 model ReturnItem {
   id              String        @id @default(uuid())
   returnRequestId String
+  orderItemId     String
+  productId       String
+  productName     String
+  quantity        Int
+  price           Float
+  size            String
+  color           String
+  reason          String
+  condition       String?
+  images          String?
+  createdAt       DateTime      @default(now())
   returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
-
-  orderItemId String
-  productId   String
-  productName String
-  quantity    Int
-  price       Float
-  size        String
-  color       String
-
-  reason    String
-  condition String? // 'UNUSED', 'USED', 'DAMAGED'
-  images    String? // JSON array of image URLs
-
-  createdAt DateTime @default(now())
 }

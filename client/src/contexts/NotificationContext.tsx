@@ -10,7 +10,7 @@ interface Notification {
     message: string;
     type: string;
     isRead: boolean;
-    orderId?: string;
+    metadata?: string;
     createdAt: string;
 }
 

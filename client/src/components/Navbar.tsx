@@ -16,6 +16,7 @@ import { useNotifications } from '@/contexts/NotificationContext';
 import pandaLogo from '@/assets/happy-hopz-logo.png';
 import { format } from 'date-fns';
 import OmniSearch from './OmniSearch';
+import { AdminNotificationBell } from './admin/NotificationBell';
 
 const menuItems = [
   {
@@ -198,89 +199,103 @@ const Navbar = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="rounded-lg hover:bg-secondary border-border relative"
-                    >
-                      <Bell className="w-5 h-5 text-foreground" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-80 p-0 overflow-hidden">
-                    <div className="bg-pink-500 text-white p-4 flex items-center justify-between">
-                      <h3 className="font-bold">Notifications</h3>
-                      {unreadCount > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-white hover:bg-white/20 text-xs h-auto py-1"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            markAllAsRead();
-                          }}
-                        >
-                          Mark all read
-                        </Button>
-                      )}
-                    </div>
-                    <div className="max-h-[400px] overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                          <Bell className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                          <p>No notifications yet</p>
-                        </div>
-                      ) : (
-                        notifications.slice(0, 5).map((n) => (
-                          <div
-                            key={n.id}
-                            className={`p-4 border-b hover:bg-muted transition-colors cursor-pointer ${!n.isRead ? 'bg-pink-50/30' : ''}`}
-                            onClick={() => markAsRead(n.id)}
+                {isAdmin ? (
+                  <AdminNotificationBell />
+                ) : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="rounded-lg hover:bg-secondary border-border relative"
+                      >
+                        <Bell className="w-5 h-5 text-foreground" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80 p-0 overflow-hidden">
+                      <div className="bg-pink-500 text-white p-4 flex items-center justify-between">
+                        <h3 className="font-bold">Notifications</h3>
+                        {unreadCount > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-white hover:bg-white/20 text-xs h-auto py-1"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              markAllAsRead();
+                            }}
                           >
-                            <div className="flex justify-between items-start mb-1">
-                              <p className={`text-sm font-bold ${!n.isRead ? 'text-pink-600' : 'text-foreground'}`}>
-                                {n.title}
-                              </p>
-                              <span className="text-[10px] text-muted-foreground">
-                                {n.createdAt ? (() => {
-                                  try {
-                                    return format(new Date(n.createdAt), 'MMM dd');
-                                  } catch (e) {
-                                    return 'Just now';
-                                  }
-                                })() : 'Just now'}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {n.message}
-                            </p>
-                            {n.orderId && (
-                              <Link
-                                to={`/orders/${n.orderId}`}
-                                className="text-[10px] text-primary font-bold mt-2 inline-block hover:underline"
-                              >
-                                Track Order →
-                              </Link>
-                            )}
+                            Mark all read
+                          </Button>
+                        )}
+                      </div>
+                      <div className="max-h-[400px] overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="p-8 text-center text-muted-foreground">
+                            <Bell className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                            <p>No notifications yet</p>
                           </div>
-                        ))
+                        ) : (
+                          notifications.slice(0, 5).map((n) => (
+                            <div
+                              key={n.id}
+                              className={`p-4 border-b hover:bg-muted transition-colors cursor-pointer ${!n.isRead ? 'bg-pink-50/30' : ''}`}
+                              onClick={() => markAsRead(n.id)}
+                            >
+                              <div className="flex justify-between items-start mb-1">
+                                <p className={`text-sm font-bold ${!n.isRead ? 'text-pink-600' : 'text-foreground'}`}>
+                                  {n.title}
+                                </p>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {n.createdAt ? (() => {
+                                    try {
+                                      return format(new Date(n.createdAt), 'MMM dd');
+                                    } catch (e) {
+                                      return 'Just now';
+                                    }
+                                  })() : 'Just now'}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {n.message}
+                              </p>
+                              {(() => {
+                                try {
+                                  const metadata = n.metadata ? JSON.parse(n.metadata) : {};
+                                  if (metadata.orderId) {
+                                    return (
+                                      <Link
+                                        to={`/orders/${metadata.orderId}`}
+                                        className="text-[10px] text-primary font-bold mt-2 inline-block hover:underline"
+                                      >
+                                        Track Order →
+                                      </Link>
+                                    );
+                                  }
+                                } catch (e) {
+                                  return null;
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      {notifications.length > 0 && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/notifications" className="w-full text-center p-3 text-sm font-bold text-gray-500 hover:text-primary border-t">
+                            View All Notifications
+                          </Link>
+                        </DropdownMenuItem>
                       )}
-                    </div>
-                    {notifications.length > 0 && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/notifications" className="w-full text-center p-3 text-sm font-bold text-gray-500 hover:text-primary border-t">
-                          View All Notifications
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 <Link to="/cart">
                   <Button
