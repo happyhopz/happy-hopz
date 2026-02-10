@@ -66,8 +66,8 @@ const OrderDetail = () => {
             queryClient.invalidateQueries({ queryKey: ['order', id] });
             toast.success('Order status updated');
         },
-        onError: () => {
-            toast.error('Failed to update status');
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to update status');
         }
     });
 
@@ -187,8 +187,8 @@ const OrderDetail = () => {
                         </div>
                     </div>
 
-                    {/* NEW: CUSTOMER ACTIONS */}
-                    {!isAdmin && !['CANCELLED', 'DELIVERED'].includes(order.status) && !showReasonInput && (
+                    {/* CUSTOMER/ADMIN ACTIONS */}
+                    {!['CANCELLED', 'SHIPPED', 'DELIVERED'].includes(order.status) && !showReasonInput && (
                         <div className="mt-4 flex gap-2">
                             <Button
                                 variant="destructive"

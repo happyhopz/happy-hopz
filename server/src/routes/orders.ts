@@ -388,11 +388,11 @@ router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, r
         });
 
         res.json(result);
-    } catch (error) {
+    } catch (error: any) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Validation failed', details: error.errors });
         }
-        res.status(500).json({ error: 'Failed to update order' });
+        res.status(500).json({ error: error.message || 'Failed to update order' });
     }
 });
 
@@ -408,9 +408,14 @@ router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response
             });
 
             if (!order) throw new Error('Order not found');
-            if (order.userId !== req.user!.id) throw new Error('Unauthorized');
+
+            // Allow cancellation if user owns order OR is an admin
+            if (order.userId !== req.user!.id && req.user!.role !== 'ADMIN') {
+                throw new Error('You do not have permission to cancel this order');
+            }
+
             if (!['PLACED', 'PACKED'].includes(order.status)) {
-                throw new Error('Order cannot be cancelled at this stage');
+                throw new Error(`Order cannot be cancelled because it is already ${order.status.toLowerCase()}`);
             }
 
             // Restock items
