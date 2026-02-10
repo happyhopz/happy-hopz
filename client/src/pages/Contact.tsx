@@ -146,7 +146,7 @@ const Contact = () => {
                                         <ContactItem
                                             icon={<Clock className="w-5 h-5" />}
                                             label="Response Time"
-                                            value="Within 24-48 hours"
+                                            value="Within 5-6 hours"
                                         />
                                     </div>
                                 </Card>
