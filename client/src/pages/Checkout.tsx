@@ -636,7 +636,7 @@ const Checkout = () => {
 
                                             <div className="flex items-start gap-4">
                                                 <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedAddressId === addr.id ? 'border-pink-600 bg-pink-600' : 'border-gray-300 group-hover:border-pink-300'}`}>
-                                                    {selectedAddressId === addr.id && <div className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />}
+                                                    {selectedAddressId === addr.id && <Check className="w-4 h-4 text-white" />}
                                                 </div>
 
                                                 <div className="flex-1">
