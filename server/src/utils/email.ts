@@ -7,11 +7,14 @@ if (process.env.SENDGRID_API_KEY) {
     console.log('✅ SendGrid initialized');
 }
 
+// Verified sender email (must match SendGrid Sender Identity)
+const VERIFIED_SENDER = 'happyhopz308@gmail.com';
+
 // Fallback to nodemailer for local development without SendGrid
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER,
+        user: process.env.EMAIL_USER || VERIFIED_SENDER,
         pass: process.env.EMAIL_PASS
     }
 });
@@ -26,7 +29,7 @@ export const sendVerificationEmail = async (email: string, code: string) => {
     }
 
     const mailOptions = {
-        from: '"Happy Hopz" <noreply@happyhopz.com>',
+        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
         to: email,
         subject: 'Verify your Happy Hopz Account',
         html: `
@@ -45,9 +48,10 @@ export const sendVerificationEmail = async (email: string, code: string) => {
     };
 
     if (process.env.SENDGRID_API_KEY) {
+        console.log('📧 [SIGNUP] Sending via SendGrid from:', VERIFIED_SENDER);
         return sgMail.send({
             ...mailOptions,
-            from: { email: 'happyhopz308@gmail.com', name: 'Happy Hopz' }
+            from: { email: VERIFIED_SENDER, name: 'Happy Hopz' }
         });
     }
 
@@ -75,7 +79,7 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
     `).join('');
 
     const mailOptions = {
-        from: '"Happy Hopz" <orders@happyhopz.com>',
+        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
         to: email,
         subject: `Your Happy Hopz Order #${order.id.slice(0, 8)} 👟`,
         html: `
@@ -114,9 +118,10 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
     };
 
     if (process.env.SENDGRID_API_KEY) {
+        console.log('📧 [ORDER CONFIRMATION] Sending via SendGrid from:', VERIFIED_SENDER);
         return sgMail.send({
             ...mailOptions,
-            from: { email: 'happyhopz308@gmail.com', name: 'Happy Hopz' }
+            from: { email: VERIFIED_SENDER, name: 'Happy Hopz' }
         });
     }
 
@@ -134,7 +139,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     const resetUrl = `https://happy-hopz.vercel.app/reset-password?token=${token}`;
 
     const mailOptions = {
-        from: '"Happy Hopz" <noreply@happyhopz.com>',
+        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
         to: email,
         subject: 'Reset Your Happy Hopz Password',
         html: `
@@ -155,9 +160,10 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     };
 
     if (process.env.SENDGRID_API_KEY) {
+        console.log('📧 [PASSWORD RESET] Sending via SendGrid from:', VERIFIED_SENDER);
         return sgMail.send({
             ...mailOptions,
-            from: { email: 'happyhopz308@gmail.com', name: 'Happy Hopz' }
+            from: { email: VERIFIED_SENDER, name: 'Happy Hopz' }
         });
     }
 
@@ -313,11 +319,11 @@ export const sendAdminOrderNotification = async (order: any) => {
 
         // Use SendGrid if available (production), otherwise fallback to nodemailer (local dev)
         if (process.env.SENDGRID_API_KEY) {
-            console.log('📧 [ADMIN NOTIFICATION] Using SendGrid...');
+            console.log('📧 [ADMIN NOTIFICATION] Using SendGrid from:', VERIFIED_SENDER);
             const msg = {
                 to: adminEmail,
                 from: {
-                    email: process.env.EMAIL_USER || 'happyhopz308@gmail.com',
+                    email: VERIFIED_SENDER,
                     name: 'Happy Hopz Orders'
                 },
                 subject: mailOptions.subject,
