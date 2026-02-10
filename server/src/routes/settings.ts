@@ -1,9 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { requireAdmin, AuthRequest } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
+import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Default settings keys
 const DEFAULT_SETTINGS = [
@@ -45,7 +44,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/settings - Admin only update
-router.patch('/', requireAdmin, async (req: AuthRequest, res: Response) => {
+router.patch('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { settings } = req.body; // Expecting { key: value, ... }
 
