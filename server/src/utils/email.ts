@@ -282,12 +282,22 @@ export const sendAdminOrderNotification = async (order: any) => {
     try {
         console.log('📤 [ADMIN NOTIFICATION] Sending email to:', adminEmail);
         console.log('📤 [ADMIN NOTIFICATION] Email subject:', mailOptions.subject);
-        await transporter.sendMail(mailOptions);
+
+        // Add timeout to prevent hanging
+        const sendEmailWithTimeout = Promise.race([
+            transporter.sendMail(mailOptions),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Email send timeout after 10 seconds')), 10000)
+            )
+        ]);
+
+        await sendEmailWithTimeout;
         console.log(`✅ [ADMIN NOTIFICATION] Email sent successfully for order #${order.id.slice(0, 8)}`);
     } catch (error: any) {
-        console.error('❌ [ADMIN NOTIFICATION] Failed to send email:', error.message);
-        console.error('❌ [ADMIN NOTIFICATION] Error code:', error.code);
-        console.error('❌ [ADMIN NOTIFICATION] Full error:', error);
+        console.error('❌ [ADMIN NOTIFICATION] Failed to send email:', error?.message || error);
+        console.error('❌ [ADMIN NOTIFICATION] Error code:', error?.code);
+        console.error('❌ [ADMIN NOTIFICATION] Error response:', error?.response);
+        // Don't throw - we don't want to fail the order if email fails
     }
 };
 
