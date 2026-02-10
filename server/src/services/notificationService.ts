@@ -43,8 +43,8 @@ export class NotificationService {
                 }
             });
 
-            // Trigger Email for High/Normal Priority Admin Notifications
-            if (isAdmin && (priority === 'HIGH' || priority === 'NORMAL')) {
+            // Trigger Email for High/Normal Priority Admin Notifications - RESTRICTED TO ORDERS ONLY
+            if (isAdmin && (priority === 'HIGH' || priority === 'NORMAL') && type === 'ORDER') {
                 // Don't await email to avoid blocking response
                 sendAdminAlertEmail(title, message, metadata).catch(err =>
                     console.error('Failed to send admin alert email from service:', err)
