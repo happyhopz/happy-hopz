@@ -101,7 +101,7 @@ export default function AdminNotifications() {
                                         {notification.title}
                                     </h3>
                                     {!notification.isRead && (
-                                        <Badge variant="hopz" className="h-5 text-[10px]">NEW</Badge>
+                                        <Badge variant={"hopz" as any} className="h-5 text-[10px]">NEW</Badge>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground whitespace-nowrap">
@@ -187,7 +187,7 @@ export default function AdminNotifications() {
 
                 <div className="flex items-center gap-3">
                     <Button
-                        variant="hopz"
+                        variant={"hopz" as any}
                         onClick={markAllRead}
                         disabled={stats.unread === 0}
                         className="rounded-xl shadow-lg shadow-primary/20 gap-2 h-11 px-6 font-bold"
@@ -202,7 +202,7 @@ export default function AdminNotifications() {
                 <Card className="bg-white/50 backdrop-blur-sm border-primary/10 transition-transform hover:scale-[1.02]">
                     <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
                         <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Unread</CardTitle>
-                        <Badge variant="hopz" className="h-5">{stats.unread}</Badge>
+                        <Badge variant={"hopz" as any} className="h-5">{stats.unread}</Badge>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
                         <p className="text-2xl font-black text-primary">{Math.round((stats.unread / Math.max(1, notifications.length)) * 100)}%</p>
