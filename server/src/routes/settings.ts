@@ -61,15 +61,20 @@ router.patch('/', authenticate, requireAdmin, async (req: AuthRequest, res: Resp
         console.log(`🔄 [PATCH /api/settings] Updating ${entries.length} items:`, Object.keys(settings));
 
         const updates = entries.map(([key, value]) => {
-            console.log(`   - Updating key: "${key}" to value: "${value}"`);
-            return prisma.siteSettings.update({
+            console.log(`   - Upserting key: "${key}" to value: "${value}"`);
+            return prisma.siteSettings.upsert({
                 where: { key },
-                data: { value: String(value) }
+                update: { value: String(value) },
+                create: {
+                    key,
+                    value: String(value),
+                    type: typeof value === 'number' ? 'number' : 'string'
+                }
             });
         });
 
         await Promise.all(updates);
-        console.log('✅ [PATCH /api/settings] DB Updates completed');
+        console.log('✅ [PATCH /api/settings] DB Upserts completed');
 
         // Audit Log
         try {
