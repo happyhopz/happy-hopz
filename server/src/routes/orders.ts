@@ -398,6 +398,8 @@ router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, r
 
 // Cancel Order
 router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response) => {
+    console.log(`📦 [CANCEL] Request for order: ${req.params.id}`);
+    console.log(`📦 [CANCEL] Auth User: ${req.user?.id} (Role: ${req.user?.role})`);
     try {
         const { reason } = z.object({ reason: z.string().min(5) }).parse(req.body);
 
@@ -407,10 +409,16 @@ router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response
                 include: { items: true }
             });
 
-            if (!order) throw new Error('Order not found');
+            if (!order) {
+                console.log(`❌ [CANCEL] Order not found: ${req.params.id}`);
+                throw new Error('Order not found');
+            }
+
+            console.log(`📦 [CANCEL] Order found. Owner: ${order.userId}, Status: ${order.status}`);
 
             // Allow cancellation if user owns order OR is an admin
             if (order.userId !== req.user!.id && req.user!.role !== 'ADMIN') {
+                console.log(`❌ [CANCEL] Permission denied. ${req.user!.id} tried cancelling order owned by ${order.userId}`);
                 throw new Error('You do not have permission to cancel this order');
             }
 
