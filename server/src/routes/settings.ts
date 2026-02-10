@@ -45,36 +45,54 @@ router.get('/', async (req: Request, res: Response) => {
 
 // PATCH /api/settings - Admin only update
 router.patch('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+    console.log('📬 [PATCH /api/settings] Request received');
+    console.log('👤 [PATCH /api/settings] User:', req.user?.email, 'Role:', req.user?.role);
+
     try {
-        const { settings } = req.body; // Expecting { key: value, ... }
+        const { settings } = req.body;
+        console.log('📦 [PATCH /api/settings] Body:', JSON.stringify(req.body, null, 2));
 
         if (!settings || typeof settings !== 'object') {
+            console.warn('⚠️ [PATCH /api/settings] Invalid format');
             return res.status(400).json({ error: 'Invalid settings format' });
         }
 
-        const updates = Object.entries(settings).map(([key, value]) =>
-            prisma.siteSettings.update({
+        const entries = Object.entries(settings);
+        console.log(`🔄 [PATCH /api/settings] Updating ${entries.length} items:`, Object.keys(settings));
+
+        const updates = entries.map(([key, value]) => {
+            console.log(`   - Updating key: "${key}" to value: "${value}"`);
+            return prisma.siteSettings.update({
                 where: { key },
                 data: { value: String(value) }
-            })
-        );
-
-        await Promise.all(updates);
-
-        // Audit Log
-        await prisma.auditLog.create({
-            data: {
-                action: 'UPDATE_SETTINGS',
-                entity: 'SiteSettings',
-                details: `Updated settings: ${Object.keys(settings).join(', ')}`,
-                adminId: req.user!.id
-            }
+            });
         });
 
+        await Promise.all(updates);
+        console.log('✅ [PATCH /api/settings] DB Updates completed');
+
+        // Audit Log
+        try {
+            await prisma.auditLog.create({
+                data: {
+                    action: 'UPDATE_SETTINGS',
+                    entity: 'SiteSettings',
+                    details: `Updated settings: ${Object.keys(settings).join(', ')}`,
+                    adminId: req.user!.id
+                }
+            });
+            console.log('✅ [PATCH /api/settings] Audit log created');
+        } catch (auditError) {
+            console.error('❌ [PATCH /api/settings] Audit log failed (non-blocking):', auditError);
+        }
+
         res.json({ success: true, message: 'Settings updated successfully' });
-    } catch (error) {
-        console.error('[Update Settings Error]:', error);
-        res.status(500).json({ error: 'Failed to update settings' });
+    } catch (error: any) {
+        console.error('❌ [UPDATE SETTINGS ERROR]:', error.message || error);
+        if (error.code === 'P2025') {
+            console.error('   - Cause: Single or more keys were not found in SiteSettings table');
+        }
+        res.status(500).json({ error: 'Failed to update settings', details: error.message });
     }
 });
 
