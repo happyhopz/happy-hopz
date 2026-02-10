@@ -21,7 +21,7 @@ const About = () => {
                         <img
                             src={pandaLogo}
                             alt="Happy Hopz"
-                            className="w-32 h-32 mx-auto mb-6 animate-bounce-gentle"
+                            className="w-48 h-48 md:w-56 md:h-56 mx-auto mb-6 animate-bounce-gentle object-contain"
                         />
                         <h1 className="text-4xl md:text-5xl font-fredoka font-bold text-foreground mb-4">
                             About <span className="text-primary">Happy Hopz</span>
