@@ -1,7 +1,14 @@
 import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
+// Initialize SendGrid if API key is available
+if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    console.log('✅ SendGrid initialized');
+}
+
+// Fallback to nodemailer for local development without SendGrid
 const transporter = nodemailer.createTransport({
-    // For development, you can use ethereal.email or your own SMTP
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
@@ -283,20 +290,30 @@ export const sendAdminOrderNotification = async (order: any) => {
         console.log('📤 [ADMIN NOTIFICATION] Sending email to:', adminEmail);
         console.log('📤 [ADMIN NOTIFICATION] Email subject:', mailOptions.subject);
 
-        // Add timeout to prevent hanging
-        const sendEmailWithTimeout = Promise.race([
-            transporter.sendMail(mailOptions),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Email send timeout after 10 seconds')), 10000)
-            )
-        ]);
+        // Use SendGrid if available (production), otherwise fallback to nodemailer (local dev)
+        if (process.env.SENDGRID_API_KEY) {
+            console.log('📧 [ADMIN NOTIFICATION] Using SendGrid...');
+            const msg = {
+                to: adminEmail,
+                from: {
+                    email: process.env.EMAIL_USER || 'happyhopz308@gmail.com',
+                    name: 'Happy Hopz Orders'
+                },
+                subject: mailOptions.subject,
+                html: mailOptions.html
+            };
 
-        await sendEmailWithTimeout;
-        console.log(`✅ [ADMIN NOTIFICATION] Email sent successfully for order #${order.id.slice(0, 8)}`);
+            await sgMail.send(msg);
+            console.log(`✅ [ADMIN NOTIFICATION] Email sent successfully via SendGrid for order #${order.id.slice(0, 8)}`);
+        } else {
+            console.log('📧 [ADMIN NOTIFICATION] Using nodemailer (local dev)...');
+            await transporter.sendMail(mailOptions);
+            console.log(`✅ [ADMIN NOTIFICATION] Email sent successfully via nodemailer for order #${order.id.slice(0, 8)}`);
+        }
     } catch (error: any) {
         console.error('❌ [ADMIN NOTIFICATION] Failed to send email:', error?.message || error);
         console.error('❌ [ADMIN NOTIFICATION] Error code:', error?.code);
-        console.error('❌ [ADMIN NOTIFICATION] Error response:', error?.response);
+        console.error('❌ [ADMIN NOTIFICATION] Error response:', error?.response?.body);
         // Don't throw - we don't want to fail the order if email fails
     }
 };
