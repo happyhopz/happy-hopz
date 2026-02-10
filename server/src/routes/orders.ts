@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { optionalAuthenticate, authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 import { sendOrderConfirmationEmail, sendAdminOrderNotification } from '../utils/email';
+import { NotificationService } from '../services/notificationService';
 
 const router = Router();
 
@@ -198,7 +199,7 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                         title: 'Order Placed Successfully! 🎊',
                         message: `Your order #${order.id.slice(0, 8)} has been placed and is being processed.`,
                         type: 'ORDER_STATUS',
-                        orderId: order.id
+                        metadata: JSON.stringify({ orderId: order.id })
                     }
                 });
             }
@@ -241,6 +242,13 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
             console.log('📧 [ORDER] Full order data available:', !!fullOrder);
             sendAdminOrderNotification(fullOrder).catch(err =>
                 console.error('❌ [ORDER] Admin notification failed:', err)
+            );
+
+            // Create system notification for all admins
+            await NotificationService.notifyNewOrder(
+                order.id,
+                fullOrder?.address.name || data.guestName || 'Guest',
+                serverTotal
             );
 
             return order;
@@ -369,7 +377,7 @@ router.put('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, r
                             ? `Order #${updatedOrder.id.slice(0, 8)} is now ${status.toLowerCase()}.`
                             : `Payment for order #${updatedOrder.id.slice(0, 8)} is ${paymentStatus?.toLowerCase()}.`,
                         type: 'ORDER_STATUS',
-                        orderId: updatedOrder.id
+                        metadata: JSON.stringify({ orderId: updatedOrder.id })
                     }
                 });
 
@@ -434,13 +442,18 @@ router.patch('/:id/cancel', authenticate, async (req: AuthRequest, res: Response
                 });
             }
 
-            return await tx.order.update({
+            const updatedOrder = await tx.order.update({
                 where: { id: order.id },
                 data: {
                     status: 'CANCELLED',
                     cancellationReason: reason
                 }
             });
+
+            // Notify admin of cancellation
+            await NotificationService.notifyOrderCancelled(order.id, reason);
+
+            return updatedOrder;
         });
 
         res.json(result);

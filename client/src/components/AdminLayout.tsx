@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { adminAPI } from '@/lib/api';
 import { useState, useRef, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { AdminNotificationBell } from './admin/NotificationBell';
+import { ChevronDown } from 'lucide-react';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -152,8 +154,44 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 lg:ml-64 p-8 min-h-[calc(100vh-64px)]">
+                <main className="flex-1 lg:ml-64 p-8 min-h-[calc(100vh-64px)] bg-[#fcfcfd]">
                     <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                        {/* Admin Header Bar */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 print:hidden">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                                    <LayoutDashboard className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-fredoka font-bold text-foreground tracking-tight">
+                                        Happy Hopz Admin
+                                    </h1>
+                                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">
+                                        Central Management Console
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <AdminNotificationBell />
+
+                                <Separator orientation="vertical" className="h-8 mx-2 hidden md:block" />
+
+                                <div className="flex items-center gap-3 bg-white p-1 pr-4 rounded-xl border border-gray-100 shadow-sm">
+                                    <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm">
+                                        {(user?.name || user?.email || 'A')[0].toUpperCase()}
+                                    </div>
+                                    <div className="hidden sm:block">
+                                        <p className="text-xs font-bold truncate max-w-[120px]">{user?.name || user?.email}</p>
+                                        <div className="flex items-center gap-1">
+                                            <Badge className="text-[8px] h-3.5 px-1 bg-green-500 border-0 text-white">ONLINE</Badge>
+                                            <p className="text-[10px] text-muted-foreground font-bold">{user?.role}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* Global Admin Search */}
                         <div className="mb-8 relative print:hidden" ref={searchRef}>

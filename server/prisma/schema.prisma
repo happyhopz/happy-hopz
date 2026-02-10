@@ -36,14 +36,16 @@ model User {
 
 model Notification {
   id        String   @id @default(uuid())
-  userId    String
+  userId    String? // Null for broadcast notifications
+  isAdmin   Boolean  @default(false) // If true, visible to all admins
   title     String
   message   String
-  type      String
-  orderId   String?
+  type      String // 'ORDER', 'SECURITY', 'SYSTEM', 'PAYMENT'
+  priority  String   @default("NORMAL") // 'LOW', 'NORMAL', 'HIGH'
+  metadata  String? // JSON string for extra data (e.g., orderId, userAgent)
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Product {

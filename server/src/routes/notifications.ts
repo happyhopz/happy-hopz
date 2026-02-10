@@ -1,69 +1,96 @@
 import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
 
 const router = Router();
 
-// Get user notifications
-router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
+/**
+ * GET /api/notifications/admin
+ * Fetch notifications for administrators.
+ * Returns both broadcast (userId is null) and targeted notifications.
+ */
+router.get('/admin', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const notifications = await prisma.notification.findMany({
-            where: { userId: req.user!.id },
-            orderBy: { createdAt: 'desc' },
-            take: 50
+            where: {
+                isAdmin: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: 50 // Limit to last 50
         });
 
         res.json(notifications);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch notifications' });
+        res.status(500).json({ error: 'Failed to fetch admin notifications' });
     }
 });
 
-// Mark notification as read
-router.put('/:id/read', authenticate, async (req: AuthRequest, res: Response) => {
+/**
+ * PATCH /api/notifications/:id/read
+ * Mark a specific notification as read.
+ */
+router.patch('/:id/read', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const notification = await prisma.notification.updateMany({
-            where: {
-                id: req.params.id as string,
-                userId: req.user!.id
-            },
+        const { id } = req.params;
+
+        const notification = await prisma.notification.findUnique({
+            where: { id: req.params.id as string }
+        });
+
+        if (!notification) {
+            return res.status(404).json({ error: 'Notification not found' });
+        }
+
+        // Check permissions: either broadcast admin, admin-targeted, or user-targeted
+        if (notification.isAdmin && req.user!.role !== 'ADMIN') {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        if (!notification.isAdmin && notification.userId !== req.user!.id) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        await prisma.notification.update({
+            where: { id: id as string },
             data: { isRead: true }
         });
 
-        res.json({ success: true });
+        res.json({ message: 'Notification marked as read' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to update notification' });
     }
 });
 
-// Mark all as read
-router.put('/read-all', authenticate, async (req: AuthRequest, res: Response) => {
+/**
+ * PATCH /api/notifications/read-all
+ * Mark all visible notifications as read for the current context (admin or user).
+ */
+router.patch('/read-all', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        await prisma.notification.updateMany({
-            where: { userId: req.user!.id },
-            data: { isRead: true }
-        });
+        const { type } = z.object({ type: z.enum(['admin', 'user']) }).parse(req.query);
 
-        res.json({ success: true });
+        if (type === 'admin') {
+            if (req.user!.role !== 'ADMIN') {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+
+            await prisma.notification.updateMany({
+                where: { isAdmin: true, isRead: false },
+                data: { isRead: true }
+            });
+        } else {
+            await prisma.notification.updateMany({
+                where: { userId: req.user!.id, isRead: false },
+                data: { isRead: true }
+            });
+        }
+
+        res.json({ message: 'All notifications marked as read' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to update notifications' });
-    }
-});
-
-// Delete notification
-router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
-    try {
-        await prisma.notification.deleteMany({
-            where: {
-                id: req.params.id as string,
-                userId: req.user!.id
-            }
-        });
-
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to delete notification' });
     }
 });
 

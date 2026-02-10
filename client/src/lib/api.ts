@@ -154,8 +154,9 @@ export const contentAPI = {
 
 export const notificationsAPI = {
     getAll: () => api.get('/notifications'),
-    markAsRead: (id: string) => api.put(`/notifications/${id}/read`),
-    markAllAsRead: () => api.put('/notifications/read-all')
+    getAdmin: () => api.get('/notifications/admin'),
+    markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
+    markAllAsRead: (type: 'admin' | 'user' = 'user') => api.patch(`/notifications/read-all?type=${type}`)
 };
 
 export const addressAPI = {

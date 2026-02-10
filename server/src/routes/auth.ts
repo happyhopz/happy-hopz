@@ -8,6 +8,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
+import { NotificationService } from '../services/notificationService';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const router = Router();
@@ -67,6 +68,16 @@ router.post('/signup', async (req: Request, res: Response) => {
             { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
         );
 
+        // Create Admin Notification
+        await NotificationService.create({
+            isAdmin: true,
+            title: 'New User Signup! 🎉',
+            message: `A new user ${user.email} has just joined Happy Hopz.`,
+            type: 'SECURITY',
+            priority: 'NORMAL',
+            metadata: { userId: user.id, email: user.email }
+        });
+
         res.status(201).json({ user, token });
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -101,6 +112,14 @@ router.post('/login', async (req: Request, res: Response) => {
             { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET!,
             { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
+        );
+
+        // Notify admin of login
+        await NotificationService.notifySecurityEvent(
+            'User Login',
+            `${user.name || user.email} logged in.`,
+            user.id,
+            { role: user.role, email: user.email }
         );
 
         res.json({
@@ -420,6 +439,16 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
         // Send reset email
         await sendPasswordResetEmail(email, resetToken);
 
+        // Notify admin
+        await NotificationService.create({
+            isAdmin: true,
+            title: 'Password Reset Requested',
+            message: `User ${email} requested a password reset.`,
+            type: 'SECURITY',
+            priority: 'LOW',
+            metadata: { userId: user.id, email }
+        });
+
         res.json({ message: 'If an account exists with this email, a reset link has been sent.' });
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -461,6 +490,16 @@ router.post('/reset-password', async (req: Request, res: Response) => {
         });
 
         res.json({ message: 'Password has been reset successfully' });
+
+        // Notify admin
+        await NotificationService.create({
+            isAdmin: true,
+            title: 'Password Changed',
+            message: `User ${user.email} successfully reset their password.`,
+            type: 'SECURITY',
+            priority: 'NORMAL',
+            metadata: { userId: user.id, email: user.email }
+        });
     } catch (error) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Token and new password (min 6 chars) are required' });

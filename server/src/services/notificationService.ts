@@ -1,0 +1,106 @@
+import { prisma } from '../lib/prisma';
+
+export type NotificationType = 'ORDER' | 'SECURITY' | 'SYSTEM' | 'PAYMENT' | 'ORDER_STATUS';
+export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH';
+
+interface CreateNotificationParams {
+    userId?: string;
+    isAdmin?: boolean;
+    title: string;
+    message: string;
+    type: NotificationType;
+    priority?: NotificationPriority;
+    metadata?: Record<string, any>;
+}
+
+export class NotificationService {
+    /**
+     * Create a new notification.
+     * If userId is provided, it's a targeted notification.
+     * If isAdmin is true and userId is null, it's a broadcast to all admins.
+     */
+    static async create({
+        userId,
+        isAdmin = false,
+        title,
+        message,
+        type,
+        priority = 'NORMAL',
+        metadata
+    }: CreateNotificationParams) {
+        try {
+            return await prisma.notification.create({
+                data: {
+                    userId: userId || null,
+                    isAdmin,
+                    title,
+                    message,
+                    type,
+                    priority,
+                    metadata: metadata ? JSON.stringify(metadata) : null,
+                    isRead: false
+                }
+            });
+        } catch (error) {
+            console.error('Failed to create notification:', error);
+            // We don't throw here to avoid failing the main operation (e.g., order creation)
+            return null;
+        }
+    }
+
+    /**
+     * Create an admin notification for a new order.
+     */
+    static async notifyNewOrder(orderId: string, customerName: string, amount: number) {
+        return this.create({
+            isAdmin: true,
+            title: 'New Order Received! 🛍️',
+            message: `Order #${orderId.slice(0, 8)} placed by ${customerName} for ₹${amount.toFixed(2)}.`,
+            type: 'ORDER',
+            priority: 'HIGH',
+            metadata: { orderId }
+        });
+    }
+
+    /**
+     * Create an admin notification for an order cancellation.
+     */
+    static async notifyOrderCancelled(orderId: string, reason: string) {
+        return this.create({
+            isAdmin: true,
+            title: 'Order Cancelled ❌',
+            message: `Order #${orderId.slice(0, 8)} has been cancelled. Reason: ${reason}`,
+            type: 'ORDER',
+            priority: 'HIGH',
+            metadata: { orderId }
+        });
+    }
+
+    /**
+     * Create an admin notification for a security event (e.g., login).
+     */
+    static async notifySecurityEvent(title: string, message: string, userId: string, details?: any) {
+        return this.create({
+            isAdmin: true,
+            title,
+            message,
+            type: 'SECURITY',
+            priority: 'NORMAL',
+            metadata: { userId, ...details }
+        });
+    }
+
+    /**
+     * Create a notification for a user about their order status.
+     */
+    static async notifyUserOrderStatus(userId: string, orderId: string, status: string) {
+        return this.create({
+            userId,
+            title: `Order Update: ${status}`,
+            message: `Your order #${orderId.slice(0, 8)} is now ${status.toLowerCase()}.`,
+            type: 'ORDER_STATUS',
+            priority: 'NORMAL',
+            metadata: { orderId, status }
+        });
+    }
+}
