@@ -512,12 +512,12 @@ const Checkout = () => {
                     <div className="lg:col-span-2 space-y-4">
                         {/* 1. Login Step */}
                         <Card className="overflow-hidden border-none shadow-sm">
-                            <div className={`px-6 py-4 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'login' ? 'bg-pink-700 text-white shadow-md' : 'bg-white border-b'}`} onClick={() => !user && !isGuest && setCurrentStep('login' as any)}>
+                            <div className={`px-6 py-4 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'login' ? 'bg-pink-400 text-black shadow-md' : 'bg-white border-b'}`} onClick={() => !user && !isGuest && setCurrentStep('login' as any)}>
                                 <div className="flex items-center gap-3">
-                                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${user || isGuest ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
+                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shadow-sm ${user || isGuest ? 'bg-green-600 text-white' : 'bg-white border-2 border-black text-black'}`}>
                                         {user || isGuest ? <Check className="w-4 h-4" /> : '1'}
                                     </span>
-                                    <span className={`font-bold tracking-tight ${currentStep === 'login' ? 'text-white' : 'text-gray-900'}`}>LOGIN OR GUEST CHECKOUT</span>
+                                    <span className={`font-black tracking-tight ${currentStep === 'login' ? 'text-black' : 'text-gray-900'}`}>LOGIN OR GUEST CHECKOUT</span>
                                 </div>
                             </div>
 
@@ -575,12 +575,12 @@ const Checkout = () => {
 
                         {/* 2. Address Step */}
                         <Card className="overflow-hidden border-none shadow-sm">
-                            <div className={`px-6 py-4 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'address' ? 'bg-pink-700 text-white shadow-md' : 'bg-white border-b'}`} onClick={() => setCurrentStep('address')}>
+                            <div className={`px-6 py-4 flex items-center justify-between cursor-pointer transition-colors ${currentStep === 'address' ? 'bg-pink-400 text-black shadow-md' : 'bg-white border-b'}`} onClick={() => setCurrentStep('address')}>
                                 <div className="flex items-center gap-3">
-                                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${currentStep === 'address' ? 'bg-black text-white' : selectedAddressId ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shadow-sm ${currentStep === 'address' ? 'bg-white border-2 border-black text-black' : selectedAddressId ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
                                         {selectedAddressId && currentStep !== 'address' ? <Check className="w-4 h-4" /> : '2'}
                                     </span>
-                                    <span className={`font-bold tracking-tight ${currentStep === 'address' ? 'text-white' : 'text-gray-900'}`}>DELIVERY ADDRESS</span>
+                                    <span className={`font-black tracking-tight ${currentStep === 'address' ? 'text-black' : 'text-gray-900'}`}>DELIVERY ADDRESS</span>
                                 </div>
                                 {currentStep !== 'address' && selectedAddressId && <Button variant="ghost" size="sm" className="text-pink-600 font-bold hover:bg-pink-50">CHANGE</Button>}
                             </div>
@@ -704,10 +704,10 @@ const Checkout = () => {
 
                         {/* 3. Payment Step */}
                         <Card className="overflow-hidden border-none shadow-sm">
-                            <div className={`px-6 py-4 flex items-center justify-between transition-colors ${currentStep === 'payment' ? 'bg-pink-700 text-white shadow-md' : 'bg-white border-b'}`}>
+                            <div className={`px-6 py-4 flex items-center justify-between transition-colors ${currentStep === 'payment' ? 'bg-pink-400 text-black shadow-md' : 'bg-white border-b'}`}>
                                 <div className="flex items-center gap-3">
-                                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${currentStep === 'payment' ? 'bg-black text-white' : 'bg-gray-200 text-gray-500'}`}>3</span>
-                                    <span className={`font-bold tracking-tight ${currentStep === 'payment' ? 'text-white' : 'text-gray-900'}`}>PAYMENT OPTIONS</span>
+                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shadow-sm ${currentStep === 'payment' ? 'bg-white border-2 border-black text-black' : 'bg-gray-200 text-gray-500'}`}>3</span>
+                                    <span className={`font-black tracking-tight ${currentStep === 'payment' ? 'text-black' : 'text-gray-900'}`}>PAYMENT OPTIONS</span>
                                 </div>
                             </div>
 
