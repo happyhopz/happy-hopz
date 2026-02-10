@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendVerificationEmail = async (email: string, code: string) => {
     // If no credentials, log to console
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    if (!process.env.SENDGRID_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
         console.log('------------------------------------');
         console.log(`VERIFICATION CODE FOR ${email}: ${code}`);
         console.log('------------------------------------');
@@ -43,6 +43,13 @@ export const sendVerificationEmail = async (email: string, code: string) => {
             </div>
         `
     };
+
+    if (process.env.SENDGRID_API_KEY) {
+        return sgMail.send({
+            ...mailOptions,
+            from: { email: 'happyhopz308@gmail.com', name: 'Happy Hopz' }
+        });
+    }
 
     try {
         await transporter.sendMail(mailOptions);
@@ -106,6 +113,13 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
         `
     };
 
+    if (process.env.SENDGRID_API_KEY) {
+        return sgMail.send({
+            ...mailOptions,
+            from: { email: 'happyhopz308@gmail.com', name: 'Happy Hopz' }
+        });
+    }
+
     return transporter.sendMail(mailOptions);
 };
 
@@ -139,6 +153,13 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
             </div>
         `
     };
+
+    if (process.env.SENDGRID_API_KEY) {
+        return sgMail.send({
+            ...mailOptions,
+            from: { email: 'happyhopz308@gmail.com', name: 'Happy Hopz' }
+        });
+    }
 
     return transporter.sendMail(mailOptions);
 };
