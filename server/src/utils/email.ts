@@ -42,6 +42,11 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
         from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
         to: email,
         subject: `Your Happy Hopz Order #${order.id.slice(0, 8)} 👟`,
+        headers: {
+            'X-Priority': '1 (Highest)',
+            'Priority': 'urgent',
+            'Importance': 'high'
+        },
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                 <h2 style="color: #ff6b6b; text-align: center;">Order Confirmed! 🎊</h2>
@@ -81,7 +86,8 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
         console.log('📧 [ORDER CONFIRMATION] Sending via SendGrid from:', VERIFIED_SENDER);
         return sgMail.send({
             ...mailOptions,
-            from: { email: VERIFIED_SENDER, name: 'Happy Hopz' }
+            from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
+            headers: mailOptions.headers
         });
     }
 
@@ -251,7 +257,12 @@ export const sendAdminOrderNotification = async (order: any) => {
                     name: 'Happy Hopz Orders'
                 },
                 subject: mailOptions.subject,
-                html: mailOptions.html
+                html: mailOptions.html,
+                headers: {
+                    'X-Priority': '1 (Highest)',
+                    'Priority': 'urgent',
+                    'Importance': 'high'
+                }
             };
 
             await sgMail.send(msg);
@@ -281,6 +292,11 @@ export const sendAdminAlertEmail = async (title: string, message: string, detail
         from: '"Happy Hopz Alerts" <alerts@happyhopz.com>',
         to: adminEmail,
         subject: `🔔 Admin Alert: ${title}`,
+        headers: {
+            'X-Priority': '1 (Highest)',
+            'Priority': 'urgent',
+            'Importance': 'high'
+        },
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #ff6b6b; margin-bottom: 20px;">
@@ -313,7 +329,8 @@ export const sendAdminAlertEmail = async (title: string, message: string, detail
                 to: adminEmail,
                 from: { email: VERIFIED_SENDER, name: 'Happy Hopz Alerts' },
                 subject: mailOptions.subject,
-                html: mailOptions.html
+                html: mailOptions.html,
+                headers: mailOptions.headers
             });
         } else {
             await transporter.sendMail(mailOptions);
