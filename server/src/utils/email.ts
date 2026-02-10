@@ -280,10 +280,14 @@ export const sendAdminOrderNotification = async (order: any) => {
     };
 
     try {
+        console.log('📤 [ADMIN NOTIFICATION] Sending email to:', adminEmail);
+        console.log('📤 [ADMIN NOTIFICATION] Email subject:', mailOptions.subject);
         await transporter.sendMail(mailOptions);
-        console.log(`✅ Admin notification sent for order #${order.id.slice(0, 8)}`);
-    } catch (error) {
-        console.error('❌ Failed to send admin notification:', error);
+        console.log(`✅ [ADMIN NOTIFICATION] Email sent successfully for order #${order.id.slice(0, 8)}`);
+    } catch (error: any) {
+        console.error('❌ [ADMIN NOTIFICATION] Failed to send email:', error.message);
+        console.error('❌ [ADMIN NOTIFICATION] Error code:', error.code);
+        console.error('❌ [ADMIN NOTIFICATION] Full error:', error);
     }
 };
 
