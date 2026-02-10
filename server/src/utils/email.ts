@@ -138,12 +138,20 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
 
 export const sendAdminOrderNotification = async (order: any) => {
     console.log('🔔 [ADMIN NOTIFICATION] Function called');
+    console.log('🔔 [ADMIN NOTIFICATION] EMAIL_USER:', process.env.EMAIL_USER);
+    console.log('🔔 [ADMIN NOTIFICATION] EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
+    console.log('🔔 [ADMIN NOTIFICATION] EMAIL_PASS length:', process.env.EMAIL_PASS?.length);
+
     const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
+    console.log('🔔 [ADMIN NOTIFICATION] Admin email target:', adminEmail);
 
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log(`❌ [ADMIN NOTIFICATION] Email credentials missing!`);
         console.log(`🔔 NEW ORDER NOTIFICATION FOR ADMIN: Order #${order.id.slice(0, 8)} - ₹${order.total}`);
         return;
     }
+
+    console.log('✅ [ADMIN NOTIFICATION] Credentials found, preparing email...');
 
     const customerName = order.user?.name || order.guestName || 'Guest Customer';
     const customerEmail = order.user?.email || order.guestEmail || 'N/A';
