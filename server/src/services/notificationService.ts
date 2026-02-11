@@ -192,6 +192,13 @@ export class NotificationService {
         } catch (error) {
             console.error('Failed to create query notification:', error);
         }
+
+        // Also notify admin via email for queries
+        try {
+            await sendAdminAlertEmail(`New Query: ${subject}`, `Message from ${name}: ${message}`);
+        } catch (error) {
+            console.error('Failed to send admin query email:', error);
+        }
     }
 
     /**
