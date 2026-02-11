@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { ShoppingCart, Search, SlidersHorizontal, Edit } from 'lucide-react';
+import { ShoppingCart, Search, SlidersHorizontal, Edit, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import ShareProduct from '@/components/ShareProduct';
 import { ALL_EU_SIZES } from '@/lib/constants';
@@ -336,7 +336,7 @@ const ProductCard = ({
                 style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
             >
                 {/* Product Image */}
-                <div className="relative h-32 md:h-52 flex items-center justify-center mb-3 md:mb-6 overflow-hidden rounded-2xl border border-muted/30 bg-white p-1 md:p-2">
+                <div className="relative aspect-[4/5] flex items-center justify-center mb-3 md:mb-6 overflow-hidden rounded-2xl border border-muted/30 bg-white shadow-sm">
                     <img
                         src={product.images[0]}
                         alt={product.name}
