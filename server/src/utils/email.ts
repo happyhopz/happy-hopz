@@ -105,44 +105,172 @@ const getStatusSubject = (status: string, orderId: string) => {
 
 const getCommonStyles = () => `
     <style>
-        .email-container { font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 15px; color: #333; }
-        .header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid #ff6b6b; }
-        .order-id { font-weight: bold; color: #777; font-size: 14px; margin: 10px 0; }
-        .spam-note { background: #fff4f4; padding: 12px; border-radius: 8px; color: #d00; font-weight: bold; text-align: center; border: 1px dashed #d00; margin: 20px 0; font-size: 13px; }
-        .section-title { font-size: 16px; font-weight: bold; color: #ff6b6b; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 25px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        .item-table { width: 100%; border-collapse: collapse; }
-        .item-row td { padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
-        .item-name { font-weight: bold; color: #222; margin: 0; }
-        .item-meta { font-size: 12px; color: #888; margin: 2px 0; }
-        .price-table { width: 100%; margin-top: 15px; }
-        .price-row td { padding: 5px 0; font-size: 14px; }
-        .total-row { font-size: 18px; font-weight: 900; color: #000; border-top: 2px solid #eee; }
-        .address-box { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 20px; }
-        .address-title { font-weight: 800; text-transform: uppercase; font-size: 11px; color: #64748b; letter-spacing: 1px; margin-bottom: 10px; }
-        .track-button { display: block; width: 200px; margin: 30px auto; background: #ff6b6b; color: white !important; padding: 15px; text-decoration: none; border-radius: 30px; font-weight: bold; text-align: center; box-shadow: 0 4px 15px rgba(255,107,107,0.3); }
-        .delivery-note { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: bold; margin-top: 15px; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        
+        .email-container { 
+            font-family: 'Outfit', 'Segoe UI', Arial, sans-serif; 
+            max-width: 600px; 
+            margin: auto; 
+            padding: 20px; 
+            background-color: #ffffff;
+            color: #1e293b; 
+        }
+        .main-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            background: #ffffff;
+        }
+        .header { 
+            text-align: center; 
+            padding: 40px 20px; 
+            background: linear-gradient(135deg, #fff5f5 0%, #fff1f2 100%);
+            border-bottom: 2px solid #fff1f2;
+        }
+        .order-id-pill { 
+            display: inline-block;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .content-body { padding: 40px 30px; }
+        .spam-note { 
+            background: #fffafa; 
+            padding: 15px; 
+            border-radius: 12px; 
+            color: #e11d48; 
+            font-weight: 600; 
+            text-align: center; 
+            border: 1px solid #fecaca; 
+            margin: 20px 0; 
+            font-size: 13px; 
+        }
+        .section-title { 
+            font-size: 14px; 
+            font-weight: 800; 
+            color: #0f172a; 
+            margin: 30px 0 15px 0; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+        }
+        .tabular-box {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .tabular-box th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 12px 15px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .tabular-box td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .tabular-box tr:last-child td { border-bottom: none; }
+        
+        .item-name { font-weight: 700; color: #1e293b; font-size: 14px; margin: 0; }
+        .item-meta { font-size: 11px; color: #94a3b8; margin: 4px 0 0 0; font-weight: 600; }
+        
+        .pricing-table { 
+            width: 100%; 
+            margin-top: 10px;
+            border-top: 2px solid #f1f5f9;
+            padding-top: 15px;
+        }
+        .pricing-row td { padding: 6px 0; font-size: 14px; font-weight: 500; color: #475569; }
+        .total-row { border-top: 1px solid #f1f5f9; }
+        .total-row td { 
+            padding-top: 15px; 
+            font-size: 20px; 
+            font-weight: 800; 
+            color: #0f172a; 
+        }
+        
+        .address-card { 
+            background: #f8fafc; 
+            padding: 25px; 
+            border-radius: 20px; 
+            border: 1px solid #e2e8f0; 
+            margin-top: 30px; 
+        }
+        .address-header { 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            font-size: 11px; 
+            color: #64748b; 
+            letter-spacing: 1px; 
+            margin-bottom: 15px;
+        }
+        .track-button { 
+            display: inline-block; 
+            background: #e11d48; 
+            color: #ffffff !important; 
+            padding: 18px 35px; 
+            text-decoration: none; 
+            border-radius: 40px; 
+            font-weight: 800; 
+            text-align: center; 
+            box-shadow: 0 10px 20px rgba(225,29,72,0.2);
+            transition: transform 0.2s ease;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        .delivery-note { 
+            background: #ecfdf5; 
+            border: 1px solid #a7f3d0; 
+            color: #065f46; 
+            padding: 15px; 
+            border-radius: 12px; 
+            font-size: 13px; 
+            font-weight: 700; 
+            margin-top: 20px; 
+            text-align: center;
+        }
     </style>
 `;
 
 const getOrderItemsHtml = (items: any[]) => items.map(item => `
-    <tr class="item-row">
-        <td>
+    <tr>
+        <td style="width: 70%;">
             <p class="item-name">${item.name}</p>
-            <p class="item-meta">Size: ${item.size} | Color: ${item.color} x ${item.quantity}</p>
+            <p class="item-meta">SIZE ${item.size} • ${item.color.toUpperCase()}</p>
         </td>
-        <td style="text-align: right; font-weight: bold;">₹${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="text-align: center; font-weight: 700; color: #64748b;">x${item.quantity}</td>
+        <td style="text-align: right; font-weight: 800; color: #1e293b;">₹${(item.price * item.quantity).toFixed(0)}</td>
     </tr>
 `).join('');
 
 const getAddressHtml = (address: any) => `
-    <div class="address-box">
-        <div class="address-title">📦 Shipping To</div>
-        <p style="margin: 0; font-weight: bold; color: #1e293b;">${address?.name}</p>
-        <p style="margin: 4px 0; font-size: 14px; color: #64748b; line-height: 1.6;">
+    <div class="address-card">
+        <div class="address-header">📍 Delivery Address</div>
+        <p style="margin: 0; font-weight: 800; color: #0f172a; font-size: 15px;">${address?.name}</p>
+        <p style="margin: 8px 0; font-size: 13px; color: #475569; line-height: 1.6; font-weight: 500;">
             ${address?.line1}, ${address?.line2 ? address.line2 + ', ' : ''}<br>
             ${address?.city}, ${address?.state} - ${address?.pincode}
         </p>
-        <p style="margin-top: 8px; font-size: 13px; font-weight: bold; color: #1e293b;">📞 ${address?.phone}</p>
+        <p style="margin-top: 12px; font-size: 13px; font-weight: 800; color: #0f172a;">📞 ${address?.phone}</p>
     </div>
 `;
 
@@ -162,67 +290,87 @@ const getOrderConfirmationHtml = (order: any, name: string) => {
     return `
         ${getCommonStyles()}
         <div class="email-container">
-            <div class="header">
-                <h2 style="color: #ff6b6b; margin: 0;">Order Confirmed! 🎊</h2>
+            <div class="main-card">
+                <div class="header">
+                    <h2 style="color: #e11d48; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -1px;">Order Confirmed! 🎊</h2>
+                    <div class="order-id-pill">${order.orderId || order.id}</div>
+                </div>
+                
+                <div class="content-body">
+                    <p style="margin-top: 0; font-size: 16px; line-height: 1.6;">Hi <strong style="color: #e11d48;">${name}</strong>,</p>
+                    <p style="color: #475569; line-height: 1.6;">Great choice! Your order is being processed and will be shipped soon. We're excited to get these to you!</p>
+                    
+                    <div class="spam-note">💡 Pro-tip: Check your <u>Spam folder</u> if you don't see our updates!</div>
+
+                    ${getExpectedDeliveryHtml(order)}
+
+                    <div class="section-title">📦 Order Summary</div>
+                    <table class="tabular-box">
+                        <thead>
+                            <tr>
+                                <th>Item Details</th>
+                                <th style="text-align: center;">Qty</th>
+                                <th style="text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${getOrderItemsHtml(order.items || [])}
+                        </tbody>
+                    </table>
+
+                    <div class="tabular-box" style="padding: 20px;">
+                        <table class="pricing-table">
+                            <tr class="pricing-row">
+                                <td>Bag Total</td>
+                                <td style="text-align: right;">₹${(order.subtotal || 0).toFixed(0)}</td>
+                            </tr>
+                            <tr class="pricing-row">
+                                <td>GST (${order.tax ? 'Applied' : 'Dynamic'})</td>
+                                <td style="text-align: right;">₹${(order.tax || 0).toFixed(0)}</td>
+                            </tr>
+                            <tr class="pricing-row">
+                                <td>Delivery</td>
+                                <td style="text-align: right; color: ${order.shipping === 0 ? '#10b981' : '#475569'};">
+                                    ${order.shipping === 0 ? 'FREE' : '₹' + (order.shipping || 0).toFixed(0)}
+                                </td>
+                            </tr>
+                            <tr class="total-row">
+                                <td style="padding-top: 15px; font-weight: 800; color: #0f172a;">Order Total</td>
+                                <td style="text-align: right; padding-top: 15px; font-weight: 800; color: #e11d48; font-size: 24px;">₹${(order.total || 0).toFixed(0)}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    ${getAddressHtml(order.address)}
+
+                    <div style="text-align: center; margin-top: 40px;">
+                        <a href="https://happy-hopz.vercel.app/orders/${order.id}" class="track-button">Track Order Journey</a>
+                    </div>
+                </div>
             </div>
-            <p>Hi ${name},</p>
-            <p>Thank you for choosing Happy Hopz! Your order has been successfully placed and is now being prepared for shipment.</p>
-            
-            <div class="order-id">ORDER ID: ${order.orderId || order.id}</div>
-            <div class="spam-note">💡 Please check your <u>Spam/Junk</u> folder for order updates!</div>
-
-            ${getExpectedDeliveryHtml(order)}
-
-            <div class="section-title">Order Manifesto</div>
-            <table class="item-table">
-                ${getOrderItemsHtml(order.items || [])}
-            </table>
-
-            <table class="price-table">
-                <tr class="price-row">
-                    <td>Subtotal</td>
-                    <td style="text-align: right;">₹${(order.subtotal || 0).toFixed(2)}</td>
-                </tr>
-                <tr class="price-row">
-                    <td>Tax</td>
-                    <td style="text-align: right;">₹${(order.tax || 0).toFixed(2)}</td>
-                </tr>
-                <tr class="price-row">
-                    <td>Shipping</td>
-                    <td style="text-align: right;">₹${(order.shipping || 0).toFixed(2)}</td>
-                </tr>
-                <tr class="price-row total-row">
-                    <td style="padding-top: 15px;">TOTAL</td>
-                    <td style="text-align: right; padding-top: 15px;">₹${(order.total || 0).toFixed(2)}</td>
-                </tr>
-            </table>
-
-            ${getAddressHtml(order.address)}
-
-            <a href="https://happy-hopz.vercel.app/orders/${order.id}" class="track-button">Track Your Journey</a>
-            <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 20px;">© 2026 Happy Hopz Footwear</p>
+            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">© 2026 Happy Hopz Footwear • Made with ❤️ for little feet</p>
         </div>
     `;
 };
 
 const getStatusUpdateHtml = (order: any, name: string) => {
     let statusTitle = 'Order Update';
-    let statusColor = '#667eea';
+    let statusColor = '#3b82f6';
     let statusIcon = '🔔';
     let statusMessage = '';
 
     switch (order.status) {
         case 'SHIPPED':
-            statusTitle = 'Order Shipped!';
-            statusColor = '#8b5cf6';
+            statusTitle = 'Package Shipped!';
+            statusColor = '#6366f1';
             statusIcon = '🚚';
-            statusMessage = `Great news! Your order is on its way. Use the tracking details below to stay updated.`;
+            statusMessage = `Great news! Your package is officially on its way to you.`;
             break;
         case 'OUT_FOR_DELIVERY':
             statusTitle = 'Out for Delivery';
             statusColor = '#f59e0b';
             statusIcon = '🛵';
-            statusMessage = `Your Happy Hopz order is out for delivery today! Keep your phone handy.`;
+            statusMessage = `Your Happy Hopz order is arriving today! Please keep your phone reachable.`;
             break;
         case 'DELIVERED':
             statusTitle = 'Order Delivered!';
@@ -234,56 +382,75 @@ const getStatusUpdateHtml = (order: any, name: string) => {
             statusTitle = 'Order Cancelled';
             statusColor = '#ef4444';
             statusIcon = '⚠️';
-            statusMessage = `Your order has been cancelled. If you didn't request this, please contact our support.`;
+            statusMessage = `Your order has been cancelled. If you have any questions, please reach out.`;
             break;
         case 'REFUNDED':
             statusTitle = 'Refund Processed';
             statusColor = '#10b981';
             statusIcon = '💰';
-            statusMessage = `Your refund has been initiated. The amount should reflect in your account within 5-7 business days.`;
+            statusMessage = `Your refund is on its way. Expect to see it in your account within 5-7 business days.`;
             break;
         default:
-            statusMessage = `Your order status has been updated to: <strong>${order.status}</strong>`;
+            statusMessage = `Update: Your order status is now <strong>${order.status}</strong>`;
     }
 
     return `
         ${getCommonStyles()}
-        <div class="email-container" style="border-top: 6px solid ${statusColor};">
-            <div style="text-align: center; padding: 20px 0;">
-                <span style="font-size: 40px;">${statusIcon}</span>
-                <h2 style="color: ${statusColor}; margin: 10px 0;">${statusTitle}</h2>
-            </div>
-            <p>Hi ${name},</p>
-            <p>${statusMessage}</p>
-
-            <div class="order-id">ORDER ID: ${order.orderId || order.id}</div>
-            
-            ${getExpectedDeliveryHtml(order)}
-
-            ${order.trackingNumber ? `
-                <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${statusColor};">
-                    <p style="margin: 0; font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">Tracking Details</p>
-                    <p style="margin: 5px 0; font-weight: bold;">Courier: ${order.courierPartner || 'Delhivery'}</p>
-                    <p style="margin: 0; font-family: monospace; font-size: 16px; color: ${statusColor};">AWB: ${order.trackingNumber}</p>
+        <div class="email-container">
+            <div class="main-card">
+                <div class="header" style="background: ${statusColor}10; border-bottom: 2px solid ${statusColor}15; padding: 50px 20px;">
+                    <span style="font-size: 48px;">${statusIcon}</span>
+                    <h2 style="color: ${statusColor}; margin: 15px 0 5px 0; font-size: 32px; font-weight: 800;">${statusTitle}</h2>
+                    <div class="order-id-pill">${order.orderId || order.id}</div>
                 </div>
-            ` : ''}
 
-            <div class="section-title">Order Manifesto</div>
-            <table class="item-table">
-                ${getOrderItemsHtml(order.items || [])}
-            </table>
+                <div class="content-body">
+                    <p style="margin-top: 0; font-size: 16px; line-height: 1.6;">Hi <strong style="color: ${statusColor};">${name}</strong>,</p>
+                    <p style="color: #475569; line-height: 1.6; font-size: 15px;">${statusMessage}</p>
 
-            <table class="price-table">
-                <tr class="price-row total-row">
-                    <td style="padding-top: 15px;">TOTAL AMOUNT</td>
-                    <td style="text-align: right; padding-top: 15px;">₹${(order.total || 0).toFixed(2)}</td>
-                </tr>
-            </table>
+                    ${getExpectedDeliveryHtml(order)}
 
-            ${getAddressHtml(order.address)}
+                    ${order.trackingNumber ? `
+                        <div style="background: ${statusColor}08; padding: 25px; border-radius: 16px; margin: 30px 0; border: 1px dashed ${statusColor}40; text-align: center;">
+                            <p style="margin: 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 2px;">Tracking Courier</p>
+                            <p style="margin: 8px 0; font-weight: 800; font-size: 18px; color: #0f172a;">${order.courierPartner || 'Delhivery'}</p>
+                            <div style="background: #ffffff; display: inline-block; padding: 8px 15px; border-radius: 8px; font-family: monospace; font-size: 20px; color: ${statusColor}; font-weight: 800; border: 1px solid ${statusColor}20;">
+                                ${order.trackingNumber}
+                            </div>
+                        </div>
+                    ` : ''}
 
-            <a href="https://happy-hopz.vercel.app/orders/${order.id}" class="track-button" style="background: ${statusColor}; box-shadow: 0 4px 15px ${statusColor}40;">View Live Status</a>
-            <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 20px;">© 2026 Happy Hopz Footwear</p>
+                    <div class="section-title">📜 Order Summary</div>
+                    <table class="tabular-box">
+                        <thead>
+                            <tr>
+                                <th>Item Details</th>
+                                <th style="text-align: center;">Qty</th>
+                                <th style="text-align: right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${getOrderItemsHtml(order.items || [])}
+                        </tbody>
+                    </table>
+
+                    <div class="tabular-box" style="padding: 20px; border: none; background: #f8fafc;">
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="font-weight: 800; color: #64748b; font-size: 12px; text-transform: uppercase;">Total Paid</td>
+                                <td style="text-align: right; font-weight: 800; color: ${statusColor}; font-size: 22px;">₹${(order.total || 0).toFixed(0)}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    ${getAddressHtml(order.address)}
+
+                    <div style="text-align: center; margin-top: 40px;">
+                        <a href="https://happy-hopz.vercel.app/orders/${order.id}" class="track-button" style="background: ${statusColor}; box-shadow: 0 10px 20px ${statusColor}30;">View Full Journey</a>
+                    </div>
+                </div>
+            </div>
+            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">© 2026 Happy Hopz Footwear • Premium Kids Collection</p>
         </div>
     `;
 };
