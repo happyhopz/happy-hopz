@@ -9,11 +9,12 @@ const router = Router();
 // Get all products with filters
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const { category, ageGroup, search, minPrice, maxPrice, status } = req.query;
+        const { category, subCategory, ageGroup, search, minPrice, maxPrice, status } = req.query;
 
         const where: any = {};
 
         if (category) where.category = category;
+        if (subCategory) where.subCategory = subCategory;
         if (ageGroup) where.ageGroup = ageGroup;
         if (status) where.status = status;
         else where.status = 'ACTIVE';
@@ -86,8 +87,9 @@ const createProductSchema = z.object({
     name: z.string(),
     description: z.string(),
     price: z.number().positive(),
-    discountPrice: z.number().positive().optional(),
+    discountPrice: z.number().positive().optional().nullable(),
     category: z.string(),
+    subCategory: z.string().optional().nullable(),
     ageGroup: z.string(),
     sizes: z.array(z.string()),
     colors: z.array(z.string()),
@@ -115,7 +117,8 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
                 inventory: JSON.stringify(inventory),
                 colors: JSON.stringify(data.colors),
                 images: JSON.stringify(data.images),
-                tags: data.tags ? JSON.stringify(data.tags) : '[]'
+                tags: data.tags ? JSON.stringify(data.tags) : '[]',
+                subCategory: data.subCategory || null
             }
         });
 
@@ -163,7 +166,10 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
 
         const product = await (prisma.product as any).update({
             where: { id: req.params.id as string },
-            data: updateData
+            data: {
+                ...updateData,
+                subCategory: data.subCategory || null
+            }
         });
 
         // Create Audit Log
