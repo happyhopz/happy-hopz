@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Navigate } from 'react-router-dom';
 import { adminAPI } from '@/lib/api';
@@ -11,16 +11,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, User, MapPin, IndianRupee, Truck, Printer, FileText } from 'lucide-react';
+import { Package, User, MapPin, IndianRupee, Truck, Printer, FileText, Send, Calendar as CalendarIcon, History, Check, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const AdminOrderDetail = () => {
     const { id } = useParams();
     const { user, isAdmin, loading } = useAuth();
     const queryClient = useQueryClient();
+
     const [status, setStatus] = useState('');
-    const [paymentStatus, setPaymentStatus] = useState('');
     const [trackingNumber, setTrackingNumber] = useState('');
+    const [courierPartner, setCourierPartner] = useState('');
+    const [estimatedDelivery, setEstimatedDelivery] = useState('');
 
     const { data: order, isLoading } = useQuery({
         queryKey: ['admin-order', id],
@@ -28,538 +31,223 @@ const AdminOrderDetail = () => {
             const response = await adminAPI.getOrder(id!);
             if (response.data) {
                 setStatus(response.data.status || '');
-                setPaymentStatus(response.data.paymentStatus || '');
                 setTrackingNumber(response.data.trackingNumber || '');
+                setCourierPartner(response.data.courierPartner || '');
+                if (response.data.estimatedDelivery) {
+                    setEstimatedDelivery(new Date(response.data.estimatedDelivery).toISOString().slice(0, 16));
+                }
             }
             return response.data;
         },
         enabled: isAdmin && !!id
     });
 
-    const updateMutation = useMutation({
+    const updateStatusMutation = useMutation({
         mutationFn: async (data: any) => {
-            return adminAPI.updateOrderStatus(id!, data);
+            return adminAPI.updateOrderStatusNew(id!, data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-order', id] });
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            toast.success('Order updated successfully');
+            toast.success('Order status updated and notification triggered');
         },
-        onError: () => {
-            toast.error('Failed to update order');
+        onError: (err: any) => {
+            toast.error(err.response?.data?.error || 'Failed to update order');
         }
     });
 
-    const { data: timelineLogs } = useQuery({
-        queryKey: ['admin-order-logs', id],
-        queryFn: async () => {
-            const response = await adminAPI.getAuditLogs({ entity: 'ORDER', entityId: id });
-            return response.data;
-        },
-        enabled: isAdmin && !!id
+    const resendMutation = useMutation({
+        mutationFn: () => adminAPI.resendOrderNotification(id!),
+        onSuccess: () => toast.success('Confirming order notification re-sent'),
+        onError: () => toast.error('Failed to resend notification')
     });
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    if (!user || !isAdmin) {
-        return <Navigate to="/" />;
-    }
+    if (loading) return <div className="p-20 text-center">Loading...</div>;
+    if (!user || !isAdmin) return <Navigate to="/" />;
 
     const handleUpdate = () => {
-        updateMutation.mutate({
+        updateStatusMutation.mutate({
             status,
-            paymentStatus,
-            trackingNumber: trackingNumber || null
+            trackingNumber: trackingNumber || undefined,
+            courierPartner: courierPartner || undefined,
+            estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery).toISOString() : undefined
         });
     };
 
-    const handlePrint = () => {
-        window.print();
-    };
+    if (isLoading) return <div className="p-20 text-center">Loading Order...</div>;
+    if (!order) return <div className="p-20 text-center">Order Not Found</div>;
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-background">
-                <Navbar />
-                <main className="container mx-auto px-4 py-8">
-                    <div className="text-center py-20">
-                        <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
-                </main>
-            </div>
-        );
-    }
-
-    if (!order) {
-        return (
-            <div className="min-h-screen bg-background">
-                <Navbar />
-                <main className="container mx-auto px-4 py-8">
-                    <BackButton label="Back to Orders" to="/admin/orders" />
-                    <Card className="p-12 text-center mt-8">
-                        <h3 className="text-xl font-sans font-bold mb-2">Order not found</h3>
-                    </Card>
-                </main>
-            </div>
-        );
-    }
+    const statusHistory = (order.statusHistory as any[]) || [];
 
     return (
-        <div className="font-sans min-h-screen bg-background print:bg-white">
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                @media print {
-                    @page { size: A4; margin: 10mm; }
-                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; }
-                    .print-hidden { display: none !important; }
-                    .print-only { display: block !important; }
-                    .invoice-container { color: black !important; background: white !important; }
-                    .avoid-break { break-inside: avoid !important; page-break-inside: avoid !important; }
-                }
-            ` }} />
-
-            {/* Final High-Fidelity Tax Invoice - Visible ONLY on Print */}
-            <div className="hidden print:block invoice-container max-w-4xl mx-auto p-0 font-sans text-black bg-white leading-relaxed">
-                {/* Header Section - Centered & Professional */}
-                <div className="text-center border-b-4 border-black pb-4 mb-4 avoid-break">
-                    <h1 className="text-3xl font-black uppercase tracking-[0.25em] mb-2">TAX INVOICE</h1>
-                    <div className="space-y-1">
-                        <h2 className="text-xl font-black uppercase tracking-tight">Happy Hopz</h2>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Premium Kids Footwear & Lifestyle Store</p>
-                        <div className="flex justify-center gap-6 text-[10px] uppercase font-black text-black pt-1">
-                            <span>Proprietorship Firm</span>
-                            <span className="opacity-40">|</span>
-                            <span>GSTIN: XXXXXXXXXXXXXXX</span>
-                        </div>
-                        <div className="flex justify-center gap-4 text-[9px] uppercase font-bold text-gray-500">
-                            <span>Email: support@happyhopz.com</span>
-                            <span>|</span>
-                            <span>Website: www.happyhopz.com</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-6 mb-4 avoid-break">
-                    {/* Invoice & Order Details */}
-                    <div className="border border-black p-4 rounded-none">
-                        <h3 className="text-[10px] font-black uppercase mb-3 tracking-[0.2em] border-b border-black pb-1">
-                            Invoice Details
-                        </h3>
-                        <div className="grid grid-cols-2 gap-y-1.5 text-[11px]">
-                            <span className="font-bold uppercase opacity-60">Invoice:</span>
-                            <span className="font-black uppercase tracking-wider">HHZ-{String(order.id).slice(0, 6).toUpperCase()}</span>
-
-                            <span className="font-bold uppercase opacity-60">Order ID:</span>
-                            <span className="font-black uppercase tracking-wider">ORD-{String(order.id).slice(18).toUpperCase()}</span>
-
-                            <span className="font-bold uppercase opacity-60">Date:</span>
-                            <span className="font-black">{new Date().toLocaleDateString('en-IN')}</span>
-
-                            <span className="font-bold uppercase opacity-60">Method:</span>
-                            <span className="font-black uppercase">{order.paymentMethod}</span>
-                        </div>
-                    </div>
-
-                    {/* Customer Details */}
-                    <div className="border border-black p-4 rounded-none">
-                        <h3 className="text-[10px] font-black uppercase mb-3 tracking-[0.2em] border-b border-black pb-1">
-                            Shipping Details
-                        </h3>
-                        <div className="text-[11px] space-y-1">
-                            <p className="font-black uppercase tracking-tight">{order.address?.name}</p>
-                            <div className="font-bold text-gray-800 leading-tight">
-                                <p>{order.address?.line1}, {order.address?.city}</p>
-                                <p className="uppercase">{order.address?.state} - {order.address?.pincode}</p>
-                            </div>
-                            <div className="pt-2 border-t border-gray-100 flex gap-4">
-                                <p><span className="font-black uppercase opacity-40">P:</span> {order.address?.phone}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Product Table */}
-                <div className="mb-4 avoid-break">
-                    <table className="w-full border-collapse border-y-2 border-black text-[11px]">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-black font-black uppercase text-[10px] tracking-widest">
-                                <th className="py-2 px-4 text-left w-12">#</th>
-                                <th className="py-2 px-4 text-left">Description</th>
-                                <th className="py-2 px-4 text-center w-24">Size</th>
-                                <th className="py-2 px-4 text-center w-20">Qty</th>
-                                <th className="py-2 px-4 text-right w-36 border-l border-black bg-gray-100">Price (₹)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {order.items?.map((item: any, idx: number) => (
-                                <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                                    <td className="py-2 px-4 text-center font-bold text-gray-400">{String(idx + 1).padStart(2, '0')}</td>
-                                    <td className="py-2 px-4 font-black uppercase">{item.name}</td>
-                                    <td className="py-2 px-4 text-center font-black italic">{item.size}</td>
-                                    <td className="py-2 px-4 text-center font-black">{item.quantity}</td>
-                                    <td className="py-2 px-4 text-right font-black border-l border-black bg-gray-50/50">{(item.price * item.quantity).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Totals & Shipping */}
-                <div className="grid grid-cols-2 gap-6 mb-4 avoid-break">
-                    {/* Left Column - Shipping & Declaration */}
-                    <div className="space-y-4">
-                        <div className="border border-black p-4 rounded-none">
-                            <h3 className="text-[10px] font-black uppercase mb-3 tracking-[0.2em] border-b border-black pb-1">
-                                Logistics
-                            </h3>
-                            <div className="grid grid-cols-2 gap-y-1.5 text-[10px]">
-                                <span className="font-bold uppercase opacity-50">Logistics:</span>
-                                <span className="font-black uppercase">ECOM / DELHIVERY</span>
-
-                                <span className="font-bold uppercase opacity-50">AWB No:</span>
-                                <span className="font-black underline tracking-widest">{order.trackingNumber || 'PENDING'}</span>
-                            </div>
-                        </div>
-
-                        <div className="p-4 border-2 border-dashed border-black">
-                            <p className="text-[9px] font-bold leading-relaxed uppercase text-gray-500">
-                                * We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Right Column - Totals */}
-                    <div className="border-2 border-black p-6 bg-gray-100/10">
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center text-[11px]">
-                                <span className="font-bold uppercase opacity-50">Subtotal</span>
-                                <span className="font-black">₹{(order.subtotal || (order.total - (order.tax || 0))).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-[11px]">
-                                <span className="font-bold uppercase opacity-50 text-gray-400">Discount</span>
-                                <span className="font-black text-gray-400">-₹{(order.discount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-[11px]">
-                                <span className="font-bold uppercase opacity-50">Shipping</span>
-                                <span className="font-black">{order.shipping > 0 ? `₹${order.shipping.toLocaleString('en-IN')}` : '0.00'}</span>
-                            </div>
-
-                            <div className="border-t border-black/10 my-2 pt-2 space-y-1.5">
-                                {(() => {
-                                    const tax = order.tax || (order.total * 0.18);
-                                    const halfTax = tax / 2;
-                                    const isInterstate = order.address?.state.toLowerCase() !== 'delhi';
-
-                                    if (isInterstate) {
-                                        return (
-                                            <div className="flex justify-between items-center text-[10px] font-black">
-                                                <span className="uppercase opacity-50">IGST (18%)</span>
-                                                <span>₹{tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                                            </div>
-                                        );
-                                    }
-                                    return (
-                                        <>
-                                            <div className="flex justify-between items-center text-[10px] font-black">
-                                                <span className="uppercase opacity-50">CGST (9%)</span>
-                                                <span>₹{halfTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-[10px] font-black">
-                                                <span className="uppercase opacity-50">SGST (9%)</span>
-                                                <span>₹{halfTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                                            </div>
-                                        </>
-                                    );
-                                })()}
-                            </div>
-
-                            <div className="pt-4 border-t-2 border-black flex justify-between items-end">
-                                <span className="text-xl font-black uppercase tracking-tighter">TOTAL</span>
-                                <span className="text-3xl font-black tracking-tighter">₹{order.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Signatory Section */}
-                <div className="flex justify-end items-end mb-6 px-4 h-24 avoid-break">
-                    <div className="text-right w-1/2 flex flex-col justify-end">
-                        <div className="mb-2">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-8">Authorized Signatory</p>
-                            <div className="border-b border-black w-48 ml-auto"></div>
-                        </div>
-                        <p className="font-black text-xl uppercase tracking-tighter">Happy Hopz</p>
-                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Computer Generated - No Signature Required</p>
-                    </div>
-                </div>
-
-                {/* Final Professional Footer */}
-                <div className="text-center border-t-2 border-black pt-4 pb-2 avoid-break">
-                    <div className="flex justify-center gap-8 text-[9px] font-black uppercase tracking-widest text-gray-400">
-                        <span>Delhi, India</span>
-                        <span>|</span>
-                        <span>www.happyhopz.com</span>
-                        <span>|</span>
-                        <span>support@happyhopz.com</span>
-                    </div>
-                </div>
-            </div>
-
-            <main className="py-8 print:hidden">
-                <div className="print:hidden">
-                    <BackButton label="Back to Orders" to="/admin/orders" />
-                </div>
-
+        <div className="min-h-screen bg-slate-50 font-sans">
+            <Navbar />
+            <main className="container mx-auto px-4 py-8 max-w-7xl">
                 <div className="flex items-center justify-between mb-8">
-                    <div className="text-black">
-                        <div className="flex items-center gap-3 mb-1">
-                            <h1 className="text-4xl font-bold">
-                                Order #{String(order.id || '').slice(0, 8)}
-                            </h1>
-                            <Badge variant="outline" className="border-primary text-primary font-black uppercase tracking-widest px-3">
-                                {order.status}
-                            </Badge>
-                        </div>
-                        <p className="text-muted-foreground mt-1 font-medium">
-                            Created on {new Date(order.createdAt).toLocaleString()}
-                        </p>
+                    <div>
+                        <BackButton to="/admin/orders" label="Back to Dashboard" />
+                        <h1 className="text-3xl font-black mt-2">Order #{order.orderId || order.id.slice(0, 8)}</h1>
+                        <p className="text-slate-500 font-medium tracking-tight">System Ref: {order.id}</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="hopz"
-                            onClick={handlePrint}
-                            className="flex items-center gap-2 shadow-lg shadow-primary/20"
-                        >
-                            <Printer className="w-4 h-4" />
-                            Generate Formal Invoice
+                    <div className="flex gap-2">
+                        <Button variant="outline" className="border-2 border-slate-200" onClick={() => window.print()}>
+                            <Printer className="w-4 h-4 mr-2" /> Print Invoice
+                        </Button>
+                        <Button variant="hopz" onClick={() => resendMutation.mutate()} disabled={resendMutation.isPending}>
+                            <Send className="w-4 h-4 mr-2" /> {resendMutation.isPending ? 'Sending...' : 'Resend Receipt'}
                         </Button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Order Items & Customer Info */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Order Items */}
-                        <Card className="p-6 border-black/10 shadow-none print:border-none print:p-0">
-                            <h2 className="text-2xl print:text-lg font-bold mb-4 flex items-center gap-2 text-black">
-                                <Package className="w-6 h-6 print:hidden" />
-                                Order Items
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Status Manager */}
+                        <Card className="p-8 border-none shadow-xl shadow-slate-200/50 bg-white ring-1 ring-slate-100">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <History className="w-5 h-5 text-pink-500" /> Update Order Status
                             </h2>
-
-                            {/* Formal Table for Print & Screen */}
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b-2 border-black text-black font-bold text-sm uppercase">
-                                            <th className="py-3 px-2">Item</th>
-                                            <th className="py-3 px-2">Details</th>
-                                            <th className="py-3 px-2 text-center">Qty</th>
-                                            <th className="py-3 px-2 text-right">Price</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="text-black">
-                                        {order.items?.map((item: any) => (
-                                            <tr key={item.id} className="border-b border-black/10">
-                                                <td className="py-4 px-2 font-medium">{item.name}</td>
-                                                <td className="py-4 px-2 text-sm">
-                                                    Size: {item.size} | Color: {item.color}
-                                                </td>
-                                                <td className="py-4 px-2 text-center">{item.quantity}</td>
-                                                <td className="py-4 px-2 text-right font-bold">
-                                                    ₹{(item.price || 0).toFixed(2)}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="mt-6 pt-4 text-black border-t-2 border-black">
-                                <div className="flex justify-end gap-10">
-                                    <div className="space-y-1 text-right">
-                                        <p className="text-sm font-medium">Subtotal:</p>
-                                        <p className="text-sm font-medium">Shipping:</p>
-                                        <p className="text-lg font-bold uppercase mt-2">Total:</p>
-                                    </div>
-                                    <div className="space-y-1 text-right">
-                                        <p className="text-sm">₹{(order.total || 0).toFixed(2)}</p>
-                                        <p className="text-sm">Free</p>
-                                        <p className="text-lg font-bold mt-2">₹{(order.total || 0).toFixed(2)}</p>
-                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Current Phase</Label>
+                                    <Select value={status} onValueChange={setStatus}>
+                                        <SelectTrigger className="border-2 h-12">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED'].map(s => (
+                                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Estimated Delivery</Label>
+                                    <Input
+                                        type="datetime-local"
+                                        className="border-2 h-12"
+                                        value={estimatedDelivery}
+                                        onChange={(e) => setEstimatedDelivery(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Courier Partner</Label>
+                                    <Input
+                                        placeholder="e.g. Delhivery, BlueDart"
+                                        className="border-2 h-12"
+                                        value={courierPartner}
+                                        onChange={(e) => setCourierPartner(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Tracking ID</Label>
+                                    <Input
+                                        placeholder="Enter AWB Number"
+                                        className="border-2 h-12"
+                                        value={trackingNumber}
+                                        onChange={(e) => setTrackingNumber(e.target.value)}
+                                    />
                                 </div>
                             </div>
+                            <Button
+                                className="w-full mt-8 h-12 font-bold text-base"
+                                variant="hopz"
+                                onClick={handleUpdate}
+                                disabled={updateStatusMutation.isPending}
+                            >
+                                {updateStatusMutation.isPending ? 'Propagating Updates...' : 'Update Status & Notify Customer'}
+                            </Button>
                         </Card>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Customer Information */}
-                            <Card className="p-6 border-black/10 shadow-none print:border-none print:p-0">
-                                <h2 className="text-xl print:text-base font-bold mb-4 flex items-center gap-2 text-black underline print:no-underline">
-                                    <User className="w-5 h-5 print:hidden" />
-                                    Customer
-                                </h2>
-                                <div className="space-y-2 text-black">
-                                    <p className="text-sm"><span className="font-bold print:hidden">Name:</span> {order.user?.name || 'N/A'}</p>
-                                    <p className="text-sm"><span className="font-bold print:hidden">Email:</span> {order.user?.email}</p>
-                                    <p className="text-sm"><span className="font-bold print:hidden">Phone:</span> {order.user?.phone || 'N/A'}</p>
-                                </div>
-                            </Card>
-
-                            {/* Shipping Address */}
-                            <Card className="p-6 border-black/10 shadow-none print:border-none print:p-0">
-                                <h2 className="text-xl print:text-base font-bold mb-4 flex items-center gap-2 text-black underline print:no-underline">
-                                    <MapPin className="w-5 h-5 print:hidden" />
-                                    Shipping Address
-                                </h2>
-                                <div className="text-black text-sm space-y-1">
-                                    <p className="font-bold">{order.address?.name}</p>
-                                    <p>{order.address?.phone}</p>
-                                    <p className="mt-1">{order.address?.line1}</p>
-                                    {order.address?.line2 && <p>{order.address.line2}</p>}
-                                    <p>{order.address?.city}, {order.address?.state} - {order.address?.pincode}</p>
-                                </div>
-                            </Card>
-                        </div>
-
-                        <Card className="p-6 border-pink-100 shadow-sm">
-                            <div className="flex items-center gap-2 mb-6 text-pink-600">
-                                <FileText className="w-5 h-5" />
-                                <h2 className="text-xl font-bold">Billing Details</h2>
+                        {/* Order Items */}
+                        <Card className="p-8 border-none shadow-xl shadow-slate-200/50 bg-white ring-1 ring-slate-100">
+                            <h2 className="text-xl font-bold mb-6">Product Manifesto</h2>
+                            <div className="divide-y-2 divide-slate-50">
+                                {order.items.map((item: any) => (
+                                    <div key={item.id} className="py-4 flex justify-between items-center group">
+                                        <div className="flex gap-4 items-center">
+                                            <div className="w-16 h-16 bg-slate-50 rounded-lg flex items-center justify-center border-2 border-slate-100">
+                                                <Package className="w-8 h-8 text-slate-300" />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-900">{item.name}</p>
+                                                <p className="text-xs font-medium text-slate-500">
+                                                    Size: {item.size} | Color: {item.color} | Qty: {item.quantity}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-black text-slate-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase">₹{item.price} Unit</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-
-                            <div className="space-y-4">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Subtotal</span>
-                                    <span className="font-bold">₹{order.subtotal?.toFixed(2) || (order.total - (order.tax || 0)).toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">GST</span>
-                                    <span className="font-bold">₹{order.tax?.toFixed(2) || (order.total * 0.18).toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Shipping</span>
-                                    <span className="font-bold text-green-600">{order.shipping > 0 ? `₹${order.shipping.toFixed(2)}` : 'FREE'}</span>
-                                </div>
-                                <div className="pt-4 border-t border-dashed border-gray-200 flex justify-between items-center">
-                                    <span className="font-bold text-lg">Total Amount</span>
-                                    <span className="font-black text-2xl text-primary">₹{order.total.toFixed(2)}</span>
+                            <div className="mt-8 pt-8 border-t-4 border-slate-900">
+                                <div className="flex justify-between items-center bg-slate-900 text-white p-6 rounded-xl">
+                                    <span className="text-sm font-bold uppercase tracking-[3px]">Total Payable</span>
+                                    <span className="text-3xl font-black">₹{order.total.toFixed(2)}</span>
                                 </div>
                             </div>
                         </Card>
                     </div>
 
-                    {/* Right Column - Order Management */}
-                    <div className="space-y-6 print:hidden">
-                        <Card className="p-6 border-black/10 shadow-none">
-                            <h2 className="text-xl font-bold mb-6 text-black">Order Actions</h2>
-
+                    <div className="space-y-8">
+                        {/* Customer Sidebar */}
+                        <Card className="p-6 border-none shadow-lg bg-pink-600 text-white">
+                            <h3 className="font-black uppercase tracking-widest text-[10px] opacity-60 mb-4">Dispatcher Note</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <Label className="text-black">Update Status</Label>
-                                    <Select value={status} onValueChange={setStatus}>
-                                        <SelectTrigger className="border-black">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="PLACED">Placed</SelectItem>
-                                            <SelectItem value="PACKED">Packed</SelectItem>
-                                            <SelectItem value="SHIPPED">Shipped</SelectItem>
-                                            <SelectItem value="DELIVERED">Delivered</SelectItem>
-                                            <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <p className="text-sm font-black uppercase">{order.address.name}</p>
+                                    <p className="text-xs opacity-90 leading-relaxed font-medium mt-1">
+                                        {order.address.line1}, {order.address.line2 && `${order.address.line2}, `}
+                                        {order.address.city}, {order.address.state} - {order.address.pincode}
+                                    </p>
                                 </div>
-
-                                <div>
-                                    <Label className="text-black">Payment Status</Label>
-                                    <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-                                        <SelectTrigger className="border-black">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="PENDING">Pending</SelectItem>
-                                            <SelectItem value="COMPLETED">Completed</SelectItem>
-                                            <SelectItem value="FAILED">Failed</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <div className="pt-4 border-t border-white/20">
+                                    <div className="flex items-center gap-2">
+                                        <User className="w-4 h-4 opacity-60" />
+                                        <span className="text-xs font-bold">{order.user?.email || order.guestEmail}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <Truck className="w-4 h-4 opacity-60" />
+                                        <span className="text-xs font-bold">{order.address.phone}</span>
+                                    </div>
                                 </div>
-
-                                <div>
-                                    <Label className="flex items-center gap-2 text-black">
-                                        <Truck className="w-4 h-4" />
-                                        Tracking Number
-                                    </Label>
-                                    <Input
-                                        className="border-black"
-                                        value={trackingNumber}
-                                        onChange={(e) => setTrackingNumber(e.target.value)}
-                                        placeholder="Order Tracking ID"
-                                    />
-                                </div>
-
-                                <Button
-                                    className="w-full bg-black text-white hover:bg-black/90"
-                                    onClick={handleUpdate}
-                                    disabled={updateMutation.isPending}
-                                >
-                                    {updateMutation.isPending ? 'Updating...' : 'Save Changes'}
-                                </Button>
                             </div>
                         </Card>
 
-                        <Card className="p-6 border-black/10 shadow-none">
-                            <h2 className="text-xl font-bold mb-6 text-black underline">Order History</h2>
-                            <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-black/10">
-                                {timelineLogs && timelineLogs.length > 0 ? timelineLogs.map((log: any) => (
-                                    <div key={log.id} className="relative pl-8">
-                                        <div className="absolute left-0 top-1.5 w-[24px] h-[24px] rounded-full bg-white border-2 border-black flex items-center justify-center z-10">
-                                            <div className="w-2 h-2 rounded-full bg-black" />
+                        {/* Status Timeline */}
+                        <Card className="p-6 border-none shadow-xl bg-white border-2 border-slate-100">
+                            <h3 className="text-lg font-bold mb-6">Status Timeline</h3>
+                            <div className="space-y-8 relative before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
+                                {statusHistory.length > 0 ? [...statusHistory].reverse().map((h: any, i: number) => (
+                                    <div key={i} className="relative pl-10">
+                                        <div className={`absolute left-0 top-1.5 w-[32px] h-[32px] rounded-full flex items-center justify-center z-10 transition-all ${i === 0 ? 'bg-pink-600 text-white ring-4 ring-pink-100' : 'bg-white border-2 border-slate-200 text-slate-400 scale-90'}`}>
+                                            {i === 0 ? <Check className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-sm text-black">
-                                                {log.action.replace(/_/g, ' ')}
-                                            </p>
-                                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                                                {new Date(log.createdAt).toLocaleString()}
-                                            </p>
-                                            {log.details && (
-                                                <div className="mt-2 p-2 bg-gray-50 rounded text-[10px] font-mono border border-black/5 leading-relaxed overflow-x-auto">
-                                                    {(() => {
-                                                        try {
-                                                            const details = JSON.parse(log.details);
-                                                            return Object.entries(details).map(([key, value]) => (
-                                                                <div key={key} className="flex justify-between gap-4">
-                                                                    <span className="font-bold opacity-60 lowercase">{key}:</span>
-                                                                    <span className="text-right">{String(value)}</span>
-                                                                </div>
-                                                            ));
-                                                        } catch (e) {
-                                                            return log.details;
-                                                        }
-                                                    })()}
-                                                </div>
-                                            )}
+                                            <p className={`font-black uppercase text-[10px] tracking-widest ${i === 0 ? 'text-pink-600' : 'text-slate-400'}`}>{h.status}</p>
+                                            <p className="text-[10px] font-bold text-slate-900 mt-1">{format(new Date(h.updatedAt), 'MMM dd, yyyy HH:mm')}</p>
+                                            <p className="text-[9px] font-medium text-slate-400 mt-1 uppercase">Authored by {h.updatedBy || 'System'}</p>
                                         </div>
                                     </div>
                                 )) : (
-                                    <div className="relative pl-8">
-                                        <div className="absolute left-0 top-1.5 w-[24px] h-[24px] rounded-full bg-white border-2 border-black flex items-center justify-center z-10">
-                                            <div className="w-2 h-2 rounded-full bg-black" />
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-sm text-black">ORDER PLACED</p>
-                                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                                                {new Date(order.createdAt).toLocaleString()}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    <div className="text-center py-4 text-slate-400 italic text-sm">No history available</div>
                                 )}
+                            </div>
+                        </Card>
+
+                        {/* Notification Status */}
+                        <Card className="p-6 border-none shadow-xl bg-slate-900 text-white">
+                            <h3 className="text-xs font-black uppercase tracking-widest opacity-60 mb-4 text-center">Notification Handshake</h3>
+                            <div className="flex gap-4">
+                                <div className={`flex-1 p-4 rounded-xl text-center border-2 ${order.emailSent ? 'border-green-500/50 bg-green-500/10' : 'border-slate-800 bg-slate-800'}`}>
+                                    <p className="text-[10px] font-black uppercase">Email</p>
+                                    <p className={`text-xs font-bold mt-1 ${order.emailSent ? 'text-green-400' : 'text-slate-500'}`}>{order.emailSent ? 'Delivered' : 'Pending'}</p>
+                                </div>
+                                <div className={`flex-1 p-4 rounded-xl text-center border-2 ${order.whatsappSent ? 'border-green-500/50 bg-green-500/10' : 'border-slate-800 bg-slate-800'}`}>
+                                    <p className="text-[10px] font-black uppercase">WhatsApp</p>
+                                    <p className={`text-xs font-bold mt-1 ${order.whatsappSent ? 'text-green-400' : 'text-slate-500'}`}>{order.whatsappSent ? 'Delivered' : 'Pending'}</p>
+                                </div>
                             </div>
                         </Card>
                     </div>

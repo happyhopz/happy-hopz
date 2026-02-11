@@ -96,11 +96,16 @@ model CartItem {
 
 model Order {
   id                 String          @id @default(uuid())
+  orderId            String?         @unique // Format: HHZ-YYYYMMDD-XXXX
   userId             String?
   total              Float
-  status             String          @default("PLACED")
+  status             String          @default("PENDING") // Pending, Confirmed, Processing, Shipped, Out for Delivery, Delivered, Cancelled, Refunded
   paymentStatus      String          @default("PENDING")
+  paymentMethod      String?         @default("ONLINE")
+  transactionId      String?
   trackingNumber     String?
+  courierPartner     String?
+  estimatedDelivery  DateTime?
   addressId          String
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @default(now()) @updatedAt
@@ -117,11 +122,26 @@ model Order {
   couponCode         String?
   couponDiscount     Float?          @default(0)
   couponId           String?
-  couponUsage        CouponUsage?
+  emailSent          Boolean         @default(false)
+  whatsappSent       Boolean         @default(false)
+  statusHistory      Json?           // Array of {status, updatedAt, updatedBy}
   address            Address         @relation(fields: [addressId], references: [id])
   user               User?           @relation(fields: [userId], references: [id])
   items              OrderItem[]
   returnRequests     ReturnRequest[]
+  notificationLogs   NotificationLog[]
+  couponUsage        CouponUsage?
+}
+
+model NotificationLog {
+  id           String   @id @default(uuid())
+  orderId      String
+  type         String   // email, whatsapp
+  triggerType  String   // order_created, status_updated, resend
+  status       String   // success, failed
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model OrderItem {

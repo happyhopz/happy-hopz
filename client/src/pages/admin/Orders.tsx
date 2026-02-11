@@ -69,11 +69,14 @@ const AdminOrders = () => {
 
     const getStatusColor = (status: string) => {
         const colors: any = {
-            PLACED: 'bg-yellow-500',
-            PACKED: 'bg-blue-500',
-            SHIPPED: 'bg-purple-500',
-            DELIVERED: 'bg-green-500',
-            CANCELLED: 'bg-red-500'
+            PENDING: 'bg-gray-400 font-bold',
+            CONFIRMED: 'bg-blue-500 font-bold',
+            PROCESSING: 'bg-purple-500 font-bold',
+            SHIPPED: 'bg-indigo-600 font-bold',
+            OUT_FOR_DELIVERY: 'bg-orange-500 font-bold',
+            DELIVERED: 'bg-green-500 font-bold',
+            CANCELLED: 'bg-red-500 font-bold',
+            REFUNDED: 'bg-gray-700 font-bold'
         };
         return colors[status] || 'bg-gray-500';
     };
@@ -277,11 +280,9 @@ const AdminOrders = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ALL">All Statuses</SelectItem>
-                                    <SelectItem value="PLACED">Placed</SelectItem>
-                                    <SelectItem value="PACKED">Packed</SelectItem>
-                                    <SelectItem value="SHIPPED">Shipped</SelectItem>
-                                    <SelectItem value="DELIVERED">Delivered</SelectItem>
-                                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                                    {['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED'].map(s => (
+                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -366,11 +367,17 @@ const AdminOrders = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-lg font-fredoka font-bold">
-                                            Order #{String(order.id || 'N/A').slice(0, 8)}
+                                            Order #{order.orderId || String(order.id || 'N/A').slice(0, 8)}
                                         </h3>
-                                        <p className="text-sm text-muted-foreground font-nunito">
-                                            {order.user?.email || order.guestEmail || 'Guest User'}
-                                        </p>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <p className="text-sm text-muted-foreground font-nunito">
+                                                {order.user?.email || order.guestEmail || 'Guest User'}
+                                            </p>
+                                            <div className="flex gap-1">
+                                                {order.emailSent && <Badge variant="outline" className="text-[9px] bg-green-50 text-green-700 border-green-200">EMAIL SENT</Badge>}
+                                                {order.whatsappSent && <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-200">WA SENT</Badge>}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex-1 ml-0 md:ml-12 mt-4 md:mt-0">

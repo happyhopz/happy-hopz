@@ -19,18 +19,60 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-export const sendVerificationEmail = async (email: string, code: string) => {
-    // Disabled at user request - only order emails are active
-    console.log(`[DISABLED] Verification code for ${email}: ${code}`);
-    return;
-};
-
-export const sendOrderConfirmationEmail = async (email: string, order: any) => {
+export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMATION' | 'STATUS_UPDATE', attachment?: { content: Buffer, filename: string }) => {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log(`📠 ORDER CONFIRMATION LOGGED FOR ${email} (Order #${order.id.slice(0, 8)})`);
+        console.log(`📠 ORDER EMAIL LOGGED FOR ${email} (Order #${order.orderId || order.id})`);
         return;
     }
 
+    const customerName = order.user?.name || order.address?.name || 'Customer';
+    const orderId = order.orderId || order.id;
+
+    let subject = '';
+    let bodyHtml = '';
+
+    if (type === 'CONFIRMATION') {
+        subject = `🎉 Order Confirmed – Happy Hopz (${orderId})`;
+        bodyHtml = getOrderConfirmationHtml(order, customerName);
+    } else {
+        subject = getStatusSubject(order.status, orderId);
+        bodyHtml = getStatusUpdateHtml(order, customerName);
+    }
+
+    const mailOptions: any = {
+        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
+        to: email,
+        subject: subject,
+        html: bodyHtml,
+        attachments: attachment ? [
+            {
+                filename: attachment.filename,
+                content: attachment.content,
+                type: 'application/pdf',
+                disposition: 'attachment'
+            }
+        ] : []
+    };
+
+    if (process.env.SENDGRID_API_KEY) {
+        console.log(`📧 [ORDER] Sending ${type} via SendGrid to ${email}`);
+        return sgMail.send(mailOptions);
+    }
+
+    return transporter.sendMail(mailOptions);
+};
+
+const getStatusSubject = (status: string, orderId: string) => {
+    switch (status) {
+        case 'SHIPPED': return `Your Order Has Been Shipped 🚚 (${orderId})`;
+        case 'DELIVERED': return `Order Delivered 🎉 (${orderId})`;
+        case 'CANCELLED': return `Order Cancellation Notice (${orderId})`;
+        case 'REFUNDED': return `Refund Processed Successfully (${orderId})`;
+        default: return `Update on your Happy Hopz order ${orderId}`;
+    }
+};
+
+const getOrderConfirmationHtml = (order: any, name: string) => {
     const itemsHtml = order.items.map((item: any) => `
         <tr>
             <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name} (x${item.quantity})</td>
@@ -38,305 +80,106 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
         </tr>
     `).join('');
 
-    const mailOptions = {
-        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
-        to: email,
-        subject: `Your Happy Hopz Order #${order.id.slice(0, 8)} 👟`,
-        headers: {
-            'X-Priority': '1 (Highest)',
-            'Priority': 'urgent',
-            'Importance': 'high'
-        },
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                <h2 style="color: #ff6b6b; text-align: center;">Order Confirmed! 🎊</h2>
-                <p>Hi there,</p>
-                <p>Thank you for shopping with Happy Hopz! Your order has been placed successfully and is being processed.</p>
-                
-                <h3 style="border-bottom: 2px solid #ff6b6b; padding-bottom: 5px;">Order Summary</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                    ${itemsHtml}
-                    <tr>
-                        <td style="padding: 10px; font-weight: bold;">Total Paid</td>
-                        <td style="padding: 10px; font-weight: bold; text-align: right;">₹${order.total}</td>
-                    </tr>
-                </table>
+    return `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+            <h2 style="color: #ff6b6b; text-align: center;">Order Confirmed! 🎊</h2>
+            <p>Hi ${name},</p>
+            <p>Thank you for shopping with Happy Hopz! Your order has been placed successfully and is being processed.</p>
+            <p><strong>Order ID:</strong> ${order.orderId || order.id}</p>
+            
+            <h3 style="border-bottom: 2px solid #ff6b6b; padding-bottom: 5px;">Order Summary</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                ${itemsHtml}
+                <tr>
+                    <td style="padding: 10px; font-weight: bold;">Grand Total</td>
+                    <td style="padding: 10px; font-weight: bold; text-align: right;">₹${order.total}</td>
+                </tr>
+            </table>
 
-                <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
-                    <p style="margin: 0; font-weight: bold;">Shipping To:</p>
-                    <p style="margin: 5px 0; font-size: 14px; color: #666;">
-                        ${order.address?.name || 'Customer'}<br>
-                        ${order.address?.line1}<br>
-                        ${order.address?.city}, ${order.address?.state} - ${order.address?.pincode}
-                    </p>
-                </div>
-
-                <p style="text-align: center; margin-top: 30px;">
-                    <a href="https://happy-hopz.vercel.app/orders/${order.id}" style="background: #ff6b6b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold;">Track Your Order</a>
-                </p>
-
-                <p style="color: #888; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
-                    Questions? Reply to this email or visit our <a href="https://happy-hopz.vercel.app/contact">Contact Us</a> page.
+            <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+                <p style="margin: 0; font-weight: bold;">Shipping To:</p>
+                <p style="margin: 5px 0; font-size: 14px; color: #666;">
+                    ${order.address?.line1}<br>
+                    ${order.address?.city}, ${order.address?.state} - ${order.address?.pincode}
                 </p>
             </div>
-        `
-    };
 
-    if (process.env.SENDGRID_API_KEY) {
-        console.log('📧 [ORDER CONFIRMATION] Sending via SendGrid from:', VERIFIED_SENDER);
-        return sgMail.send({
-            ...mailOptions,
-            from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
-            headers: mailOptions.headers
-        });
-    }
-
-    return transporter.sendMail(mailOptions);
+            <p style="text-align: center; margin-top: 30px;">
+                <a href="https://happy-hopz.vercel.app/orders/${order.id}" style="background: #ff6b6b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold;">Track Your Order</a>
+            </p>
+        </div>
+    `;
 };
 
-export const sendPasswordResetEmail = async (email: string, token: string) => {
-    // Disabled at user request - only order emails are active
-    console.log(`[DISABLED] Password reset token for ${email}: ${token}`);
-    return;
+const getStatusUpdateHtml = (order: any, name: string) => {
+    let statusMessage = '';
+    let actionTip = '';
+
+    switch (order.status) {
+        case 'SHIPPED':
+            statusMessage = `Great news! Your order has been shipped. 🚚`;
+            actionTip = `Tracking Link: <a href="https://happy-hopz.vercel.app/orders/${order.id}">Track Here</a><br>Courier: ${order.courierPartner || 'Standard'}<br>Tracking ID: ${order.trackingNumber || 'N/A'}`;
+            break;
+        case 'DELIVERED':
+            statusMessage = `Your Happy Hopz order has been delivered! 🎉 We hope your little one loves it. ❤️`;
+            actionTip = `Need help? Contact our support team.`;
+            break;
+        case 'CANCELLED':
+            statusMessage = `Your order has been cancelled.`;
+            actionTip = `Reason: ${order.cancellationReason || 'Requested by user'}`;
+            break;
+        case 'REFUNDED':
+            statusMessage = `Your refund has been processed successfully. 💰`;
+            actionTip = `The amount should reflect in your account within 5-7 business days.`;
+            break;
+        default:
+            statusMessage = `Your order status has been updated to: <strong>${order.status}</strong>`;
+    }
+
+    return `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+            <h2 style="color: #667eea; text-align: center;">Order Update</h2>
+            <p>Hi ${name},</p>
+            <p>${statusMessage}</p>
+            <p><strong>Order ID:</strong> ${order.orderId || order.id}</p>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; border-left: 4px solid #667eea;">
+                <p style="margin: 0;">${actionTip}</p>
+            </div>
+
+            <p style="text-align: center; margin-top: 30px;">
+                <a href="https://happy-hopz.vercel.app/orders/${order.id}" style="background: #667eea; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold;">View Order Details</a>
+            </p>
+        </div>
+    `;
 };
 
 export const sendAdminOrderNotification = async (order: any) => {
-    console.log('🔔 [ADMIN NOTIFICATION] Function called');
-    console.log('🔔 [ADMIN NOTIFICATION] EMAIL_USER:', process.env.EMAIL_USER);
-    console.log('🔔 [ADMIN NOTIFICATION] EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
-    console.log('🔔 [ADMIN NOTIFICATION] EMAIL_PASS length:', process.env.EMAIL_PASS?.length);
-
     const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
-    console.log('🔔 [ADMIN NOTIFICATION] Admin email target:', adminEmail);
-
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log(`❌ [ADMIN NOTIFICATION] Email credentials missing!`);
-        console.log(`🔔 NEW ORDER NOTIFICATION FOR ADMIN: Order #${order.id.slice(0, 8)} - ₹${order.total}`);
-        return;
-    }
-
-    console.log('✅ [ADMIN NOTIFICATION] Credentials found, preparing email...');
-
-    const customerName = order.user?.name || order.guestName || 'Guest Customer';
-    const customerEmail = order.user?.email || order.guestEmail || 'N/A';
-    const customerPhone = order.user?.phone || order.guestPhone || 'N/A';
-
-    const itemsHtml = order.items.map((item: any) => `
-        <tr>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.size || 'N/A'}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.color || 'N/A'}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">x${item.quantity}</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price * item.quantity}</td>
-        </tr>
-    `).join('');
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
 
     const mailOptions = {
-        from: '"Happy Hopz Orders" <orders@happyhopz.com>',
+        from: '"Happy Hopz Admin" <orders@happyhopz.com>',
         to: adminEmail,
-        subject: `🛍️ New Order #${order.id.slice(0, 8)} - ₹${order.total}`,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background: #f9f9f9;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px;">
-                    <h2 style="margin: 0; text-align: center;">🎉 New Order Received!</h2>
-                    <p style="margin: 10px 0 0 0; text-align: center; font-size: 14px; opacity: 0.9;">Order #${order.id.slice(0, 8)}</p>
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-                    <h3 style="color: #667eea; margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Customer Information</h3>
-                    <table style="width: 100%; font-size: 14px;">
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: bold; width: 120px;">Name:</td>
-                            <td style="padding: 8px 0;">${customerName}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: bold;">Email:</td>
-                            <td style="padding: 8px 0;">${customerEmail}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: bold;">Phone:</td>
-                            <td style="padding: 8px 0;">${customerPhone}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: bold;">Type:</td>
-                            <td style="padding: 8px 0;">${order.userId ? '👤 Registered User' : '🎭 Guest Checkout'}</td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-                    <h3 style="color: #667eea; margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Order Items</h3>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                        <thead>
-                            <tr style="background: #f0f0f0;">
-                                <th style="padding: 10px; text-align: left;">Product</th>
-                                <th style="padding: 10px; text-align: center;">Size</th>
-                                <th style="padding: 10px; text-align: center;">Color</th>
-                                <th style="padding: 10px; text-align: center;">Qty</th>
-                                <th style="padding: 10px; text-align: right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-                    <h3 style="color: #667eea; margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Shipping Address</h3>
-                    <p style="margin: 0; font-size: 14px; line-height: 1.6;">
-                        <strong>${order.address?.name || customerName}</strong><br>
-                        ${order.address?.line1}<br>
-                        ${order.address?.line2 ? order.address.line2 + '<br>' : ''}
-                        ${order.address?.city}, ${order.address?.state} - ${order.address?.pincode}<br>
-                        📞 ${order.address?.phone || customerPhone}
-                    </p>
-                </div>
-
-                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-                    <h3 style="color: #667eea; margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Order Summary</h3>
-                    <table style="width: 100%; font-size: 14px;">
-                        <tr>
-                            <td style="padding: 8px 0;">Subtotal:</td>
-                            <td style="padding: 8px 0; text-align: right;">₹${order.subtotal || 0}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0;">Tax (GST):</td>
-                            <td style="padding: 8px 0; text-align: right;">₹${order.tax || 0}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0;">Shipping:</td>
-                            <td style="padding: 8px 0; text-align: right;">₹${order.shipping || 0}</td>
-                        </tr>
-                        ${order.couponDiscount > 0 ? `
-                        <tr style="color: #22c55e;">
-                            <td style="padding: 8px 0;">Discount (${order.couponCode}):</td>
-                            <td style="padding: 8px 0; text-align: right;">-₹${order.couponDiscount}</td>
-                        </tr>
-                        ` : ''}
-                        <tr style="border-top: 2px solid #667eea; font-weight: bold; font-size: 16px;">
-                            <td style="padding: 12px 0;">Total Amount:</td>
-                            <td style="padding: 12px 0; text-align: right; color: #667eea;">₹${order.total}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0;">Payment Status:</td>
-                            <td style="padding: 8px 0; text-align: right;">
-                                <span style="background: ${order.paymentStatus === 'COMPLETED' ? '#22c55e' : '#f59e0b'}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">
-                                    ${order.paymentStatus}
-                                </span>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div style="text-align: center; margin-top: 25px;">
-                    <a href="https://happy-hopz.vercel.app/admin/orders/${order.id}" 
-                       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-                        📦 View Order in Admin Panel
-                    </a>
-                </div>
-
-                <p style="color: #888; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px; text-align: center;">
-                    This is an automated notification from Happy Hopz Order Management System
-                </p>
-            </div>
-        `
+        subject: `🛍️ NEW ORDER: ${order.orderId || order.id} - ₹${order.total}`,
+        html: `<h2>New Order Alert!</h2><p>Order #${order.orderId || order.id} received from ${order.address?.name || 'Guest'}.</p><a href="https://happy-hopz.vercel.app/admin/orders/${order.id}">Admin View</a>`
     };
 
-    try {
-        console.log('📤 [ADMIN NOTIFICATION] Sending email to:', adminEmail);
-        console.log('📤 [ADMIN NOTIFICATION] Email subject:', mailOptions.subject);
-
-        // Use SendGrid if available (production), otherwise fallback to nodemailer (local dev)
-        if (process.env.SENDGRID_API_KEY) {
-            console.log('📧 [ADMIN NOTIFICATION] Using SendGrid from:', VERIFIED_SENDER);
-            const msg = {
-                to: adminEmail,
-                from: {
-                    email: VERIFIED_SENDER,
-                    name: 'Happy Hopz Orders'
-                },
-                subject: mailOptions.subject,
-                html: mailOptions.html,
-                headers: {
-                    'X-Priority': '1 (Highest)',
-                    'Priority': 'urgent',
-                    'Importance': 'high'
-                }
-            };
-
-            await sgMail.send(msg);
-            console.log(`✅ [ADMIN NOTIFICATION] Email sent successfully via SendGrid for order #${order.id.slice(0, 8)}`);
-        } else {
-            console.log('📧 [ADMIN NOTIFICATION] Using nodemailer (local dev)...');
-            await transporter.sendMail(mailOptions);
-            console.log(`✅ [ADMIN NOTIFICATION] Email sent successfully via nodemailer for order #${order.id.slice(0, 8)}`);
-        }
-    } catch (error: any) {
-        console.error('❌ [ADMIN NOTIFICATION] Failed to send email:', error?.message || error);
-        console.error('❌ [ADMIN NOTIFICATION] Error code:', error?.code);
-        console.error('❌ [ADMIN NOTIFICATION] Error response:', error?.response?.body);
-        // Don't throw - we don't want to fail the order if email fails
-    }
+    if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
+    return transporter.sendMail(mailOptions);
 };
 
-export const sendAdminAlertEmail = async (title: string, message: string, details?: any) => {
+export const sendAdminAlertEmail = async (title: string, message: string) => {
     const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
-
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log(`❌ [ADMIN ALERT] Email credentials missing for: ${title}`);
-        return;
-    }
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
 
     const mailOptions = {
         from: '"Happy Hopz Alerts" <alerts@happyhopz.com>',
         to: adminEmail,
-        subject: `🔔 Admin Alert: ${title}`,
-        headers: {
-            'X-Priority': '1 (Highest)',
-            'Priority': 'urgent',
-            'Importance': 'high'
-        },
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #ff6b6b; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: #333;">${title}</h2>
-                </div>
-                
-                <p style="font-size: 16px; color: #444; line-height: 1.5;">${message}</p>
-                
-                ${details ? `
-                <div style="background: #f1f3f5; padding: 15px; border-radius: 5px; margin-top: 20px;">
-                    <h4 style="margin: 0 0 10px 0; color: #666;">Details:</h4>
-                    <pre style="margin: 0; font-size: 13px; color: #555; white-space: pre-wrap;">${JSON.stringify(details, null, 2)}</pre>
-                </div>
-                ` : ''}
-
-                <p style="text-align: center; margin-top: 30px;">
-                    <a href="https://happy-hopz.vercel.app/admin/notifications" style="background: #333; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; font-size: 14px;">View Activity Log</a>
-                </p>
-
-                <p style="color: #999; font-size: 11px; border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
-                    Automated system alert from Happy Hopz Admin Console.
-                </p>
-            </div>
-        `
+        subject: `🔔 ALERT: ${title}`,
+        html: `<p>${message}</p>`
     };
 
-    try {
-        if (process.env.SENDGRID_API_KEY) {
-            await sgMail.send({
-                to: adminEmail,
-                from: { email: VERIFIED_SENDER, name: 'Happy Hopz Alerts' },
-                subject: mailOptions.subject,
-                html: mailOptions.html,
-                headers: mailOptions.headers
-            });
-        } else {
-            await transporter.sendMail(mailOptions);
-        }
-        console.log(`✅ [ADMIN ALERT] Email sent: ${title}`);
-    } catch (error) {
-        console.error(`❌ [ADMIN ALERT] Failed to send:`, error);
-    }
+    if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
+    return transporter.sendMail(mailOptions);
 };

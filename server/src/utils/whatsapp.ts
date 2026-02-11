@@ -1,47 +1,68 @@
 import axios from 'axios';
 
 /**
- * Sends a WhatsApp message to the admin.
- * Current implementation uses CallMeBot (free for personal use) as a default.
- * For professional use, this should be replaced with Twilio or Meta WhatsApp Business API.
+ * Sends a WhatsApp message using Meta Cloud API.
+ * This implementation uses Official WhatsApp Templates.
  */
-export const sendAdminWhatsApp = async (message: string) => {
-    try {
-        const { prisma } = await import('../lib/prisma');
+export const sendOrderWhatsApp = async (to: string, templateName: string, components: any[]) => {
+    const apiToken = process.env.WHATSAPP_API_TOKEN;
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-        // Fetch WhatsApp settings from the database
-        const settings = await prisma.siteSettings.findMany({
-            where: {
-                key: {
-                    in: ['whatsapp_number', 'whatsapp_notifications_enabled', 'callmebot_apikey']
-                }
+    if (!apiToken || !phoneNumberId) {
+        console.warn('⚠️ [WHATSAPP] API Token or Phone Number ID not configured.');
+        return { success: false, error: 'Configuration missing' };
+    }
+
+    try {
+        const url = `https://graph.facebook.com/v17.0/${phoneNumberId}/messages`;
+
+        // Ensure phone number has '91' prefix or correct country code, and no '+'
+        const formattedTo = to.startsWith('+') ? to.slice(1) : to;
+
+        const data = {
+            messaging_product: 'whatsapp',
+            to: formattedTo,
+            type: 'template',
+            template: {
+                name: templateName,
+                language: { code: 'en' },
+                components: components
+            }
+        };
+
+        const response = await axios.post(url, data, {
+            headers: {
+                'Authorization': `Bearer ${apiToken}`,
+                'Content-Type': 'application/json'
             }
         });
 
-        const settingsMap: Record<string, string> = {};
-        settings.forEach(s => settingsMap[s.key] = s.value);
+        console.log(`✅ [WHATSAPP] Message sent successfully to ${formattedTo}. ID: ${response.data.messages[0].id}`);
+        return { success: true, messageId: response.data.messages[0].id };
+    } catch (error: any) {
+        const errorMsg = error.response?.data?.error?.message || error.message;
+        console.error('❌ [WHATSAPP] Meta API Error:', errorMsg);
+        return { success: false, error: errorMsg };
+    }
+};
 
-        const isEnabled = settingsMap['whatsapp_notifications_enabled'] === 'true';
-        const phoneNumber = settingsMap['whatsapp_number'];
-        const apiKey = settingsMap['callmebot_apikey']; // Optional: For CallMeBot users
+/**
+ * Legacy admin notification (keeping for internal alerts if needed, or upgrading later)
+ */
+export const sendAdminWhatsApp = async (message: string) => {
+    // For now, reuse the new system with a generic text template if available
+    // OR keep CallMeBot for admin's personal simple alerts as it doesn't require templates
+    try {
+        const { prisma } = await import('../lib/prisma');
+        const setting = await prisma.siteSettings.findUnique({ where: { key: 'callmebot_apikey' } });
+        const number = await prisma.siteSettings.findUnique({ where: { key: 'whatsapp_number' } });
 
-        if (!isEnabled || !phoneNumber) {
-            return;
-        }
-
-        console.log(`📱 [WHATSAPP] Attempting to send message to ${phoneNumber}`);
-
-        // If apikey is present, use CallMeBot (Free & easy for personal alerts)
-        if (apiKey) {
-            const url = `https://api.callmebot.com/whatsapp.php?phone=${phoneNumber}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
+        if (setting?.value && number?.value) {
+            const url = `https://api.callmebot.com/whatsapp.php?phone=${number.value}&text=${encodeURIComponent(message)}&apikey=${setting.value}`;
             await axios.get(url);
-            console.log('✅ [WHATSAPP] Sent via CallMeBot');
-        } else {
-            // Placeholder for other providers or just logging for now
-            console.log('⚠️ [WHATSAPP] WhatsApp notifications are enabled but no API key (e.g., CallMeBot) is configured.');
-            console.log('📝 [WHATSAPP] Message content:', message);
+            console.log('✅ [WHATSAPP] Admin Alert sent via CallMeBot');
         }
     } catch (error: any) {
-        console.error('❌ [WHATSAPP] Failed to send notification:', error.message);
+        console.error('❌ [WHATSAPP] Admin Alert failed:', error.message);
     }
 };

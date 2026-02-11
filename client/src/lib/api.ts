@@ -105,6 +105,11 @@ export const adminAPI = {
     bulkStockUpdate: (updates: { sku: string; stock: number }[]) => api.put('/admin/inventory/bulk-stock', { updates }),
     generateSEO: (id: string) => api.post(`/admin/products/${id}/seo-generate`),
     search: (query: string) => api.get(`/admin/search?q=${query}`),
+
+    // NEW: Robust Order Management
+    updateOrderStatusNew: (orderId: string, data: any) => api.patch(`/orders/update-status/${orderId}`, data),
+    resendOrderNotification: (orderId: string) => api.post(`/orders/${orderId}/resend-notification`),
+
     getAuditLogs: (filters?: { entity?: string; entityId?: string }) => {
         const params = new URLSearchParams();
         if (filters?.entity) params.append('entity', filters.entity);

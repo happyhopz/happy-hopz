@@ -1,136 +1,189 @@
 import { prisma } from '../lib/prisma';
-import { sendAdminAlertEmail } from '../utils/email';
-import { sendAdminWhatsApp } from '../utils/whatsapp';
-
-export type NotificationType = 'ORDER' | 'SECURITY' | 'SYSTEM' | 'PAYMENT' | 'ORDER_STATUS' | 'QUERY';
-export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH';
-
-interface CreateNotificationParams {
-    userId?: string;
-    isAdmin?: boolean;
-    title: string;
-    message: string;
-    type: NotificationType;
-    priority?: NotificationPriority;
-    metadata?: Record<string, any>;
-}
+import { sendOrderEmail } from '../utils/email';
+import { sendOrderWhatsApp } from '../utils/whatsapp';
+import { generateOrderPDF } from '../utils/pdfUtils';
 
 export class NotificationService {
     /**
-     * Create a new notification.
-     * If userId is provided, it's a targeted notification.
-     * If isAdmin is true and userId is null, it's a broadcast to all admins.
+     * Notify Admin of a new order
      */
-    static async create({
-        userId,
-        isAdmin = false,
-        title,
-        message,
-        type,
-        priority = 'NORMAL',
-        metadata
-    }: CreateNotificationParams) {
+    static async notifyNewOrder(orderId: string, customerName: string, amount: number) {
         try {
-            const notification = await prisma.notification.create({
+            await prisma.notification.create({
                 data: {
-                    userId: userId || null,
-                    isAdmin,
-                    title,
-                    message,
-                    type,
-                    priority,
-                    metadata: metadata ? JSON.stringify(metadata) : null,
-                    isRead: false
+                    isAdmin: true,
+                    title: 'New Order Received! 🛍️',
+                    message: `Order #${orderId.slice(-8)} from ${customerName} for ₹${amount}`,
+                    type: 'ORDER',
+                    priority: 'HIGH',
+                    metadata: JSON.stringify({ orderId })
                 }
             });
-
-            // Trigger Email for High/Normal Priority Admin Notifications - RESTRICTED TO ORDERS ONLY
-            if (isAdmin && (priority === 'HIGH' || priority === 'NORMAL') && type === 'ORDER') {
-                // Don't await email to avoid blocking response
-                sendAdminAlertEmail(title, message, metadata).catch(err =>
-                    console.error('Failed to send admin alert email from service:', err)
-                );
-
-                // Trigger WhatsApp Notification
-                sendAdminWhatsApp(`${title}\n${message}`).catch(err =>
-                    console.error('Failed to send WhatsApp alert from service:', err)
-                );
-            }
-
-            return notification;
         } catch (error) {
-            console.error('Failed to create notification:', error);
-            return null;
+            console.error('Failed to create admin notification:', error);
         }
     }
 
     /**
-     * Create an admin notification for a new order.
+     * Notify Customer when order is placed
      */
-    static async notifyNewOrder(orderId: string, customerName: string, amount: number) {
-        return this.create({
-            isAdmin: true,
-            title: 'New Order Received! 🛍️',
-            message: `Order #${orderId.slice(0, 8)} placed by ${customerName} for ₹${amount.toFixed(2)}.`,
-            type: 'ORDER',
-            priority: 'HIGH',
-            metadata: { orderId }
-        });
+    static async notifyOrderPlaced(fullOrder: any) {
+        const orderId = fullOrder.orderId || fullOrder.id;
+        const email = fullOrder.user?.email || fullOrder.guestEmail;
+        const phone = fullOrder.user?.phone || fullOrder.guestPhone || fullOrder.address?.phone;
+
+        // 1. Generate PDF
+        let pdfBuffer: Buffer | null = null;
+        try {
+            pdfBuffer = await generateOrderPDF(fullOrder);
+        } catch (error) {
+            console.error('Failed to generate PDF:', error);
+        }
+
+        // 2. Send Email
+        if (email) {
+            try {
+                await sendOrderEmail(email, fullOrder, 'CONFIRMATION', pdfBuffer ? {
+                    content: pdfBuffer,
+                    filename: `HappyHopz_Receipt_${orderId}.pdf`
+                } : undefined);
+                await this.logNotification(fullOrder.id, 'email', 'order_created', 'success');
+                await prisma.order.update({
+                    where: { id: fullOrder.id },
+                    data: { emailSent: true }
+                });
+            } catch (error: any) {
+                await this.logNotification(fullOrder.id, 'email', 'order_created', 'failed', error.message);
+            }
+        }
+
+        // 3. Send WhatsApp
+        if (phone) {
+            try {
+                const components = [
+                    {
+                        type: 'body',
+                        parameters: [
+                            { type: 'text', text: fullOrder.address?.name || 'Customer' },
+                            { type: 'text', text: orderId },
+                            { type: 'text', text: `₹${fullOrder.total}` },
+                            { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                        ]
+                    }
+                ];
+                const res = await sendOrderWhatsApp(phone, 'hhz_order_confirmation', components);
+                if (res.success) {
+                    await this.logNotification(fullOrder.id, 'whatsapp', 'order_created', 'success');
+                    await prisma.order.update({
+                        where: { id: fullOrder.id },
+                        data: { whatsappSent: true }
+                    });
+                } else {
+                    await this.logNotification(fullOrder.id, 'whatsapp', 'order_created', 'failed', res.error);
+                }
+            } catch (error: any) {
+                await this.logNotification(fullOrder.id, 'whatsapp', 'order_created', 'failed', error.message);
+            }
+        }
     }
 
     /**
-     * Create an admin notification for an order cancellation.
+     * Notify Customer of status update
      */
+    static async notifyStatusUpdate(fullOrder: any) {
+        const orderId = fullOrder.orderId || fullOrder.id;
+        const email = fullOrder.user?.email || fullOrder.guestEmail;
+        const phone = fullOrder.user?.phone || fullOrder.guestPhone || fullOrder.address?.phone;
+
+        // 1. Send Email
+        if (email) {
+            try {
+                await sendOrderEmail(email, fullOrder, 'STATUS_UPDATE');
+                await this.logNotification(fullOrder.id, 'email', 'status_updated', 'success');
+            } catch (error: any) {
+                await this.logNotification(fullOrder.id, 'email', 'status_updated', 'failed', error.message);
+            }
+        }
+
+        // 2. Send WhatsApp
+        if (phone) {
+            try {
+                let template = 'hhz_status_update';
+                let params: any[] = [
+                    { type: 'text', text: orderId },
+                    { type: 'text', text: fullOrder.status }
+                ];
+
+                if (fullOrder.status === 'SHIPPED') {
+                    template = 'hhz_order_shipped';
+                    params = [
+                        { type: 'text', text: orderId },
+                        { type: 'text', text: fullOrder.trackingNumber || 'N/A' },
+                        { type: 'text', text: fullOrder.courierPartner || 'Standard' },
+                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                    ];
+                }
+
+                const components = [{ type: 'body', parameters: params }];
+                const res = await sendOrderWhatsApp(phone, template, components);
+                if (res.success) {
+                    await this.logNotification(fullOrder.id, 'whatsapp', 'status_updated', 'success');
+                } else {
+                    await this.logNotification(fullOrder.id, 'whatsapp', 'status_updated', 'failed', res.error);
+                }
+            } catch (error: any) {
+                await this.logNotification(fullOrder.id, 'whatsapp', 'status_updated', 'failed', error.message);
+            }
+        }
+    }
+
+    static async logNotification(orderId: string, type: string, triggerType: string, status: string, error?: string) {
+        try {
+            await (prisma as any).notificationLog.create({
+                data: {
+                    orderId,
+                    type,
+                    triggerType,
+                    status,
+                    errorMessage: error || null
+                }
+            });
+        } catch (e) {
+            console.error('Failed to log notification:', e);
+        }
+    }
+
     static async notifyOrderCancelled(orderId: string, reason: string) {
-        return this.create({
-            isAdmin: true,
-            title: 'Order Cancelled ❌',
-            message: `Order #${orderId.slice(0, 8)} has been cancelled. Reason: ${reason}`,
-            type: 'ORDER',
-            priority: 'HIGH',
-            metadata: { orderId }
-        });
+        try {
+            await prisma.notification.create({
+                data: {
+                    isAdmin: true,
+                    title: 'Order Cancelled ⚠️',
+                    message: `Order #${orderId.slice(-8)} was cancelled. Reason: ${reason}`,
+                    type: 'SYSTEM',
+                    priority: 'HIGH',
+                    metadata: JSON.stringify({ orderId, reason })
+                }
+            });
+        } catch (error) {
+            console.error('Failed to create cancellation notification:', error);
+        }
     }
 
-    /**
-     * Create an admin notification for a security event (e.g., login).
-     */
-    static async notifySecurityEvent(title: string, message: string, userId: string, details?: any) {
-        return this.create({
-            isAdmin: true,
-            title,
-            message,
-            type: 'SECURITY',
-            priority: 'NORMAL',
-            metadata: { userId, ...details }
-        });
-    }
-
-    /**
-     * Create an admin notification for a new contact form submission.
-     */
     static async notifyNewQuery(name: string, subject: string, message: string) {
-        return this.create({
-            isAdmin: true,
-            title: 'New Customer Query 📩',
-            message: `New message from ${name}: "${subject}"`,
-            type: 'QUERY',
-            priority: 'NORMAL',
-            metadata: { name, subject, message }
-        });
-    }
-
-    /**
-     * Create a notification for a user about their order status.
-     */
-    static async notifyUserOrderStatus(userId: string, orderId: string, status: string) {
-        return this.create({
-            userId,
-            title: `Order Update: ${status}`,
-            message: `Your order #${orderId.slice(0, 8)} is now ${status.toLowerCase()}.`,
-            type: 'ORDER_STATUS',
-            priority: 'NORMAL',
-            metadata: { orderId, status }
-        });
+        try {
+            await prisma.notification.create({
+                data: {
+                    isAdmin: true,
+                    title: 'New Customer Query 📩',
+                    message: `New message from ${name}: "${subject}"`,
+                    type: 'QUERY',
+                    priority: 'NORMAL',
+                    metadata: JSON.stringify({ name, subject, message })
+                }
+            });
+        } catch (error) {
+            console.error('Failed to create query notification:', error);
+        }
     }
 }

@@ -73,38 +73,47 @@ const OrderDetail = () => {
 
     const getStatusIcon = (status: string) => {
         const icons: any = {
-            PLACED: <Clock className="w-5 h-5" />,
-            PACKED: <Package className="w-5 h-5" />,
-            SHIPPED: <Truck className="w-5 h-5" />,
-            DELIVERED: <CheckCircle2 className="w-5 h-5" />,
-            CANCELLED: <XCircle className="w-5 h-5" />
+            PENDING: <Clock className="w-5 h-5 text-gray-500" />,
+            CONFIRMED: <CheckCircle2 className="w-5 h-5 text-blue-500" />,
+            PROCESSING: <Package className="w-5 h-5 text-purple-500" />,
+            SHIPPED: <Truck className="w-5 h-5 text-indigo-500" />,
+            OUT_FOR_DELIVERY: <Truck className="w-5 h-5 text-orange-500" />,
+            DELIVERED: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+            CANCELLED: <XCircle className="w-5 h-5 text-red-500" />,
+            REFUNDED: <IndianRupee className="w-5 h-5 text-gray-500" />
         };
-        return icons[status] || <Clock className="w-5 h-5" />;
+        return icons[status] || <Clock className="w-5 h-5 text-gray-400" />;
     };
 
     const getStatusColor = (status: string) => {
         const colors: any = {
-            PLACED: 'bg-pink-500',
-            PACKED: 'bg-purple-500',
+            PENDING: 'bg-gray-400',
+            CONFIRMED: 'bg-blue-500',
+            PROCESSING: 'bg-purple-500',
             SHIPPED: 'bg-indigo-600',
+            OUT_FOR_DELIVERY: 'bg-orange-500',
             DELIVERED: 'bg-green-500',
-            CANCELLED: 'bg-red-500'
+            CANCELLED: 'bg-red-500',
+            REFUNDED: 'bg-gray-600'
         };
         return colors[status] || 'bg-gray-500';
     };
 
     const getStatusLabel = (status: string) => {
         const labels: any = {
-            PLACED: 'Order Placed',
-            PACKED: 'Packed',
+            PENDING: 'Pending Confirmation',
+            CONFIRMED: 'Order Confirmed',
+            PROCESSING: 'Processing Order',
             SHIPPED: 'Shipped',
+            OUT_FOR_DELIVERY: 'Out for Delivery',
             DELIVERED: 'Delivered',
-            CANCELLED: 'Cancelled'
+            CANCELLED: 'Cancelled',
+            REFUNDED: 'Refunded'
         };
         return labels[status] || status;
     };
 
-    const statusSteps = ['PLACED', 'PACKED', 'SHIPPED', 'DELIVERED'];
+    const statusSteps = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
 
     if (loading) {
         return (
@@ -169,7 +178,7 @@ const OrderDetail = () => {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h1 className="text-4xl font-fredoka font-bold text-foreground">
-                                Order #{String(order.id || '').slice(0, 8)}
+                                Order #{order.orderId || String(order.id || '').slice(0, 8)}
                             </h1>
                             <p className="text-muted-foreground flex items-center gap-2 mt-1">
                                 <Calendar className="w-4 h-4" />
@@ -322,16 +331,16 @@ const OrderDetail = () => {
                                     </div>
                                 </div>
 
-                                {order.expectedDelivery && order.status !== 'DELIVERED' && (
+                                {order.estimatedDelivery && order.status !== 'DELIVERED' && (
                                     <div className="mt-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center">
                                                 <Truck className="w-6 h-6 text-blue-500" />
                                             </div>
                                             <div>
-                                                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Expected Delivery</p>
+                                                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Estimated Delivery</p>
                                                 <p className="text-lg font-fredoka font-bold text-blue-900">
-                                                    {format(new Date(order.expectedDelivery), 'EEEE, MMMM dd, yyyy')}
+                                                    {format(new Date(order.estimatedDelivery), 'EEEE, MMMM dd, yyyy')}
                                                 </p>
                                             </div>
                                         </div>
@@ -344,9 +353,10 @@ const OrderDetail = () => {
                                 {order.status === 'SHIPPED' && (
                                     <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
                                         <Truck className="w-5 h-5 text-blue-500" />
-                                        <p className="text-sm text-blue-700 font-medium">
-                                            Your package is on its way! Use the tracking number above for more details.
-                                        </p>
+                                        <div>
+                                            <p className="text-sm text-blue-700 font-bold">Your package is on its way!</p>
+                                            <p className="text-xs text-blue-600">{order.courierPartner || 'Standard Courier Service'}</p>
+                                        </div>
                                     </div>
                                 )}
                             </Card>

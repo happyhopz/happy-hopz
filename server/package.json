@@ -34,6 +34,9 @@
     "google-auth-library": "^10.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^4.1.0",
+    "jspdf-autotable": "^5.0.7",
+    "nanoid": "^5.1.6",
     "nodemailer": "^7.0.13",
     "razorpay": "^2.9.6",
     "zod": "^3.25.76"
