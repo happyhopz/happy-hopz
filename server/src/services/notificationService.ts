@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { sendOrderEmail } from '../utils/email';
+import { sendOrderEmail, sendAdminOrderNotification, sendAdminAlertEmail } from '../utils/email';
 import { sendOrderWhatsApp } from '../utils/whatsapp';
 import { generateOrderPDF } from '../utils/pdfUtils';
 
@@ -84,6 +84,13 @@ export class NotificationService {
             } catch (error: any) {
                 await this.logNotification(fullOrder.id, 'whatsapp', 'order_created', 'failed', error.message);
             }
+        }
+
+        // 4. Notify Admin via Email
+        try {
+            await sendAdminOrderNotification(fullOrder);
+        } catch (error) {
+            console.error('Failed to send admin order notification email:', error);
         }
     }
 
@@ -220,6 +227,13 @@ export class NotificationService {
             });
         } catch (error) {
             console.error('Failed to create security notification:', error);
+        }
+
+        // Also send Alert Email for security events
+        try {
+            await sendAdminAlertEmail(`Security: ${title}`, message);
+        } catch (error) {
+            console.error('Failed to send admin security alert email:', error);
         }
     }
 }
