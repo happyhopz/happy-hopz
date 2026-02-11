@@ -26,7 +26,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         category: product?.category || 'Sneakers',
         ageGroup: product?.ageGroup || '3-6 years',
         sizes: product?.sizes || [],
-        inventory: product?.inventory || [],
+        inventory: Array.isArray(product?.inventory) ? product.inventory : [],
         colors: product?.colors?.join(', ') || 'Red, Blue, Green',
         stock: product?.stock || 0,
         images: product?.images || [],
@@ -690,6 +690,7 @@ const AdminProducts = () => {
                                 </DialogTitle>
                             </DialogHeader>
                             <ProductForm
+                                key={editingProduct?.id || 'new'}
                                 product={editingProduct}
                                 onSubmit={(data) => {
                                     if (editingProduct) {

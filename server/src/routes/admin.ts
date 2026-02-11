@@ -325,9 +325,10 @@ router.get('/products', async (req: AuthRequest, res: Response) => {
 
         const formattedProducts = products.map(p => ({
             ...p,
-            sizes: JSON.parse(p.sizes),
-            colors: JSON.parse(p.colors),
-            images: JSON.parse(p.images),
+            sizes: JSON.parse(p.sizes || '[]'),
+            inventory: (p as any).inventory ? JSON.parse((p as any).inventory) : [],
+            colors: JSON.parse(p.colors || '[]'),
+            images: JSON.parse(p.images || '[]'),
             tags: JSON.parse(p.tags || '[]')
         }));
 
@@ -342,7 +343,7 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
     try {
         const {
             sku, name, description, price, discountPrice, costPrice,
-            category, ageGroup, sizes, colors, stock, images,
+            category, ageGroup, sizes, colors, stock, inventory, images,
             status, tags, seoTitle, seoDescription,
             isVariant, parentId
         } = req.body;
@@ -357,6 +358,7 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
             category,
             ageGroup,
             sizes: Array.isArray(sizes) ? JSON.stringify(sizes) : sizes,
+            inventory: Array.isArray(inventory) ? JSON.stringify(inventory) : (inventory || '[]'),
             colors: Array.isArray(colors) ? JSON.stringify(colors) : colors,
             stock: parseInt(String(stock)) || 0,
             images: Array.isArray(images) ? JSON.stringify(images) : images,
@@ -382,9 +384,10 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
 
         res.json({
             ...product,
-            sizes: JSON.parse(product.sizes),
-            colors: JSON.parse(product.colors),
-            images: JSON.parse(product.images),
+            sizes: JSON.parse(product.sizes || '[]'),
+            inventory: (product as any).inventory ? JSON.parse((product as any).inventory) : [],
+            colors: JSON.parse(product.colors || '[]'),
+            images: JSON.parse(product.images || '[]'),
             tags: JSON.parse(product.tags || '[]')
         });
     } catch (error: any) {
@@ -407,7 +410,7 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
         const {
             sku, name, description, price, discountPrice, costPrice,
             boxPrice, tagPrice, shippingCost, otherCosts,
-            category, ageGroup, sizes, colors, stock, images,
+            category, ageGroup, sizes, colors, stock, inventory, images,
             status, tags, seoTitle, seoDescription,
             isVariant, parentId
         } = req.body;
@@ -430,8 +433,11 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             category,
             ageGroup,
             sizes: Array.isArray(sizes) ? JSON.stringify(sizes) : sizes,
+            inventory: Array.isArray(inventory) ? JSON.stringify(inventory) : inventory,
             colors: Array.isArray(colors) ? JSON.stringify(colors) : colors,
-            stock: parseInt(String(stock)) || 0,
+            stock: inventory && Array.isArray(inventory)
+                ? inventory.reduce((sum: number, i: any) => sum + (parseInt(i.stock) || 0), 0)
+                : (parseInt(String(stock)) || 0),
             images: Array.isArray(images) ? JSON.stringify(images) : images,
             status: status || 'ACTIVE',
             tags: Array.isArray(tags) ? JSON.stringify(tags) : (tags || "[]"),
@@ -467,6 +473,7 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
         res.json({
             ...product,
             sizes: safeParse(product.sizes),
+            inventory: (product as any).inventory ? safeParse((product as any).inventory) : [],
             colors: safeParse(product.colors),
             images: safeParse(product.images),
             tags: safeParse(product.tags)
