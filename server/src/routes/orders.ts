@@ -57,9 +57,9 @@ router.get('/my-orders', optionalAuthenticate, async (req: AuthRequest, res: Res
 router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const orderSchema = z.object({
-            guestEmail: z.string().email().optional().nullable(),
-            guestName: z.string().optional().nullable(),
-            guestPhone: z.string().optional().nullable(),
+            guestEmail: z.string().email().optional().nullable().or(z.literal('')),
+            guestName: z.string().optional().nullable().or(z.literal('')),
+            guestPhone: z.string().optional().nullable().or(z.literal('')),
             items: z.array(z.object({
                 productId: z.string(),
                 name: z.string(),
@@ -77,16 +77,26 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                 name: z.string(),
                 phone: z.string(),
                 line1: z.string(),
-                line2: z.string().optional(),
+                line2: z.string().optional().nullable(),
                 city: z.string(),
                 state: z.string(),
                 pincode: z.string()
             }).optional().nullable(),
-            paymentStatus: z.string().optional(),
+            paymentStatus: z.string().optional().nullable(),
+            paymentMethod: z.string().optional().nullable(),
+            source: z.string().optional().nullable(),
             couponCode: z.string().optional().nullable()
         });
 
-        const data = orderSchema.parse(req.body);
+        const validation = orderSchema.safeParse(req.body);
+        if (!validation.success) {
+            console.error('❌ [Order Validation Failed]:', JSON.stringify(validation.error.format(), null, 2));
+            return res.status(400).json({
+                error: 'Invalid order data',
+                details: validation.error.format()
+            });
+        }
+        const data = validation.data;
 
         // Subtotal validation logic would go here (skipped for conciseness in this fix)
 
@@ -121,7 +131,7 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     couponCode: data.couponCode,
                     status: 'PENDING',
                     paymentStatus: data.paymentStatus || 'PENDING',
-                    paymentMethod: 'ONLINE',
+                    paymentMethod: data.paymentMethod || 'ONLINE',
                     addressId: finalAddressId,
                     statusHistory: [
                         { status: 'PENDING', updatedAt: new Date(), updatedBy: req.user?.id || 'GUEST' }

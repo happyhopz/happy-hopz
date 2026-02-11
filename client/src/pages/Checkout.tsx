@@ -383,6 +383,7 @@ const Checkout = () => {
                 guestName: isGuest ? guestInfo.name : null,
                 guestPhone: isGuest ? guestInfo.phone : null,
                 address: isGuest ? address : null,
+                paymentMethod: paymentMethod,
                 couponCode: appliedCoupon ? appliedCoupon.code : undefined
             };
 
