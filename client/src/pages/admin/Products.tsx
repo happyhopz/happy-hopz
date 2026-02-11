@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle, Sparkles, Box, CheckSquare, Square, Check } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { ALL_EU_SIZES } from '@/lib/constants';
 
 const ProductForm = ({ product, onSubmit, isLoading }: any) => {
     const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         discountPrice: product?.discountPrice || '',
         category: product?.category || 'Sneakers',
         ageGroup: product?.ageGroup || '3-6 years',
-        sizes: product?.sizes?.join(', ') || 'S, M, L',
+        sizes: product?.sizes || [],
         colors: product?.colors?.join(', ') || 'Red, Blue, Green',
         stock: product?.stock || '50',
         images: product?.images || [],
@@ -77,7 +78,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
             shippingCost: formData.shippingCost === '' ? null : parseFloat(String(formData.shippingCost)),
             otherCosts: formData.otherCosts === '' ? null : parseFloat(String(formData.otherCosts)),
             stock: formData.stock === '' ? 0 : parseInt(String(formData.stock)),
-            sizes: typeof formData.sizes === 'string' ? formData.sizes.split(',').map((s: any) => s.trim()) : formData.sizes,
+            sizes: Array.isArray(formData.sizes) ? formData.sizes.map((s: any) => String(s).trim()) : [],
             colors: typeof formData.colors === 'string' ? formData.colors.split(',').map((c: any) => c.trim()) : formData.colors,
             tags: formData.tags || []
         };
@@ -204,12 +205,12 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                             <div className="flex justify-between items-center text-sm mt-1">
                                 <span className="font-semibold">Estimated Profit per Unit:</span>
                                 <span className={`font-bold ${(parseFloat(formData.price) - (
-                                        (parseFloat(formData.costPrice) || 0) +
-                                        (parseFloat(formData.boxPrice) || 0) +
-                                        (parseFloat(formData.tagPrice) || 0) +
-                                        (parseFloat(formData.shippingCost) || 0) +
-                                        (parseFloat(formData.otherCosts) || 0)
-                                    )) > 0 ? 'text-green-600' : 'text-red-600'
+                                    (parseFloat(formData.costPrice) || 0) +
+                                    (parseFloat(formData.boxPrice) || 0) +
+                                    (parseFloat(formData.tagPrice) || 0) +
+                                    (parseFloat(formData.shippingCost) || 0) +
+                                    (parseFloat(formData.otherCosts) || 0)
+                                )) > 0 ? 'text-green-600' : 'text-red-600'
                                     }`}>
                                     ₹{(
                                         parseFloat(formData.price) - (
@@ -306,13 +307,35 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                 </div>
             </div>
             <div>
-                <Label>Sizes (comma separated)</Label>
-                <Input
-                    value={formData.sizes}
-                    onChange={(e) => setFormData({ ...formData, sizes: e.target.value })}
-                    placeholder="S, M, L, XL"
-                    required
-                />
+                <Label className="mb-2 block">Available Sizes (EU)</Label>
+                <div className="grid grid-cols-4 md:grid-cols-7 gap-2 p-4 border rounded-2xl bg-gray-50/30">
+                    {ALL_EU_SIZES.map((size) => (
+                        <label
+                            key={size}
+                            className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.sizes.includes(size)
+                                ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                                : 'border-gray-100 bg-white text-muted-foreground hover:border-gray-200'
+                                }`}
+                        >
+                            <input
+                                type="checkbox"
+                                className="hidden"
+                                checked={formData.sizes.includes(size)}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setFormData({ ...formData, sizes: [...formData.sizes, size].sort((a, b) => parseInt(a) - parseInt(b)) });
+                                    } else {
+                                        setFormData({ ...formData, sizes: formData.sizes.filter((s: string) => s !== size) });
+                                    }
+                                }}
+                            />
+                            <span className="text-xs font-bold">{size}</span>
+                        </label>
+                    ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2 px-1">
+                    Select all sizes currently in stock for this product.
+                </p>
             </div>
             <div>
                 <Label>Colors (comma separated)</Label>

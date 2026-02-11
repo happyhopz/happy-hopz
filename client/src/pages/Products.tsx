@@ -14,6 +14,8 @@ import { Slider } from '@/components/ui/slider';
 import { ShoppingCart, Search, SlidersHorizontal, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import ShareProduct from '@/components/ShareProduct';
+import { ALL_EU_SIZES } from '@/lib/constants';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const Products = () => {
     const { user } = useAuth();
@@ -47,7 +49,7 @@ const Products = () => {
         addToCartMutation.mutate({
             productId: product.id,
             quantity: 1,
-            size: product.sizes[0] || 'M',
+            size: product.sizes[0] || '13',
             color: product.colors[0] || 'Default'
         });
     };
@@ -62,7 +64,7 @@ const Products = () => {
             await cartAPI.add({
                 productId: product.id,
                 quantity: 1,
-                size: product.sizes[0] || 'M',
+                size: product.sizes[0] || '13',
                 color: product.colors[0] || 'Default'
             });
             queryClient.invalidateQueries({ queryKey: ['cart'] });
@@ -224,10 +226,20 @@ const Products = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-fredoka font-bold text-foreground mb-2 block">Sizes</label>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                            <div className="space-y-4 md:col-span-2">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-sm font-fredoka font-bold text-foreground">Filter by Size (EU)</label>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-[10px] h-auto p-0 font-bold text-muted-foreground hover:text-primary"
+                                        onClick={() => setSelectedSizes([])}
+                                    >
+                                        Clear All
+                                    </Button>
+                                </div>
+                                <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+                                    {ALL_EU_SIZES.map(size => (
                                         <button
                                             key={size}
                                             onClick={() => {
@@ -235,23 +247,15 @@ const Products = () => {
                                                     prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
                                                 );
                                             }}
-                                            className={`h-8 rounded-lg text-xs font-bold border-2 transition-all ${selectedSizes.includes(size)
+                                            className={`h-9 rounded-xl text-xs font-bold border-2 transition-all ${selectedSizes.includes(size)
                                                 ? 'border-primary bg-primary text-white shadow-sm'
-                                                : 'border-muted text-muted-foreground hover:border-primary/30'
+                                                : 'border-muted text-muted-foreground hover:border-primary/30 bg-white'
                                                 }`}
                                         >
                                             {size}
                                         </button>
                                     ))}
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-[10px] h-auto p-0 font-bold text-muted-foreground hover:text-primary"
-                                    onClick={() => setSelectedSizes([])}
-                                >
-                                    Reset Sizes
-                                </Button>
                             </div>
                         </div>
                     )}

@@ -41,3 +41,5 @@ export const SIZE_GUIDE_DATA = [
     { ourSize: 'XXL', age: '7 Years', eu: '32', inch: '7.75"', cm: '19.7' },
     { ourSize: 'XXL', age: '8 Years', eu: '33', inch: '8.125"', cm: '20.6' },
 ];
+
+export const ALL_EU_SIZES = Array.from(new Set(SIZE_GUIDE_DATA.map(item => item.eu))).sort((a, b) => parseInt(a) - parseInt(b));

@@ -395,7 +395,7 @@ const ProductDetail = () => {
                         {/* Select Size */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <h3 className="font-bold text-foreground uppercase tracking-wide text-sm">Select Size</h3>
+                                <h3 className="font-bold text-foreground uppercase tracking-wide text-sm">Select Size (EU)</h3>
                                 <button
                                     onClick={() => setShowSizeChart(true)}
                                     className="text-pink-500 font-bold text-sm hover:underline flex items-center gap-1"
@@ -404,14 +404,14 @@ const ProductDetail = () => {
                                     Size Chart
                                 </button>
                             </div>
-                            <div className="flex gap-3 flex-wrap">
+                            <div className="grid grid-cols-5 md:grid-cols-7 gap-2">
                                 {product.sizes.map((size: string) => (
                                     <button
                                         key={size}
                                         onClick={() => setSelectedSize(size)}
-                                        className={`w-14 h-14 rounded-full border-2 font-bold transition-all ${selectedSize === size
-                                            ? 'border-blue-600 text-black bg-blue-400 shadow-lg scale-105'
-                                            : 'border-gray-300 text-foreground hover:border-blue-500 bg-white'
+                                        className={`h-11 rounded-xl border-2 font-bold transition-all flex items-center justify-center text-sm ${selectedSize === size
+                                            ? 'border-blue-600 text-black bg-blue-100 shadow-md scale-105'
+                                            : 'border-gray-200 text-foreground hover:border-blue-500 bg-white'
                                             }`}
                                     >
                                         {size}
