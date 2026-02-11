@@ -53,7 +53,7 @@ const faqData = [
         questions: [
             {
                 q: 'What is your return policy?',
-                a: 'We offer a 14-day easy return policy. Products must be unused, in original packaging, and with all tags intact.'
+                a: 'We offer a 7-day easy return policy. Products must be unused, in original packaging, and with all tags intact.'
             },
             {
                 q: 'How do I return a product?',

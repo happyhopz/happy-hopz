@@ -627,7 +627,7 @@ const ProductDetail = () => {
                             </button>
                             {showDeliveryDetails && (
                                 <div className="pb-4 space-y-3 text-sm">
-                                    <p>✓ Free delivery on orders above ₹499</p>
+                                    <p>✓ Free delivery on orders above ₹999</p>
                                     <p>✓ Cash on Delivery available</p>
                                     <p>✓ Easy 7-day returns</p>
                                     <p>✓ Items can be exchanged for different sizes</p>
