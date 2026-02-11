@@ -73,37 +73,31 @@ const OrderDetail = () => {
 
     const getStatusIcon = (status: string) => {
         const icons: any = {
-            PENDING: <Clock className="w-5 h-5 text-gray-500" />,
-            CONFIRMED: <CheckCircle2 className="w-5 h-5 text-blue-500" />,
-            PROCESSING: <Package className="w-5 h-5 text-purple-500" />,
-            SHIPPED: <Truck className="w-5 h-5 text-indigo-500" />,
+            CONFIRMED: <CheckCircle2 className="w-5 h-5 text-pink-500" />,
+            SHIPPED: <Truck className="w-5 h-5 text-purple-500" />,
             OUT_FOR_DELIVERY: <Truck className="w-5 h-5 text-orange-500" />,
             DELIVERED: <CheckCircle2 className="w-5 h-5 text-green-500" />,
-            CANCELLED: <XCircle className="w-5 h-5 text-red-500" />,
-            REFUNDED: <IndianRupee className="w-5 h-5 text-gray-500" />
+            CANCELLED: <XCircle className="w-5 h-5 text-slate-400" />,
+            REFUNDED: <IndianRupee className="w-5 h-5 text-slate-400" />
         };
         return icons[status] || <Clock className="w-5 h-5 text-gray-400" />;
     };
 
     const getStatusColor = (status: string) => {
         const colors: any = {
-            PENDING: 'bg-gray-400',
-            CONFIRMED: 'bg-blue-500',
-            PROCESSING: 'bg-purple-500',
-            SHIPPED: 'bg-indigo-600',
+            CONFIRMED: 'bg-pink-500',
+            SHIPPED: 'bg-purple-600',
             OUT_FOR_DELIVERY: 'bg-orange-500',
-            DELIVERED: 'bg-green-500',
-            CANCELLED: 'bg-red-500',
-            REFUNDED: 'bg-gray-600'
+            DELIVERED: 'bg-green-600',
+            CANCELLED: 'bg-slate-500',
+            REFUNDED: 'bg-slate-900'
         };
         return colors[status] || 'bg-gray-500';
     };
 
     const getStatusLabel = (status: string) => {
         const labels: any = {
-            PENDING: 'Pending Confirmation',
-            CONFIRMED: 'Order Confirmed',
-            PROCESSING: 'Processing Order',
+            CONFIRMED: 'Confirmed',
             SHIPPED: 'Shipped',
             OUT_FOR_DELIVERY: 'Out for Delivery',
             DELIVERED: 'Delivered',
@@ -113,7 +107,7 @@ const OrderDetail = () => {
         return labels[status] || status;
     };
 
-    const statusSteps = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
+    const statusSteps = ['CONFIRMED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
     if (loading) {
         return (
@@ -177,22 +171,27 @@ const OrderDetail = () => {
 
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-4xl font-fredoka font-bold text-foreground">
-                                Order #{order.orderId || String(order.id || '').slice(0, 8)}
+                            <h1 className="text-4xl font-fredoka font-black text-slate-900 tracking-tight">
+                                Order #{order.orderId || String(order.id || '').slice(-8)}
                             </h1>
-                            <p className="text-muted-foreground flex items-center gap-2 mt-1">
-                                <Calendar className="w-4 h-4" />
+                            <p className="text-slate-400 flex items-center gap-2 mt-2 text-sm font-bold uppercase tracking-wider">
+                                <Calendar className="w-4 h-4 text-pink-500" />
                                 Placed on {order.createdAt ? format(new Date(order.createdAt), 'MMMM dd, yyyy') : 'N/A'}
                             </p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <Badge className={`${getStatusColor(order.status)} text-white px-3 py-1 uppercase tracking-wider font-extrabold`}>
-                                {getStatusIcon(order.status)}
-                                <span className="ml-2">{getStatusLabel(order.status)}</span>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Badge className={`${getStatusColor(order.status)} text-white px-4 py-1.5 uppercase tracking-widest font-black text-[10px] rounded-full shadow-lg shadow-pink-200/50`}>
+                                {getStatusLabel(order.status)}
                             </Badge>
-                            <Badge variant="outline" className="uppercase font-bold">
-                                {order.paymentStatus === 'PENDING' ? 'Awaiting Payment' : order.paymentStatus}
-                            </Badge>
+                            {order.paymentStatus === 'PENDING' ? (
+                                <Badge variant="outline" className="uppercase font-black text-[10px] tracking-widest border-2 border-orange-100 bg-orange-50/50 text-orange-600 px-3 py-1.5 rounded-full">
+                                    Awaiting Payment
+                                </Badge>
+                            ) : (
+                                <Badge variant="outline" className="uppercase font-black text-[10px] tracking-widest border-2 border-green-100 bg-green-50/50 text-green-600 px-3 py-1.5 rounded-full">
+                                    {order.paymentStatus}
+                                </Badge>
+                            )}
                         </div>
                     </div>
 
@@ -290,213 +289,238 @@ const OrderDetail = () => {
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Status Progress */}
-                        {order.status !== 'CANCELLED' && (
-                            <Card className="p-6 overflow-hidden relative">
-                                <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-fredoka font-bold">Shipping Progress</h2>
+                        {!['CANCELLED', 'REFUNDED'].includes(order.status) && (
+                            <Card className="p-8 overflow-hidden relative border-none shadow-2xl shadow-slate-200/50 bg-white ring-1 ring-slate-100 rounded-3xl">
+                                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-pink-500 to-purple-600" />
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-2xl font-black text-slate-900">Shipping Journey</h2>
                                     {order.trackingNumber && (
-                                        <div className="bg-primary/5 px-4 py-2 rounded-lg border border-primary/20 flex items-center gap-2">
-                                            <span className="text-xs font-bold text-muted-foreground uppercase">Tracking:</span>
-                                            <code className="text-sm font-bold text-primary">{order.trackingNumber}</code>
+                                        <div className="bg-slate-50 px-5 py-2.5 rounded-2xl border-2 border-slate-100 flex items-center gap-3">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Live Tracking</span>
+                                                <code className="text-sm font-black text-slate-900">{order.trackingNumber}</code>
+                                            </div>
+                                            <div className="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center shadow-lg shadow-pink-200">
+                                                <ArrowLeft className="w-4 h-4 rotate-180" />
+                                            </div>
                                         </div>
                                     )}
                                 </div>
-                                <div className="relative pt-4 pb-8">
+                                <div className="relative pt-6 pb-10">
                                     <div className="flex justify-between relative z-10">
                                         {statusSteps.map((step, index) => (
                                             <div key={step} className="flex flex-col items-center">
-                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 shadow-sm border-4 ${index <= currentStep
-                                                    ? 'bg-primary border-primary/20 text-white scale-110'
-                                                    : 'bg-white border-muted text-muted-foreground'
+                                                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-700 shadow-xl border-4 ${index <= currentStep
+                                                    ? 'bg-slate-900 border-white text-white scale-110 shadow-slate-300'
+                                                    : 'bg-white border-slate-50 text-slate-200'
                                                     }`}>
                                                     {index < currentStep ? (
-                                                        <CheckCircle2 className="w-6 h-6" />
+                                                        <CheckCircle2 className="w-7 h-7" />
                                                     ) : (
                                                         getStatusIcon(step)
                                                     )}
                                                 </div>
-                                                <span className={`text-xs mt-3 font-bold uppercase tracking-wider ${index <= currentStep ? 'text-primary' : 'text-muted-foreground'
+                                                <span className={`text-[10px] mt-4 font-black uppercase tracking-[2px] ${index <= currentStep ? 'text-slate-900' : 'text-slate-300'
                                                     }`}>
-                                                    {step}
+                                                    {step.replace(/_/g, ' ')}
                                                 </span>
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="absolute top-[42px] left-6 right-6 h-1 bg-muted rounded-full overflow-hidden">
+                                    <div className="absolute top-[52px] left-8 right-8 h-2 bg-slate-50 rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-primary transition-all duration-1000 ease-out"
+                                            className="h-full bg-slate-900 transition-all duration-[1500ms] ease-in-out"
                                             style={{ width: `${(currentStep / (statusSteps.length - 1)) * 100}%` }}
                                         />
                                     </div>
                                 </div>
 
                                 {order.estimatedDelivery && order.status !== 'DELIVERED' && (
-                                    <div className="mt-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center">
-                                                <Truck className="w-6 h-6 text-blue-500" />
+                                    <div className="mt-8 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl flex items-center justify-between text-white shadow-2xl shadow-slate-300 group overflow-hidden relative">
+                                        <div className="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
+                                        <div className="flex items-center gap-5 relative z-10">
+                                            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                                                <Truck className="w-7 h-7 text-pink-400" />
                                             </div>
                                             <div>
-                                                <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Estimated Delivery</p>
-                                                <p className="text-lg font-fredoka font-bold text-blue-900">
-                                                    {format(new Date(order.estimatedDelivery), 'EEEE, MMMM dd, yyyy')}
+                                                <p className="text-[10px] font-black text-pink-400 uppercase tracking-[3px] mb-1">Arrival Window</p>
+                                                <p className="text-xl font-fredoka font-bold">
+                                                    {format(new Date(order.estimatedDelivery), 'EEEE, MMMM dd')}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="hidden md:block text-right">
-                                            <p className="text-xs text-blue-600 font-medium italic">"On track for timely arrival"</p>
+                                        <div className="hidden md:block text-right relative z-10">
+                                            <p className="text-xs text-white/60 font-medium tracking-wide">"Our fleet is moving at top speed"</p>
                                         </div>
                                     </div>
                                 )}
+                            </Card>
 
                                 {order.status === 'SHIPPED' && (
-                                    <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
-                                        <Truck className="w-5 h-5 text-blue-500" />
-                                        <div>
-                                            <p className="text-sm text-blue-700 font-bold">Your package is on its way!</p>
-                                            <p className="text-xs text-blue-600">{order.courierPartner || 'Standard Courier Service'}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </Card>
+                            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
+                                <Truck className="w-5 h-5 text-blue-500" />
+                                <div>
+                                    <p className="text-sm text-blue-700 font-bold">Your package is on its way!</p>
+                                    <p className="text-xs text-blue-600">{order.courierPartner || 'Standard Courier Service'}</p>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
                         )}
 
-                        {/* Order Items */}
-                        <Card className="p-6">
-                            <h2 className="text-xl font-fredoka font-bold mb-6">Order Items</h2>
-                            <div className="space-y-4">
-                                {order.items?.map((item: any) => (
-                                    <div key={item.id} className="flex gap-4 p-4 bg-muted rounded-xl">
-                                        <div className="w-20 h-20 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border">
-                                            {(() => {
-                                                let imageUrl = '';
-                                                try {
-                                                    const images = typeof item.product?.images === 'string'
-                                                        ? JSON.parse(item.product.images)
-                                                        : item.product?.images;
-                                                    imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : '';
-                                                } catch (e) {
-                                                    console.error('Image parse error', e);
-                                                }
-                                                return imageUrl ? (
-                                                    <img
-                                                        src={imageUrl}
-                                                        alt={item.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : <Package className="w-8 h-8 text-muted-foreground" />;
-                                            })()}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-fredoka font-bold">{item.name}</h3>
-                                            <p className="text-sm text-muted-foreground">
-                                                Size: {item.size} | Color: {item.color} | Qty: {item.quantity}
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-fredoka font-bold text-primary flex items-center justify-end gap-1">
-                                                <IndianRupee className="w-4 h-4" />
-                                                {((item.price || 0) * (item.quantity || 1)).toFixed(2)}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground flex items-center justify-end gap-1">
-                                                <IndianRupee className="w-3 h-3" />
-                                                {(item.price || 0).toFixed(2)} each
-                                            </p>
-                                        </div>
+                    {/* Order Items */}
+                    <Card className="p-8 border-none shadow-xl shadow-slate-200/50 bg-white ring-1 ring-slate-100 rounded-3xl">
+                        <h2 className="text-2xl font-black text-slate-900 mb-8 tracking-tight">Order Items</h2>
+                        <div className="space-y-6">
+                            {order.items?.map((item: any) => (
+                                <div key={item.id} className="flex gap-6 p-6 bg-slate-50/50 rounded-3xl border border-slate-100 hover:border-pink-200 transition-colors group">
+                                    <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-slate-100 shadow-sm group-hover:scale-105 transition-transform duration-500">
+                                        {(() => {
+                                            let imageUrl = '';
+                                            try {
+                                                const images = typeof item.product?.images === 'string'
+                                                    ? JSON.parse(item.product.images)
+                                                    : item.product?.images;
+                                                imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : '';
+                                            } catch (e) {
+                                                console.error('Image parse error', e);
+                                            }
+                                            return imageUrl ? (
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={item.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : <Package className="w-10 h-10 text-slate-200" />;
+                                        })()}
                                     </div>
-                                ))}
-                            </div>
-                        </Card>
+                                    <div className="flex-1 flex flex-col justify-center">
+                                        <h3 className="text-lg font-black text-slate-900 leading-tight mb-1">{item.name}</h3>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] flex items-center gap-3">
+                                            <span>Size: {item.size}</span>
+                                            <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                                            <span>Color: {item.color}</span>
+                                            <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                                            <span className="text-pink-500">QTY: {item.quantity}</span>
+                                        </p>
+                                    </div>
+                                    <div className="text-right flex flex-col justify-center">
+                                        <p className="text-xl font-black text-slate-900 flex items-center justify-end">
+                                            <IndianRupee className="w-4 h-4 mr-1 text-slate-400" />
+                                            {((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                                        </p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                                            ₹{(item.price || 0).toFixed(2)} / Unit
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
 
-                        {/* Admin Controls */}
-                        {isAdmin && (
-                            <Card className="p-6">
-                                <h2 className="text-xl font-fredoka font-bold mb-4">Admin Controls</h2>
-                                <div className="flex flex-wrap gap-2">
-                                    {statusSteps.map((status) => (
-                                        <Button
-                                            key={status}
-                                            variant={order.status === status ? 'default' : 'outline'}
-                                            size="sm"
-                                            onClick={() => updateStatusMutation.mutate(status)}
-                                            disabled={updateStatusMutation.isPending}
-                                        >
-                                            {status}
-                                        </Button>
-                                    ))}
+                    {/* Admin Controls */}
+                    {isAdmin && (
+                        <Card className="p-6">
+                            <h2 className="text-xl font-fredoka font-bold mb-4">Admin Controls</h2>
+                            <div className="flex flex-wrap gap-2">
+                                {statusSteps.map((status) => (
                                     <Button
-                                        variant={order.status === 'CANCELLED' ? 'destructive' : 'outline'}
+                                        key={status}
+                                        variant={order.status === status ? 'default' : 'outline'}
                                         size="sm"
-                                        onClick={() => updateStatusMutation.mutate('CANCELLED')}
+                                        onClick={() => updateStatusMutation.mutate(status)}
                                         disabled={updateStatusMutation.isPending}
                                     >
-                                        CANCELLED
+                                        {status}
                                     </Button>
-                                </div>
-                            </Card>
-                        )}
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Order Summary */}
-                        <Card className="p-6">
-                            <h2 className="text-xl font-fredoka font-bold mb-4">Order Summary</h2>
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Subtotal</span>
-                                    <span className="font-nunito font-semibold flex items-center gap-1">
-                                        <IndianRupee className="w-3 h-3" />
-                                        {(order.total || 0).toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Shipping</span>
-                                    <span className="font-nunito font-semibold text-primary">Free</span>
-                                </div>
-                                <Separator />
-                                <div className="flex justify-between">
-                                    <span className="text-xl font-fredoka font-bold">Total</span>
-                                    <span className="text-2xl font-fredoka font-bold text-primary flex items-center gap-1">
-                                        <IndianRupee className="w-5 h-5" />
-                                        {(order.total || 0).toFixed(2)}
-                                    </span>
-                                </div>
+                                ))}
+                                <Button
+                                    variant={order.status === 'CANCELLED' ? 'destructive' : 'outline'}
+                                    size="sm"
+                                    onClick={() => updateStatusMutation.mutate('CANCELLED')}
+                                    disabled={updateStatusMutation.isPending}
+                                >
+                                    CANCELLED
+                                </Button>
                             </div>
                         </Card>
+                    )}
+                </div>
 
-                        {/* Shipping Address */}
-                        <Card className="p-6">
-                            <h2 className="text-xl font-fredoka font-bold mb-4 flex items-center gap-2">
-                                <MapPin className="w-5 h-5" />
-                                Shipping Address
-                            </h2>
-                            {order.address ? (
-                                <div className="space-y-2 text-sm">
-                                    <p className="font-nunito font-semibold">{order.address.name}</p>
-                                    <p className="text-muted-foreground">{order.address.line1}</p>
-                                    {order.address.line2 && (
-                                        <p className="text-muted-foreground">{order.address.line2}</p>
-                                    )}
-                                    <p className="text-muted-foreground">
+                {/* Sidebar */}
+                <div className="space-y-8">
+                    {/* Order Summary */}
+                    <Card className="p-8 border-none shadow-2xl shadow-slate-200/50 bg-white ring-1 ring-slate-100 rounded-3xl overflow-hidden relative">
+                        <h2 className="text-xl font-black text-slate-900 mb-6 tracking-tight">Order Receipt</h2>
+                        <div className="space-y-5">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Subtotal</span>
+                                <span className="font-black text-slate-900">₹{(order.total || 0).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Shipping Mode</span>
+                                <span className="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-widest rounded-full">Standard Courier</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Delivery Fee</span>
+                                <span className="text-xs font-black text-slate-900 uppercase">FREE</span>
+                            </div>
+                            <div className="pt-6 border-t-2 border-dashed border-slate-100">
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-[3px] text-pink-500 mb-1">Total Payable</p>
+                                        <p className="text-4xl font-fredoka font-black text-slate-900">
+                                            ₹{(order.total || 0).toFixed(2)}
+                                        </p>
+                                    </div>
+                                    <div className="text-right pb-1">
+                                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Inclusive of taxes</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Shipping Address */}
+                    <Card className="p-8 border-none shadow-2xl shadow-slate-200/50 bg-slate-900 text-white rounded-3xl relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mb-16 group-hover:scale-110 transition-transform duration-700" />
+                        <h2 className="text-lg font-black mb-6 flex items-center gap-3 relative z-10">
+                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+                                <MapPin className="w-5 h-5 text-pink-400" />
+                            </div>
+                            Delivery Details
+                        </h2>
+                        {order.address ? (
+                            <div className="space-y-6 relative z-10">
+                                <div>
+                                    <p className="text-sm font-black uppercase tracking-widest text-pink-400 mb-2">Recipient</p>
+                                    <p className="text-lg font-bold leading-tight">{order.address.name}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black uppercase tracking-widest text-pink-400 mb-2">Location</p>
+                                    <p className="text-sm font-medium text-white/80 leading-relaxed uppercase tracking-wide">
+                                        {order.address.line1}<br />
+                                        {order.address.line2 && <>{order.address.line2}<br /></>}
                                         {order.address.city}, {order.address.state} - {order.address.pincode}
                                     </p>
-                                    <p className="flex items-center gap-2 text-muted-foreground mt-2">
-                                        <Phone className="w-4 h-4" />
+                                </div>
+                                <div className="pt-6 border-t border-white/10">
+                                    <p className="flex items-center gap-3 text-sm font-black">
+                                        <Phone className="w-4 h-4 text-pink-400" />
                                         {order.address.phone}
                                     </p>
                                 </div>
-                            ) : (
-                                <p className="text-muted-foreground">No address provided</p>
-                            )}
-                        </Card>
-                    </div>
+                            </div>
+                        ) : (
+                            <p className="text-white/40 italic relative z-10">No shipping identity verified</p>
+                        )}
+                    </Card>
                 </div>
-            </main>
-
-            <Footer />
         </div>
+            </main >
+
+    <Footer />
+        </div >
     );
 };
 
