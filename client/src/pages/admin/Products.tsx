@@ -16,8 +16,17 @@ import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { ALL_EU_SIZES } from '@/lib/constants';
-
 const ProductForm = ({ product, onSubmit, isLoading }: any) => {
+    const initialSizes = product?.sizes || [];
+    const initialInventory = (Array.isArray(product?.inventory) ? product.inventory : []).filter((i: any) => initialSizes.includes(i.size));
+
+    // Auto-sync: Add missing entries to inventory if they exist in sizes
+    initialSizes.forEach((size: string) => {
+        if (!initialInventory.find((i: any) => i.size === size)) {
+            initialInventory.push({ size, stock: product?.stock || 0 });
+        }
+    });
+
     const [formData, setFormData] = useState({
         name: product?.name || '',
         description: product?.description || '',
@@ -25,8 +34,8 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         discountPrice: product?.discountPrice || '',
         category: product?.category || 'Sneakers',
         ageGroup: product?.ageGroup || '3-6 years',
-        sizes: product?.sizes || [],
-        inventory: Array.isArray(product?.inventory) ? product.inventory : [],
+        sizes: initialSizes,
+        inventory: initialInventory.sort((a: any, b: any) => parseInt(a.size) - parseInt(b.size)),
         colors: product?.colors?.join(', ') || 'Red, Blue, Green',
         stock: product?.stock || 0,
         images: product?.images || [],
@@ -340,19 +349,19 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Current Stock</p>
                                         <Input
-                                            type="number"
-                                            min="0"
-                                            value={sizeStock}
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={sizeStock === 0 ? '' : sizeStock}
                                             onChange={(e) => {
-                                                const val = parseInt(e.target.value) || 0;
+                                                const val = e.target.value === '' ? 0 : parseInt(e.target.value.replace(/\D/g, ''));
                                                 const newInventory = formData.inventory.map((i: any) =>
-                                                    i.size === size ? { ...i, stock: val } : i
+                                                    i.size === size ? { ...i, stock: isNaN(val) ? 0 : val } : i
                                                 );
-                                                const newTotalStock = newInventory.reduce((sum: number, i: any) => sum + i.stock, 0);
+                                                const newTotalStock = newInventory.reduce((sum: number, i: any) => sum + (parseInt(i.stock) || 0), 0);
                                                 setFormData({ ...formData, inventory: newInventory, stock: newTotalStock });
                                             }}
                                             className="h-10 text-sm font-bold border-gray-200 bg-gray-50/50 focus:bg-white transition-colors"
-                                            placeholder="Quantity"
+                                            placeholder="0"
                                         />
                                     </div>
                                 )}
