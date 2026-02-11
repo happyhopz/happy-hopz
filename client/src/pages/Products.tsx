@@ -340,7 +340,7 @@ const ProductCard = ({
                     <img
                         src={product.images[0]}
                         alt={product.name}
-                        className="relative w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                        className="relative w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                 </div>
 
