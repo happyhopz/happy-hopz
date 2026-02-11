@@ -44,6 +44,11 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
         to: email,
         subject: subject,
         html: bodyHtml,
+        headers: {
+            'X-Priority': '1 (Highest)',
+            'Importance': 'high',
+            'Priority': 'urgent'
+        },
         attachments: attachment ? [
             {
                 filename: attachment.filename,
@@ -53,6 +58,10 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
             }
         ] : []
     };
+
+    if (process.env.SENDGRID_API_KEY) {
+        return sgMail.send(mailOptions);
+    }
 
     return transporter.sendMail(mailOptions);
 };
@@ -181,9 +190,13 @@ export const sendAdminOrderNotification = async (order: any) => {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
 
     const mailOptions = {
-        from: '"Happy Hopz Admin" <orders@happyhopz.com>',
+        from: `"Happy Hopz Admin" <${VERIFIED_SENDER}>`,
         to: adminEmail,
         subject: `🛍️ NEW ORDER: ${order.orderId || order.id} - ₹${order.total}`,
+        headers: {
+            'X-Priority': '1 (Highest)',
+            'Importance': 'high'
+        },
         html: `<h2>New Order Alert!</h2><p>Order #${order.orderId || order.id} received from ${order.address?.name || 'Guest'}.</p><a href="https://happy-hopz.vercel.app/admin/orders/${order.id}">Admin View</a>`
     };
 
@@ -196,9 +209,13 @@ export const sendAdminAlertEmail = async (title: string, message: string) => {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
 
     const mailOptions = {
-        from: '"Happy Hopz Alerts" <alerts@happyhopz.com>',
+        from: `"Happy Hopz Alerts" <${VERIFIED_SENDER}>`,
         to: adminEmail,
         subject: `🔔 ALERT: ${title}`,
+        headers: {
+            'X-Priority': '1 (Highest)',
+            'Importance': 'high'
+        },
         html: `<p>${message}</p>`
     };
 
