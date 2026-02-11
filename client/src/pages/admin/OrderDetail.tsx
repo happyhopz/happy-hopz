@@ -192,24 +192,24 @@ const AdminOrderDetail = () => {
 
                     <div className="space-y-8">
                         {/* Customer Sidebar */}
-                        <Card className="p-6 border-none shadow-lg bg-pink-600 text-white">
-                            <h3 className="font-black uppercase tracking-widest text-[10px] opacity-60 mb-4">Dispatcher Note</h3>
+                        <Card className="p-6 border-none shadow-lg bg-slate-50 ring-1 ring-slate-200">
+                            <h3 className="font-black uppercase tracking-widest text-[10px] text-slate-400 mb-4">Dispatcher Note</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <p className="text-sm font-black uppercase">{order.address.name}</p>
-                                    <p className="text-xs opacity-90 leading-relaxed font-medium mt-1">
+                                    <p className="text-sm font-black uppercase text-slate-900 uppercase">{order.address.name}</p>
+                                    <p className="text-xs text-slate-600 leading-relaxed font-medium mt-1">
                                         {order.address.line1}, {order.address.line2 && `${order.address.line2}, `}
                                         {order.address.city}, {order.address.state} - {order.address.pincode}
                                     </p>
                                 </div>
-                                <div className="pt-4 border-t border-white/20">
+                                <div className="pt-4 border-t border-slate-200">
                                     <div className="flex items-center gap-2">
-                                        <User className="w-4 h-4 opacity-60" />
-                                        <span className="text-xs font-bold">{order.user?.email || order.guestEmail}</span>
+                                        <User className="w-4 h-4 text-slate-400" />
+                                        <span className="text-xs font-bold text-slate-900">{order.user?.email || order.guestEmail}</span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <Truck className="w-4 h-4 opacity-60" />
-                                        <span className="text-xs font-bold">{order.address.phone}</span>
+                                        <Truck className="w-4 h-4 text-slate-400" />
+                                        <span className="text-xs font-bold text-slate-900">{order.address.phone}</span>
                                     </div>
                                 </div>
                             </div>
@@ -237,16 +237,16 @@ const AdminOrderDetail = () => {
                         </Card>
 
                         {/* Notification Status */}
-                        <Card className="p-6 border-none shadow-xl bg-slate-900 text-white">
-                            <h3 className="text-xs font-black uppercase tracking-widest opacity-60 mb-4 text-center">Notification Handshake</h3>
+                        <Card className="p-6 border-none shadow-xl bg-slate-50 ring-1 ring-slate-200">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 text-center">Notification Handshake</h3>
                             <div className="flex gap-4">
-                                <div className={`flex-1 p-4 rounded-xl text-center border-2 ${order.emailSent ? 'border-green-500/50 bg-green-500/10' : 'border-slate-800 bg-slate-800'}`}>
-                                    <p className="text-[10px] font-black uppercase">Email</p>
-                                    <p className={`text-xs font-bold mt-1 ${order.emailSent ? 'text-green-400' : 'text-slate-500'}`}>{order.emailSent ? 'Delivered' : 'Pending'}</p>
+                                <div className={`flex-1 p-4 rounded-xl text-center border-2 ${order.emailSent ? 'border-green-500/50 bg-green-50' : 'border-slate-200 bg-white'}`}>
+                                    <p className="text-[10px] font-black uppercase text-slate-500">Email</p>
+                                    <p className={`text-xs font-bold mt-1 ${order.emailSent ? 'text-green-600' : 'text-slate-400'}`}>{order.emailSent ? 'Delivered' : 'Pending'}</p>
                                 </div>
-                                <div className={`flex-1 p-4 rounded-xl text-center border-2 ${order.whatsappSent ? 'border-green-500/50 bg-green-500/10' : 'border-slate-800 bg-slate-800'}`}>
-                                    <p className="text-[10px] font-black uppercase">WhatsApp</p>
-                                    <p className={`text-xs font-bold mt-1 ${order.whatsappSent ? 'text-green-400' : 'text-slate-500'}`}>{order.whatsappSent ? 'Delivered' : 'Pending'}</p>
+                                <div className={`flex-1 p-4 rounded-xl text-center border-2 ${order.whatsappSent ? 'border-green-500/50 bg-green-50' : 'border-slate-200 bg-white'}`}>
+                                    <p className="text-[10px] font-black uppercase text-slate-500">WhatsApp</p>
+                                    <p className={`text-xs font-bold mt-1 ${order.whatsappSent ? 'text-green-600' : 'text-slate-400'}`}>{order.whatsappSent ? 'Delivered' : 'Pending'}</p>
                                 </div>
                             </div>
                         </Card>
