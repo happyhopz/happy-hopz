@@ -45,6 +45,7 @@ router.get('/', async (req: Request, res: Response) => {
         const formattedProducts = products.map(p => ({
             ...p,
             sizes: JSON.parse(p.sizes),
+            inventory: (p as any).inventory ? JSON.parse((p as any).inventory) : [],
             colors: JSON.parse(p.colors),
             images: JSON.parse(p.images),
             tags: p.tags ? JSON.parse(p.tags) : []
@@ -70,6 +71,7 @@ router.get('/:id', async (req: Request, res: Response) => {
         res.json({
             ...product,
             sizes: JSON.parse(product.sizes),
+            inventory: (product as any).inventory ? JSON.parse((product as any).inventory) : [],
             colors: JSON.parse(product.colors),
             images: JSON.parse(product.images),
             tags: product.tags ? JSON.parse(product.tags) : []
@@ -89,7 +91,11 @@ const createProductSchema = z.object({
     ageGroup: z.string(),
     sizes: z.array(z.string()),
     colors: z.array(z.string()),
-    stock: z.number().int().nonnegative(),
+    inventory: z.array(z.object({
+        size: z.string(),
+        stock: z.number().int().nonnegative()
+    })).optional(),
+    stock: z.number().int().nonnegative().optional(),
     images: z.array(z.string()),
     tags: z.array(z.string()).optional()
 });
@@ -98,10 +104,15 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
     try {
         const data = createProductSchema.parse(req.body);
 
-        const product = await prisma.product.create({
+        const inventory = data.inventory || data.sizes.map((s: string) => ({ size: s, stock: 10 })); // Default stock if not provided
+        const totalStock = inventory.reduce((sum: number, item: any) => sum + item.stock, 0);
+
+        const product = await (prisma.product as any).create({
             data: {
                 ...data,
+                stock: totalStock,
                 sizes: JSON.stringify(data.sizes),
+                inventory: JSON.stringify(inventory),
                 colors: JSON.stringify(data.colors),
                 images: JSON.stringify(data.images),
                 tags: data.tags ? JSON.stringify(data.tags) : '[]'
@@ -145,7 +156,12 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
         if (data.images) updateData.images = JSON.stringify(data.images);
         if (data.tags) updateData.tags = JSON.stringify(data.tags);
 
-        const product = await prisma.product.update({
+        if (data.inventory) {
+            updateData.inventory = JSON.stringify(data.inventory);
+            updateData.stock = data.inventory.reduce((sum: number, item: any) => sum + item.stock, 0);
+        }
+
+        const product = await (prisma.product as any).update({
             where: { id: req.params.id as string },
             data: updateData
         });

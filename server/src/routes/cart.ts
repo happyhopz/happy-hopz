@@ -25,6 +25,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
                     product: product ? {
                         ...product,
                         sizes: JSON.parse(product.sizes),
+                        inventory: (product as any).inventory ? JSON.parse((product as any).inventory) : [],
                         colors: JSON.parse(product.colors),
                         images: JSON.parse(product.images)
                     } : null

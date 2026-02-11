@@ -147,12 +147,27 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                 }
             });
 
-            // Update product stock
+            // Update product stock (Per-size inventory)
             for (const item of data.items) {
-                await tx.product.update({
-                    where: { id: item.productId },
-                    data: { stock: { decrement: item.quantity } }
-                });
+                const product = await tx.product.findUnique({ where: { id: item.productId } });
+                if (product) {
+                    const inventory = (product as any).inventory ? JSON.parse((product as any).inventory) : [];
+                    const updatedInventory = inventory.map((inv: any) => {
+                        if (inv.size === item.size) {
+                            return { ...inv, stock: Math.max(0, inv.stock - item.quantity) };
+                        }
+                        return inv;
+                    });
+                    const totalStock = updatedInventory.reduce((sum: number, i: any) => sum + i.stock, 0);
+
+                    await (tx.product as any).update({
+                        where: { id: item.productId },
+                        data: {
+                            inventory: JSON.stringify(updatedInventory),
+                            stock: totalStock
+                        }
+                    });
+                }
             }
 
             return order;
@@ -214,6 +229,31 @@ router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: 
                 },
                 include: { items: { include: { product: true } }, address: true, user: true }
             });
+
+            // Handle Stock Restoration on Cancellation
+            if (status === 'CANCELLED' && order.status !== 'CANCELLED') {
+                for (const item of order.items) {
+                    const product = await tx.product.findUnique({ where: { id: item.productId } });
+                    if (product) {
+                        const inventory = (product as any).inventory ? JSON.parse((product as any).inventory) : [];
+                        const updatedInventory = inventory.map((inv: any) => {
+                            if (inv.size === item.size) {
+                                return { ...inv, stock: inv.stock + item.quantity };
+                            }
+                            return inv;
+                        });
+                        const totalStock = updatedInventory.reduce((sum: number, i: any) => sum + i.stock, 0);
+
+                        await (tx.product as any).update({
+                            where: { id: item.productId },
+                            data: {
+                                inventory: JSON.stringify(updatedInventory),
+                                stock: totalStock
+                            }
+                        });
+                    }
+                }
+            }
 
             NotificationService.notifyStatusUpdate(updatedOrder).catch(err =>
                 console.error('Failed to send status update notification:', err)

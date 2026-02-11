@@ -405,20 +405,45 @@ const ProductDetail = () => {
                                 </button>
                             </div>
                             <div className="grid grid-cols-5 md:grid-cols-7 gap-2">
-                                {product.sizes.map((size: string) => (
-                                    <button
-                                        key={size}
-                                        onClick={() => setSelectedSize(size)}
-                                        className={`h-11 rounded-xl border-2 font-bold transition-all flex items-center justify-center text-sm ${selectedSize === size
-                                            ? 'border-blue-600 text-black bg-blue-100 shadow-md scale-105'
-                                            : 'border-gray-200 text-foreground hover:border-blue-500 bg-white'
-                                            }`}
-                                    >
-                                        {size}
-                                    </button>
-                                ))}
+                                {product.sizes.map((size: string) => {
+                                    const sizeStock = product.inventory?.find((i: any) => i.size === size)?.stock ?? 0;
+                                    const isOutOfStock = sizeStock <= 0;
+                                    const isLowStock = sizeStock > 0 && sizeStock <= 3;
+
+                                    return (
+                                        <button
+                                            key={size}
+                                            disabled={isOutOfStock}
+                                            onClick={() => setSelectedSize(size)}
+                                            className={`relative h-11 rounded-xl border-2 font-bold transition-all flex items-center justify-center text-sm ${selectedSize === size
+                                                ? 'border-blue-600 text-black bg-blue-100 shadow-md scale-105'
+                                                : isOutOfStock
+                                                    ? 'border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed'
+                                                    : 'border-gray-200 text-foreground hover:border-blue-500 bg-white'
+                                                }`}
+                                        >
+                                            {size}
+                                            {isLowStock && !isOutOfStock && (
+                                                <span className="absolute -top-2 -right-1 bg-orange-500 text-white text-[8px] px-1 rounded-full animate-pulse">
+                                                    Low
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
+
+                        {/* Inventory Status Message */}
+                        {selectedSize && (
+                            <p className={`text-xs font-bold ${product.inventory?.find((i: any) => i.size === selectedSize)?.stock <= 3 ? 'text-orange-600' : 'text-green-600'}`}>
+                                {product.inventory?.find((i: any) => i.size === selectedSize)?.stock <= 0
+                                    ? '❌ This size is currently out of stock'
+                                    : product.inventory?.find((i: any) => i.size === selectedSize)?.stock <= 3
+                                        ? `🔥 Only ${product.inventory?.find((i: any) => i.size === selectedSize)?.stock} pairs left in this size!`
+                                        : '✅ Size available in stock'}
+                            </p>
+                        )}
 
                         {/* Select Color */}
                         <div className="space-y-3">

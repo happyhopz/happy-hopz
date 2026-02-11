@@ -59,6 +59,7 @@ model Product {
   sizes          String
   colors         String
   stock          Int
+  inventory      String      @default("[]")
   images         String
   status         String      @default("ACTIVE")
   tags           String      @default("[]")

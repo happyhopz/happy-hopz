@@ -26,8 +26,9 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         category: product?.category || 'Sneakers',
         ageGroup: product?.ageGroup || '3-6 years',
         sizes: product?.sizes || [],
+        inventory: product?.inventory || [],
         colors: product?.colors?.join(', ') || 'Red, Blue, Green',
-        stock: product?.stock || '50',
+        stock: product?.stock || 0,
         images: product?.images || [],
         status: product?.status || 'ACTIVE',
         tags: product?.tags || [],
@@ -79,6 +80,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
             otherCosts: formData.otherCosts === '' ? null : parseFloat(String(formData.otherCosts)),
             stock: formData.stock === '' ? 0 : parseInt(String(formData.stock)),
             sizes: Array.isArray(formData.sizes) ? formData.sizes.map((s: any) => String(s).trim()) : [],
+            inventory: formData.inventory,
             colors: typeof formData.colors === 'string' ? formData.colors.split(',').map((c: any) => c.trim()) : formData.colors,
             tags: formData.tags || []
         };
@@ -307,34 +309,56 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                 </div>
             </div>
             <div>
-                <Label className="mb-2 block">Available Sizes (EU)</Label>
-                <div className="grid grid-cols-4 md:grid-cols-7 gap-2 p-4 border rounded-2xl bg-gray-50/30">
-                    {ALL_EU_SIZES.map((size) => (
-                        <label
-                            key={size}
-                            className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-200 ${formData.sizes.includes(size)
-                                ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                                : 'border-gray-100 bg-white text-muted-foreground hover:border-gray-200'
-                                }`}
-                        >
-                            <input
-                                type="checkbox"
-                                className="hidden"
-                                checked={formData.sizes.includes(size)}
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                        setFormData({ ...formData, sizes: [...formData.sizes, size].sort((a, b) => parseInt(a) - parseInt(b)) });
-                                    } else {
-                                        setFormData({ ...formData, sizes: formData.sizes.filter((s: string) => s !== size) });
-                                    }
-                                }}
-                            />
-                            <span className="text-xs font-bold">{size}</span>
-                        </label>
-                    ))}
+                <Label className="mb-2 block">Available Sizes (EU) & Stock</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 p-4 border rounded-2xl bg-gray-50/30">
+                    {ALL_EU_SIZES.map((size) => {
+                        const isSelected = formData.sizes.includes(size);
+                        const sizeStock = formData.inventory.find((i: any) => i.size === size)?.stock || 0;
+
+                        return (
+                            <div key={size} className={`flex flex-col p-3 rounded-xl border-2 transition-all duration-200 ${isSelected ? 'border-primary bg-white shadow-sm' : 'border-gray-100 bg-white/50 opacity-60'}`}>
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                const newSizes = [...formData.sizes, size].sort((a, b) => parseInt(a) - parseInt(b));
+                                                const newInventory = [...formData.inventory, { size, stock: 10 }].sort((a, b) => parseInt(a.size) - parseInt(b.size));
+                                                setFormData({ ...formData, sizes: newSizes, inventory: newInventory });
+                                            } else {
+                                                const newSizes = formData.sizes.filter((s: string) => s !== size);
+                                                const newInventory = formData.inventory.filter((i: any) => i.size !== size);
+                                                setFormData({ ...formData, sizes: newSizes, inventory: newInventory });
+                                            }
+                                        }}
+                                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    <span className="text-xs font-black">EU {size}</span>
+                                </label>
+                                {isSelected && (
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        value={sizeStock}
+                                        onChange={(e) => {
+                                            const val = parseInt(e.target.value) || 0;
+                                            const newInventory = formData.inventory.map((i: any) =>
+                                                i.size === size ? { ...i, stock: val } : i
+                                            );
+                                            const newTotalStock = newInventory.reduce((sum: number, i: any) => sum + i.stock, 0);
+                                            setFormData({ ...formData, inventory: newInventory, stock: newTotalStock });
+                                        }}
+                                        className="h-8 text-xs font-bold border-gray-100"
+                                        placeholder="Qty"
+                                    />
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2 px-1">
-                    Select all sizes currently in stock for this product.
+                    Select active sizes and enter current stock levels for each.
                 </p>
             </div>
             <div>
@@ -347,13 +371,12 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                 />
             </div>
             <div>
-                <Label>Stock</Label>
+                <Label>Total Stock (Auto-calculated)</Label>
                 <Input
                     type="number"
-                    min="0"
                     value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    required
+                    readOnly
+                    className="bg-gray-50 font-bold text-primary"
                 />
             </div>
             <div>

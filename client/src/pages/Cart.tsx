@@ -164,10 +164,17 @@ const Cart = () => {
                                                         variant="outline"
                                                         size="icon"
                                                         className="w-10 h-10 md:w-10 md:h-10 rounded-full border-cyan-200 hover:bg-cyan-50"
-                                                        onClick={() => updateMutation.mutate({
-                                                            id: item.id,
-                                                            quantity: item.quantity + 1
-                                                        })}
+                                                        onClick={() => {
+                                                            const sizeStock = item.product?.inventory?.find((i: any) => i.size === item.size)?.stock ?? 10;
+                                                            if (item.quantity < sizeStock) {
+                                                                updateMutation.mutate({
+                                                                    id: item.id,
+                                                                    quantity: item.quantity + 1
+                                                                });
+                                                            } else {
+                                                                toast.error(`Only ${sizeStock} pairs available in size ${item.size}`);
+                                                            }
+                                                        }}
                                                     >
                                                         <Plus className="w-4 h-4 text-cyan-600" />
                                                     </Button>
