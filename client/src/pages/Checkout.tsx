@@ -27,9 +27,11 @@ import {
     Shield,
     Truck,
     Plus,
+    Minus,
     Edit2,
     Tag,
     X,
+    Trash2,
     Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -197,6 +199,59 @@ const Checkout = () => {
             return response.data;
         }
     });
+
+    const updateCartMutation = useMutation({
+        mutationFn: ({ id, quantity }: { id: string; quantity: number }) => cartAPI.update(id, quantity),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to update quantity');
+        }
+    });
+
+    const removeCartItemMutation = useMutation({
+        mutationFn: (id: string) => cartAPI.remove(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            toast.success('Item removed from bag');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to remove item');
+        }
+    });
+
+    const handleUpdateQuantity = async (item: any, delta: number) => {
+        const newQty = item.quantity + delta;
+        if (newQty < 1) return;
+
+        if (isGuest) {
+            const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const updatedCart = localCart.map((i: any) =>
+                (i.productId === item.productId && i.size === item.size && i.color === item.color)
+                    ? { ...i, quantity: newQty }
+                    : i
+            );
+            localStorage.setItem('cart', JSON.stringify(updatedCart));
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+        } else {
+            updateCartMutation.mutate({ id: item.id, quantity: newQty });
+        }
+    };
+
+    const handleRemoveItem = async (item: any) => {
+        if (isGuest) {
+            const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const updatedCart = localCart.filter((i: any) =>
+                !(i.productId === item.productId && i.size === item.size && i.color === item.color)
+            );
+            localStorage.setItem('cart', JSON.stringify(updatedCart));
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            toast.success('Item removed from bag');
+        } else {
+            removeCartItemMutation.mutate(item.id);
+        }
+    };
 
     const createOrderMutation = useMutation({
         mutationFn: async (orderData: any) => {
@@ -815,24 +870,51 @@ const Checkout = () => {
                                         }
 
                                         return (
-                                            <Link key={item.id} to={`/products/${item.product.id}`}>
-                                                <div className="flex gap-3 items-center p-2 rounded-lg hover:bg-gray-50 transition-colors border border-gray-50 cursor-pointer">
-                                                    <div className="w-14 h-14 rounded-md bg-pink-50 overflow-hidden flex-shrink-0 border border-pink-50">
-                                                        {imageUrl ? (
-                                                            <img src={imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-pink-200">
-                                                                <Package className="w-6 h-6" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="text-[11px] font-bold text-gray-800 truncate leading-tight">{item.product.name}</h4>
-                                                        <p className="text-[10px] text-gray-500 mt-0.5">Size: {item.size} | Qty: {item.quantity}</p>
-                                                        <p className="text-[11px] font-bold text-pink-600">₹{(item.product.discountPrice || item.product.price).toFixed(0)}</p>
+                                            <div key={item.id || `${item.productId}-${item.size}`} className="flex gap-3 items-center p-3 rounded-2xl hover:bg-gray-50 transition-all duration-300 border border-gray-100 group">
+                                                <Link to={`/products/${item.product.id}`} className="w-16 h-16 rounded-xl bg-pink-50 overflow-hidden flex-shrink-0 border border-pink-50 shadow-sm group-hover:shadow-md transition-shadow">
+                                                    {imageUrl ? (
+                                                        <img src={imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-pink-200">
+                                                            <Package className="w-6 h-6" />
+                                                        </div>
+                                                    )}
+                                                </Link>
+                                                <div className="flex-1 min-w-0 pr-1">
+                                                    <Link to={`/products/${item.product.id}`}>
+                                                        <h4 className="text-[11px] font-black text-gray-800 truncate leading-tight hover:text-pink-600 transition-colors uppercase tracking-tight">{item.product.name}</h4>
+                                                    </Link>
+                                                    <p className="text-[10px] text-gray-500 mt-0.5 font-bold uppercase tracking-widest">EU {item.size} • {item.color}</p>
+
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-100 p-1 shadow-sm">
+                                                            <button
+                                                                onClick={() => handleUpdateQuantity(item, -1)}
+                                                                disabled={item.quantity <= 1}
+                                                                className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-pink-50 text-gray-400 hover:text-pink-600 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                                                            >
+                                                                <Minus className="w-3 h-3" strokeWidth={3} />
+                                                            </button>
+                                                            <span className="text-[11px] font-black text-gray-800 min-w-[20px] text-center">{item.quantity}</span>
+                                                            <button
+                                                                onClick={() => handleUpdateQuantity(item, 1)}
+                                                                className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-pink-50 text-gray-400 hover:text-pink-600 transition-colors"
+                                                            >
+                                                                <Plus className="w-3 h-3" strokeWidth={3} />
+                                                            </button>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <p className="text-[11px] font-black text-pink-600">₹{(item.product.discountPrice || item.product.price).toFixed(0)}</p>
+                                                            <button
+                                                                onClick={() => handleRemoveItem(item)}
+                                                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </Link>
+                                            </div>
                                         );
                                     })}
                                 </div>
