@@ -32,16 +32,16 @@ router.get('/my-orders', optionalAuthenticate, async (req: AuthRequest, res: Res
         if (req.user) {
             const orders = await prisma.order.findMany({
                 where: { userId: req.user.id },
-                include: { items: true },
+                include: { items: { include: { product: true } } },
                 orderBy: { createdAt: 'desc' }
             });
             return res.json(orders);
         }
 
         if (orderId) {
-            const order = await prisma.order.findFirst({
+            const order = await (prisma.order as any).findFirst({
                 where: { OR: [{ id: orderId as string }, { orderId: orderId as string }] },
-                include: { items: true, address: true }
+                include: { items: { include: { product: true } }, address: true }
             });
             if (!order) return res.status(404).json({ error: 'Order not found' });
             return res.json([order]);
@@ -141,7 +141,7 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     }
                 },
                 include: {
-                    items: true,
+                    items: { include: { product: true } },
                     address: true,
                     user: true
                 }
@@ -191,7 +191,7 @@ router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: 
         const result = await prisma.$transaction(async (tx) => {
             const order = await (tx.order as any).findFirst({
                 where: { OR: [{ id: orderIdParam }, { orderId: orderIdParam }] },
-                include: { items: true, address: true, user: true }
+                include: { items: { include: { product: true } }, address: true, user: true }
             });
 
             if (!order) throw new Error('Order not found');
@@ -212,7 +212,7 @@ router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: 
                     estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : order.estimatedDelivery,
                     statusHistory: newHistory
                 },
-                include: { items: true, address: true, user: true }
+                include: { items: { include: { product: true } }, address: true, user: true }
             });
 
             NotificationService.notifyStatusUpdate(updatedOrder).catch(err =>
@@ -233,7 +233,7 @@ router.get('/:id', optionalAuthenticate, async (req: AuthRequest, res: Response)
     try {
         const order = await prisma.order.findUnique({
             where: { id: req.params.id as string },
-            include: { items: true, address: true, user: true }
+            include: { items: { include: { product: true } }, address: true, user: true }
         });
 
         if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -257,7 +257,7 @@ router.post('/:orderId/resend-notification', authenticate, requireAdmin, async (
         const orderIdParam = req.params.orderId;
         const order = await (prisma.order as any).findFirst({
             where: { OR: [{ id: orderIdParam }, { orderId: orderIdParam }] },
-            include: { items: true, address: true, user: true }
+            include: { items: { include: { product: true } }, address: true, user: true }
         });
 
         if (!order) return res.status(404).json({ error: 'Order not found' });

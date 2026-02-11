@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://happyhopz.com/sitemap.xml
+Sitemap: https://www.happyhopz.com/sitemap.xml

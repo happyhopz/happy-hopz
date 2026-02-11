@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Package, Calendar, MapPin, Phone, ArrowLeft, Truck, CheckCircle2, Clock, XCircle, IndianRupee } from 'lucide-react';
+import { Package, Calendar, MapPin, Phone, ArrowLeft, Truck, CheckCircle2, Clock, XCircle, IndianRupee, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -171,7 +171,7 @@ const OrderDetail = () => {
 
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-3">
-                            <h1 className="text-5xl font-fredoka font-black text-slate-900 tracking-tight leading-none">
+                            <h1 className="text-3xl font-fredoka font-black text-slate-900 tracking-tight leading-none">
                                 Order #{order.orderId || String(order.id || '').slice(-8)}
                             </h1>
                             <div className="flex items-center gap-4">
@@ -214,31 +214,31 @@ const OrderDetail = () => {
 
                         {/* Cancellation Display */}
                         {order.status === 'CANCELLED' && (
-                            <div className="p-8 bg-red-50 border-2 border-red-100 rounded-[32px] flex items-start gap-6 animate-in fade-in slide-in-from-top-4 duration-500 shadow-xl shadow-red-100/50">
-                                <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border-2 border-red-100 shadow-sm flex-shrink-0">
-                                    <XCircle className="w-8 h-8 text-red-500" />
+                            <div className="p-6 bg-red-50 border border-red-100 rounded-3xl flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-red-100 shadow-sm flex-shrink-0">
+                                    <XCircle className="w-6 h-6 text-red-500" />
                                 </div>
                                 <div>
-                                    <h3 className="text-[10px] font-black text-red-500 uppercase tracking-[4px] mb-2">Order Terminated</h3>
-                                    <p className="text-lg font-black text-slate-900 mb-1">Cancellation Reason</p>
-                                    <p className="text-slate-600 font-medium italic">"{order.cancellationReason || order.cancelReason || 'Customer choice'}"</p>
+                                    <h3 className="text-[9px] font-black text-red-500 uppercase tracking-[3px] mb-1">Order Terminated</h3>
+                                    <p className="text-base font-black text-slate-900 mb-0.5">Cancellation Reason</p>
+                                    <p className="text-slate-600 text-sm font-medium italic">"{order.cancellationReason || order.cancelReason || 'Customer choice'}"</p>
                                 </div>
                             </div>
                         )}
 
                         {/* Return Request Display */}
                         {order.returnStatus && (
-                            <div className="p-8 bg-orange-50 border-2 border-orange-100 rounded-[32px] flex items-start gap-6 animate-in fade-in slide-in-from-top-4 duration-500 shadow-xl shadow-orange-100/50">
-                                <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border-2 border-orange-100 shadow-sm flex-shrink-0">
-                                    <Package className="w-8 h-8 text-orange-500" />
+                            <div className="p-6 bg-orange-50 border border-orange-100 rounded-3xl flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-orange-100 shadow-sm flex-shrink-0">
+                                    <Package className="w-6 h-6 text-orange-500" />
                                 </div>
                                 <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-[10px] font-black text-orange-500 uppercase tracking-[4px]">Return Active</h3>
-                                        <Badge className="bg-orange-500 text-white text-[8px] font-black uppercase">{order.returnStatus}</Badge>
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <h3 className="text-[9px] font-black text-orange-500 uppercase tracking-[3px]">Return Active</h3>
+                                        <Badge className="bg-orange-500 text-white text-[7px] font-black uppercase">{order.returnStatus}</Badge>
                                     </div>
-                                    <p className="text-lg font-black text-slate-900 mb-1">Return Request Details</p>
-                                    <p className="text-slate-600 font-medium italic">"{order.returnReason || 'Product issues'}"</p>
+                                    <p className="text-base font-black text-slate-900 mb-0.5">Return Request Details</p>
+                                    <p className="text-slate-600 text-sm font-medium italic">"{order.returnReason || 'Product issues'}"</p>
                                 </div>
                             </div>
                         )}
@@ -247,10 +247,10 @@ const OrderDetail = () => {
                         {!['CANCELLED', 'SHIPPED', 'DELIVERED', 'REFUNDED'].includes(order.status) && !showReasonInput && (
                             <Button
                                 variant="outline"
-                                className="w-full py-8 border-2 border-dashed border-red-200 text-red-500 hover:bg-red-50 hover:border-red-500 rounded-[32px] transition-all font-black uppercase tracking-widest text-xs"
+                                className="w-full py-6 border-2 border-dashed border-red-200 text-red-500 hover:bg-red-50 hover:border-red-500 rounded-3xl transition-all font-black uppercase tracking-widest text-[10px]"
                                 onClick={() => setShowReasonInput('CANCEL')}
                             >
-                                <XCircle className="w-5 h-5 mr-3" />
+                                <XCircle className="w-4 h-4 mr-2" />
                                 Need to Cancel this order?
                             </Button>
                         )}
@@ -306,18 +306,18 @@ const OrderDetail = () => {
 
                         {/* Shipping Progress Tracker */}
                         {!['CANCELLED', 'REFUNDED'].includes(order.status) && (
-                            <Card className="p-10 border-none bg-white shadow-2xl shadow-slate-200/50 rounded-[40px] relative overflow-hidden ring-1 ring-slate-100">
-                                <div className="absolute top-0 left-0 w-2 h-full bg-pink-500" />
-                                <div className="flex flex-wrap items-center justify-between gap-6 mb-12">
+                            <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1.5 h-full bg-pink-500" />
+                                <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
                                     <div>
-                                        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Shipping Progress</h2>
-                                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-[3px] mt-2">Real-time status updates</p>
+                                        <h2 className="text-xl font-black text-slate-900 tracking-tight">Shipping Progress</h2>
+                                        <p className="text-slate-400 text-[9px] font-black uppercase tracking-[2px] mt-1">Real-time status updates</p>
                                     </div>
                                     {order.trackingNumber && (
-                                        <div className="bg-slate-900 text-white rounded-3xl p-6 flex flex-col items-center gap-2 shadow-2xl shadow-slate-300 scale-90 md:scale-100 origin-right">
-                                            <span className="text-[9px] font-black text-white/40 uppercase tracking-[4px]">AWB Tracking</span>
-                                            <p className="text-xl font-mono font-black tracking-tighter">{order.trackingNumber}</p>
-                                            <Badge className="bg-white/10 text-pink-400 text-[8px] font-black uppercase border-none tracking-widest px-3">
+                                        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center gap-1 shadow-sm transition-all hover:bg-white hover:shadow-md">
+                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-[3px]">AWB Tracking</span>
+                                            <p className="text-base font-mono font-black tracking-tighter text-slate-900">{order.trackingNumber}</p>
+                                            <Badge className="bg-pink-100 text-pink-600 text-[7px] font-black uppercase border-none tracking-widest px-2">
                                                 {order.courierPartner || 'Delhivery'}
                                             </Badge>
                                         </div>
@@ -331,27 +331,27 @@ const OrderDetail = () => {
                                             const isActive = index === currentStep;
                                             return (
                                                 <div key={step} className="flex flex-col items-center relative group">
-                                                    <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center transition-all duration-700 shadow-2xl border-4 ${isCompleted ? 'bg-slate-900 border-white text-white rotate-[10deg] scale-110 shadow-slate-300' : 'bg-white border-slate-50 text-slate-200'
+                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-md border-2 ${isCompleted ? 'bg-slate-900 border-white text-white rotate-[5deg] scale-105' : 'bg-white border-slate-50 text-slate-200'
                                                         }`}>
                                                         {isCompleted && index < currentStep ? (
-                                                            <CheckCircle2 className="w-8 h-8 text-pink-400" />
+                                                            <CheckCircle2 className="w-6 h-6 text-pink-400" />
                                                         ) : (
                                                             getStatusIcon(step)
                                                         )}
                                                     </div>
-                                                    <div className={`mt-5 text-center transition-all ${isCompleted ? 'opacity-100' : 'opacity-40'}`}>
-                                                        <p className={`text-[10px] font-black uppercase tracking-[2px] ${isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
+                                                    <div className={`mt-3 text-center transition-all ${isCompleted ? 'opacity-100' : 'opacity-40'}`}>
+                                                        <p className={`text-[8px] font-black uppercase tracking-[1px] ${isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
                                                             {getStatusLabel(step)}
                                                         </p>
-                                                        {isActive && <div className="w-1.5 h-1.5 bg-pink-500 rounded-full mx-auto mt-2 animate-ping" />}
+                                                        {isActive && <div className="w-1 h-1 bg-pink-500 rounded-full mx-auto mt-1 animate-ping" />}
                                                     </div>
                                                 </div>
                                             );
                                         })}
                                     </div>
-                                    <div className="absolute top-[52px] left-10 right-10 h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                                    <div className="absolute top-[42px] left-10 right-10 h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
                                         <div
-                                            className="h-full bg-slate-900 transition-all duration-[2000ms] shadow-[0_0_15px_rgba(0,0,0,0.1)] ease-out rounded-full"
+                                            className="h-full bg-slate-900 transition-all duration-[2000ms] shadow-sm ease-out rounded-full"
                                             style={{ width: `${(currentStep / (statusSteps.length - 1)) * 100}%` }}
                                         />
                                     </div>
@@ -380,18 +380,18 @@ const OrderDetail = () => {
                         )}
 
                         {/* Items Section */}
-                        <Card className="p-10 border-none bg-white shadow-2xl shadow-slate-200/50 rounded-[40px] ring-1 ring-slate-100">
-                            <div className="flex items-center justify-between mb-10">
+                        <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl">
+                            <div className="flex items-center justify-between mb-8">
                                 <div>
-                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">Order Items</h2>
-                                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-[3px] mt-2">Pack of {order.items?.length || 0} products</p>
+                                    <h2 className="text-xl font-black text-slate-900 tracking-tight">Order Items</h2>
+                                    <p className="text-slate-400 text-[9px] font-black uppercase tracking-[2px] mt-1">Pack of {order.items?.length || 0} products</p>
                                 </div>
-                                <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center">
-                                    <Package className="w-6 h-6 text-slate-400" />
+                                <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center">
+                                    <Package className="w-5 h-5 text-slate-400" />
                                 </div>
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-4">
                                 {order.items?.map((item: {
                                     id: string;
                                     name: string;
@@ -401,8 +401,8 @@ const OrderDetail = () => {
                                     price: number;
                                     product?: { images?: string | string[] }
                                 }) => (
-                                    <div key={item.id} className="group p-6 rounded-[32px] bg-slate-50/50 border border-slate-50 hover:bg-white hover:shadow-2xl hover:shadow-slate-200 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500 flex flex-col md:flex-row items-center gap-8">
-                                        <div className="w-32 h-32 bg-white rounded-[24px] overflow-hidden border-4 border-white shadow-lg ring-1 ring-slate-100 flex-shrink-0 group-hover:rotate-6 transition-all">
+                                    <div key={item.id} className="group p-4 rounded-2xl bg-slate-50/50 border border-slate-50 hover:bg-white hover:shadow-lg transition-all duration-300 flex flex-col md:flex-row items-center gap-6">
+                                        <div className="w-20 h-20 bg-white rounded-xl overflow-hidden border border-slate-100 shadow-sm flex-shrink-0 group-hover:scale-105 transition-all">
                                             {(() => {
                                                 let imageUrl = '';
                                                 try {
@@ -411,27 +411,27 @@ const OrderDetail = () => {
                                                         : item.product?.images;
                                                     imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : '';
                                                 } catch (e) {
-                                                    console.error('Image parse error', e);
+                                                    // console.error('Image parse error', e);
                                                 }
                                                 return imageUrl ? (
                                                     <img src={imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                                                ) : <div className="w-full h-full bg-slate-50 flex items-center justify-center"><Package className="w-10 h-10 text-slate-200" /></div>;
+                                                ) : <div className="w-full h-full bg-slate-50 flex items-center justify-center"><Package className="w-6 h-6 text-slate-200" /></div>;
                                             })()}
                                         </div>
                                         <div className="flex-1 text-center md:text-left">
-                                            <h3 className="text-2xl font-black text-slate-900 leading-tight mb-3 group-hover:text-pink-600 transition-colors">{item.name}</h3>
-                                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                                                <span className="px-4 py-1.5 bg-white rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 shadow-sm border border-slate-100 italic">SIZE: {item.size}</span>
-                                                <span className="px-4 py-1.5 bg-white rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 shadow-sm border border-slate-100 italic">COLOR: {item.color}</span>
-                                                <Badge className="bg-slate-900 text-white font-black text-[9px] px-3 py-1 rounded-full uppercase">QTY: {item.quantity}</Badge>
+                                            <h3 className="text-lg font-black text-slate-900 leading-tight mb-2 group-hover:text-pink-600 transition-colors">{item.name}</h3>
+                                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                                <span className="px-3 py-1 bg-white rounded-full text-[9px] font-black uppercase tracking-wider text-slate-400 shadow-sm border border-slate-100">SIZE: {item.size}</span>
+                                                <span className="px-3 py-1 bg-white rounded-full text-[9px] font-black uppercase tracking-wider text-slate-400 shadow-sm border border-slate-100">COLOR: {item.color}</span>
+                                                <Badge className="bg-slate-900 text-white font-black text-[8px] px-2 py-0.5 rounded-full">QTY: {item.quantity}</Badge>
                                             </div>
                                         </div>
                                         <div className="text-right flex flex-col items-center md:items-end justify-center">
-                                            <p className="text-3xl font-black text-slate-900 flex items-center mb-1">
-                                                <IndianRupee className="w-5 h-5 mr-1 text-slate-300" />
+                                            <p className="text-xl font-black text-slate-900 flex items-center mb-0.5">
+                                                <IndianRupee className="w-4 h-4 mr-0.5 text-slate-300" />
                                                 {((item.price || 0) * (item.quantity || 1)).toFixed(2)}
                                             </p>
-                                            <p className="text-[10px] font-black text-pink-500/50 uppercase tracking-[2px]">₹{(item.price || 0).toFixed(2)} / UNIT</p>
+                                            <p className="text-[8px] font-black text-pink-500/50 uppercase tracking-[1px]">₹{(item.price || 0).toFixed(2)} / UNIT</p>
                                         </div>
                                     </div>
                                 ))}
@@ -440,21 +440,21 @@ const OrderDetail = () => {
 
                         {/* Admin Controls Area */}
                         {isAdmin && (
-                            <Card className="p-10 border-none bg-slate-900 shadow-2xl shadow-slate-300 rounded-[40px] text-white overflow-hidden relative">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500 opacity-10 rounded-full blur-[100px] -mr-32 -mt-32" />
-                                <div className="flex items-center gap-4 mb-8 relative z-10">
-                                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
-                                        <CheckCircle2 className="w-6 h-6 text-pink-400" />
+                            <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden relative">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full blur-[40px] -mr-16 -mt-16" />
+                                <div className="flex items-center gap-3 mb-6 relative z-10">
+                                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 transition-all hover:bg-pink-50 hover:border-pink-100">
+                                        <CheckCircle2 className="w-5 h-5 text-pink-500" />
                                     </div>
-                                    <h2 className="text-2xl font-black tracking-tight">Administrator Panel</h2>
+                                    <h2 className="text-xl font-black tracking-tight text-slate-900">Administrator Panel</h2>
                                 </div>
-                                <p className="text-white/40 text-[10px] font-black uppercase tracking-[3px] mb-6 mb-8 relative z-10">Control fulfillment status</p>
-                                <div className="flex flex-wrap gap-4 relative z-10">
+                                <p className="text-slate-400 text-[9px] font-black uppercase tracking-[2px] mb-6 relative z-10">Control fulfillment status</p>
+                                <div className="flex flex-wrap gap-3 relative z-10">
                                     {statusSteps.map((status) => (
                                         <Button
                                             key={status}
                                             variant={order.status === status ? 'default' : 'outline'}
-                                            className={`h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${order.status === status ? 'bg-pink-500 border-pink-500 text-white shadow-xl shadow-pink-500/50' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                            className={`h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all shadow-sm ${order.status === status ? 'bg-pink-500 border-pink-500 text-white shadow-md' : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-white hover:text-slate-900'
                                                 }`}
                                             onClick={() => updateStatusMutation.mutate(status)}
                                             disabled={updateStatusMutation.isPending}
@@ -464,7 +464,7 @@ const OrderDetail = () => {
                                     ))}
                                     <Button
                                         variant="outline"
-                                        className={`h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all border-red-500/50 text-red-500 bg-red-500/5 hover:bg-red-500 hover:text-white`}
+                                        className={`h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all border-red-100 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white shadow-sm`}
                                         onClick={() => updateStatusMutation.mutate('CANCELLED')}
                                         disabled={updateStatusMutation.isPending}
                                     >
@@ -478,32 +478,32 @@ const OrderDetail = () => {
                     {/* Sidebar section */}
                     <div className="space-y-8">
                         {/* Receipt Details */}
-                        <Card className="p-10 border-none bg-white shadow-2xl shadow-slate-200/50 rounded-[40px] ring-1 ring-slate-100 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full -mr-16 -mt-16 group-hover:scale-125 transition-transform duration-700 opacity-50" />
-                            <h2 className="text-2xl font-black text-slate-900 mb-8 tracking-tight">Order Receipt</h2>
-                            <div className="space-y-6">
+                        <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-pink-50 rounded-full -mr-12 -mt-12 opacity-50 transition-transform group-hover:scale-110" />
+                            <h2 className="text-xl font-black text-slate-900 mb-6 tracking-tight">Order Receipt</h2>
+                            <div className="space-y-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Subtotal Amount</span>
-                                    <span className="text-lg font-black text-slate-900 leading-none">₹{(order.total || 0).toFixed(2)}</span>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Subtotal Amount</span>
+                                    <span className="text-base font-black text-slate-900">₹{(order.total || 0).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Logistics Tier</span>
-                                    <span className="px-3 py-1 bg-green-50 text-green-600 text-[9px] font-black uppercase tracking-widest rounded-full ring-1 ring-green-100">Free Air Shipping</span>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Logistics Tier</span>
+                                    <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[7px] font-black uppercase tracking-widest rounded-full ring-1 ring-green-100">Free Air Shipping</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Handling Fee</span>
-                                    <span className="text-xs font-black text-slate-900 uppercase italic">WAIVED</span>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Handling Fee</span>
+                                    <span className="text-[10px] font-black text-slate-900 uppercase italic">WAIVED</span>
                                 </div>
-                                <div className="pt-8 border-t-4 border-dashed border-slate-50">
-                                    <div className="flex justify-between items-end mb-2">
+                                <div className="pt-6 border-t-2 border-dashed border-slate-50">
+                                    <div className="flex justify-between items-end">
                                         <div>
-                                            <p className="text-[9px] font-black uppercase tracking-[4px] text-pink-500 mb-2">Grand Total</p>
-                                            <p className="text-4xl font-fredoka font-black text-slate-900 leading-none">
+                                            <p className="text-[8px] font-black uppercase tracking-[3px] text-pink-500 mb-1">Grand Total</p>
+                                            <p className="text-2xl font-fredoka font-black text-slate-900">
                                                 ₹{(order.total || 0).toFixed(2)}
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[2px]">Taxes Inclusive</p>
+                                            <p className="text-[7px] font-black text-slate-300 uppercase tracking-[1px]">Taxes Inclusive</p>
                                         </div>
                                     </div>
                                 </div>
@@ -511,38 +511,38 @@ const OrderDetail = () => {
                         </Card>
 
                         {/* Shipping Destination */}
-                        <Card className="p-10 border-none bg-slate-900 shadow-2xl shadow-slate-300 rounded-[40px] text-white relative overflow-hidden group">
-                            <div className="absolute right-0 bottom-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mb-24 group-hover:scale-110 transition-transform duration-1000" />
-                            <div className="flex items-center gap-4 mb-10 relative z-10">
-                                <div className="w-14 h-14 bg-white/10 rounded-[22px] flex items-center justify-center border border-white/20 group-hover:bg-pink-500 group-hover:border-pink-500 transition-all duration-500">
-                                    <MapPin className="w-7 h-7 text-pink-400 group-hover:text-white transition-colors" />
+                        <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl relative overflow-hidden group">
+                            <div className="absolute right-0 bottom-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mb-16 opacity-50 transition-all duration-700 group-hover:scale-110" />
+                            <div className="flex items-center gap-3 mb-8 relative z-10">
+                                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 group-hover:bg-primary group-hover:border-primary transition-all duration-300">
+                                    <MapPin className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
                                 </div>
-                                <h2 className="text-2xl font-black text-white tracking-tight leading-none">Delivery Destination</h2>
+                                <h2 className="text-xl font-black text-slate-900 tracking-tight leading-none">Delivery Destination</h2>
                             </div>
 
                             {order.address ? (
-                                <div className="space-y-8 relative z-10">
+                                <div className="space-y-6 relative z-10">
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[4px] text-pink-400 mb-3">Recipient Identity</p>
-                                        <p className="text-xl font-black text-white leading-tight">{order.address.name}</p>
+                                        <p className="text-[9px] font-black uppercase tracking-[3px] text-slate-400 mb-2">Recipient Identity</p>
+                                        <p className="text-lg font-black text-slate-900 leading-tight">{order.address.name}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[4px] text-pink-400 mb-3">Verified Location</p>
+                                        <p className="text-[9px] font-black uppercase tracking-[3px] text-slate-400 mb-2">Verified Location</p>
                                         <div className="space-y-1">
-                                            <p className="text-base font-medium text-white/90 leading-tight uppercase tracking-wider">{order.address.line1}</p>
-                                            {order.address.line2 && <p className="text-base font-medium text-white/70 leading-tight uppercase tracking-wider">{order.address.line2}</p>}
-                                            <p className="text-base font-black text-white uppercase tracking-widest mt-2">
+                                            <p className="text-sm font-medium text-slate-600 leading-tight uppercase tracking-wider">{order.address.line1}</p>
+                                            {order.address.line2 && <p className="text-sm font-medium text-slate-500 leading-tight uppercase tracking-wider">{order.address.line2}</p>}
+                                            <p className="text-sm font-black text-slate-900 uppercase tracking-widest mt-1">
                                                 {order.address.city}, {order.address.state}
                                             </p>
-                                            <p className="text-xs font-black text-white/40 uppercase tracking-[4px] mt-1">{order.address.pincode}</p>
+                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[3px] mt-0.5">{order.address.pincode}</p>
                                         </div>
                                     </div>
-                                    <div className="pt-8 border-t border-white/10">
-                                        <div className="flex items-center gap-4 group/phone">
-                                            <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/10 group-hover/phone:bg-white/20 transition-all">
-                                                <Phone className="w-5 h-5 text-pink-400" />
+                                    <div className="pt-6 border-t border-slate-50">
+                                        <div className="flex items-center gap-3 group/phone">
+                                            <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 group-hover/phone:bg-primary group-hover/phone:text-white transition-all">
+                                                <Phone className="w-4 h-4 text-primary group-hover/phone:text-white" />
                                             </div>
-                                            <p className="text-lg font-black tracking-widest group-hover/phone:text-pink-400 transition-colors uppercase">{order.address.phone}</p>
+                                            <p className="text-base font-black tracking-widest text-slate-700 group-hover/phone:text-primary transition-colors uppercase">{order.address.phone}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -553,6 +553,56 @@ const OrderDetail = () => {
                                 </div>
                             )}
                         </Card>
+
+                        {/* Customer Info */}
+                        <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl relative overflow-hidden">
+                            <div className="flex items-center gap-3 mb-6 relative z-10">
+                                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100">
+                                    <HelpCircle className="w-5 h-5 text-primary" />
+                                </div>
+                                <h2 className="text-xl font-black text-slate-900 tracking-tight leading-none">Customer Contact</h2>
+                            </div>
+                            <div className="space-y-4 relative z-10">
+                                {order.guestEmail || (order.user && order.user.email) ? (
+                                    <div>
+                                        <p className="text-[9px] font-black uppercase tracking-[3px] text-slate-400 mb-1">Email Address</p>
+                                        <p className="text-sm font-medium text-slate-900 truncate">{order.guestEmail || order.user?.email}</p>
+                                    </div>
+                                ) : null}
+                                {order.guestPhone || (order.user && order.user.phone) ? (
+                                    <div>
+                                        <p className="text-[9px] font-black uppercase tracking-[3px] text-slate-400 mb-1">Contact Phone</p>
+                                        <p className="text-sm font-medium text-slate-900">{order.guestPhone || order.user?.phone}</p>
+                                    </div>
+                                ) : null}
+                            </div>
+                        </Card>
+
+                        {/* Activity Timeline */}
+                        {order.statusHistory && Array.isArray(order.statusHistory) && order.statusHistory.length > 0 && (
+                            <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl relative overflow-hidden">
+                                <h2 className="text-xl font-black text-slate-900 mb-6 tracking-tight leading-none">Order Activity</h2>
+                                <div className="space-y-6 relative ml-2">
+                                    <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-100" />
+                                    {order.statusHistory.slice().reverse().map((history: any, idx: number) => (
+                                        <div key={idx} className="flex gap-4 relative z-10">
+                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0 mt-1 ${idx === 0 ? 'bg-pink-500 animate-pulse' : 'bg-slate-200'
+                                                }`}>
+                                                <div className="w-1 h-1 rounded-full bg-white" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-wider text-slate-900 leading-none mb-1">
+                                                    {getStatusLabel(history.status)}
+                                                </p>
+                                                <p className="text-[8px] text-slate-400 font-medium">
+                                                    {history.updatedAt ? format(new Date(history.updatedAt), 'MMM dd, hh:mm a') : 'Recently'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                        )}
                     </div>
                 </div>
             </main>
