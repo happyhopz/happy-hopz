@@ -57,6 +57,8 @@ const getColorHex = (colorName: string) => {
         'lavender': '#e6e6fa',
         'mint': '#98ffed',
         'peach': '#ffdab9',
+        'ivory': '#fffff0',
+        'off white': '#faf9f6',
     };
     return colors[colorName.toLowerCase()] || '#cbd5e1'; // default to slate-300 if not found
 };
@@ -456,14 +458,14 @@ const ProductDetail = () => {
                                                 }`}
                                             style={{
                                                 borderColor: colorHex,
-                                                color: colorHex,
+                                                color: '#000000', // Always black text for visibility
                                                 boxShadow: isSelected ? `0 10px 20px -5px ${colorHex}55, 0 0 15px ${colorHex}33` : undefined,
                                             }}
                                         >
                                             {/* Glossy Overlay */}
                                             <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                            <span className="relative z-10">{color}</span>
+                                            <span className="relative z-10 font-bold">{color}</span>
 
                                             {/* Selection Indicator Dot */}
                                             {isSelected && (
