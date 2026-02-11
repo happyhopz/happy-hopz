@@ -72,7 +72,7 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
             tax: z.number(),
             shipping: z.number(),
             total: z.number(),
-            addressId: z.string().optional(),
+            addressId: z.string().optional().nullable(),
             address: z.object({
                 name: z.string(),
                 phone: z.string(),
@@ -81,7 +81,7 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                 city: z.string(),
                 state: z.string(),
                 pincode: z.string()
-            }).optional(),
+            }).optional().nullable(),
             paymentStatus: z.string().optional(),
             couponCode: z.string().optional().nullable()
         });
