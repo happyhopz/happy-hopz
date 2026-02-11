@@ -113,7 +113,7 @@ const AdminOrderDetail = () => {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED'].map(s => (
+                                            {['CONFIRMED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED'].map(s => (
                                                 <SelectItem key={s} value={s}>{s}</SelectItem>
                                             ))}
                                         </SelectContent>

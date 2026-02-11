@@ -129,12 +129,12 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     shipping: data.shipping,
                     total: data.total,
                     couponCode: data.couponCode,
-                    status: 'PENDING',
+                    status: 'CONFIRMED',
                     paymentStatus: data.paymentStatus || 'PENDING',
                     paymentMethod: data.paymentMethod || 'ONLINE',
                     addressId: finalAddressId,
                     statusHistory: [
-                        { status: 'PENDING', updatedAt: new Date(), updatedBy: req.user?.id || 'GUEST' }
+                        { status: 'CONFIRMED', updatedAt: new Date(), updatedBy: req.user?.id || 'SYSTEM' }
                     ],
                     items: {
                         create: data.items
@@ -180,7 +180,7 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
 router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { status, trackingNumber, courierPartner, estimatedDelivery } = z.object({
-            status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED']),
+            status: z.enum(['CONFIRMED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED']),
             trackingNumber: z.string().optional(),
             courierPartner: z.string().optional(),
             estimatedDelivery: z.string().datetime().optional()

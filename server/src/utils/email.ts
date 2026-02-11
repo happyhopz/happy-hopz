@@ -115,8 +115,8 @@ const getOrderConfirmationHtml = (order: any, name: string) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
             <h2 style="color: #ff6b6b; text-align: center;">Order Confirmed! 🎊</h2>
             <p>Hi ${name},</p>
-            <p>Thank you for shopping with Happy Hopz! Your order has been placed successfully and is being processed.</p>
             <p><strong>Order ID:</strong> ${order.orderId || order.id}</p>
+            <p style="background: #fff4f4; padding: 10px; border-radius: 5px; color: #d00; font-weight: bold; text-align: center; border: 1px dashed #d00; margin: 15px 0;">💡 Please check your <u>Spam/Junk</u> folder for order updates!</p>
             
             <h3 style="border-bottom: 2px solid #ff6b6b; padding-bottom: 5px;">Order Summary</h3>
             <table style="width: 100%; border-collapse: collapse;">
