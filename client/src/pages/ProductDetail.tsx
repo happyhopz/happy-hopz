@@ -561,40 +561,20 @@ const ProductDetail = () => {
                                 </div>
                                 <div className="flex items-start gap-3 text-sm">
                                     <RotateCcw className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                                    <span>Pay on delivery might be available</span>
+                                    <span>Pay on delivery is available</span>
                                 </div>
                                 <div className="flex items-start gap-3 text-sm">
                                     <Shield className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                                    <span>Easy 14 days returns and exchanges</span>
+                                    <span>Easy 7 days returns and exchanges</span>
                                 </div>
                             </div>
                         </div>
 
-                        <Separator />
 
-                        {/* Best Offers */}
-                        <div className="space-y-3">
-                            <h3 className="font-bold text-foreground uppercase tracking-wide text-sm flex items-center gap-2">
-                                <Tag className="w-5 h-5" />
-                                Best Offers
-                            </h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex items-start gap-2">
-                                    <span className=" text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded font-bold">OFFER</span>
-                                    <p><strong>10% Instant Discount</strong> on first purchase</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <span className="text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded font-bold">EMI</span>
-                                    <p>EMI Available on purchases above ₹3000</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <span className="text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded font-bold">FREE</span>
-                                    <p>Free Shipping on all orders</p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <Separator />
+
+
+
 
                         {/* Product Details Accordion */}
                         <div>
@@ -649,7 +629,7 @@ const ProductDetail = () => {
                                 <div className="pb-4 space-y-3 text-sm">
                                     <p>✓ Free delivery on orders above ₹499</p>
                                     <p>✓ Cash on Delivery available</p>
-                                    <p>✓ Easy 14-day returns</p>
+                                    <p>✓ Easy 7-day returns</p>
                                     <p>✓ Items can be exchanged for different sizes</p>
                                 </div>
                             )}
