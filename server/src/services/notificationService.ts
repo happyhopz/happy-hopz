@@ -121,12 +121,34 @@ export class NotificationService {
                     { type: 'text', text: fullOrder.status }
                 ];
 
-                if (fullOrder.status === 'SHIPPED') {
+                if (fullOrder.status === 'CONFIRMED') {
+                    template = 'hhz_order_confirmation'; // Reuse confirmation or specific hhz_order_confirmed
+                    params = [
+                        { type: 'text', text: fullOrder.address?.name || 'Customer' },
+                        { type: 'text', text: orderId },
+                        { type: 'text', text: `₹${fullOrder.total}` },
+                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                    ];
+                } else if (fullOrder.status === 'SHIPPED') {
                     template = 'hhz_order_shipped';
                     params = [
                         { type: 'text', text: orderId },
                         { type: 'text', text: fullOrder.trackingNumber || 'N/A' },
                         { type: 'text', text: fullOrder.courierPartner || 'Standard' },
+                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                    ];
+                } else if (fullOrder.status === 'OUT_FOR_DELIVERY') {
+                    template = 'hhz_out_for_delivery';
+                    params = [
+                        { type: 'text', text: orderId },
+                        { type: 'text', text: fullOrder.address?.name || 'Customer' },
+                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                    ];
+                } else if (fullOrder.status === 'DELIVERED') {
+                    template = 'hhz_order_delivered';
+                    params = [
+                        { type: 'text', text: fullOrder.address?.name || 'Customer' },
+                        { type: 'text', text: orderId },
                         { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
                     ];
                 }

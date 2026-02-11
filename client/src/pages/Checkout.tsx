@@ -250,11 +250,22 @@ const Checkout = () => {
         { id: 'NETBANKING', label: 'Net Banking', description: 'All major banks', icon: Landmark },
     ];
 
+    const isValidPhone = (phone: string) => {
+        const cleaned = phone.replace(/\D/g, '');
+        return cleaned.length >= 10;
+    };
+
     const handleAddAddress = () => {
         if (!address.name || !address.phone || !address.line1 || !address.city || !address.state || !address.pincode) {
             toast.error('Please fill all required fields');
             return;
         }
+
+        if (!isValidPhone(address.phone)) {
+            toast.error('Please enter a valid 10-digit mobile number');
+            return;
+        }
+
         addAddressMutation.mutate(address);
     };
 
@@ -265,8 +276,16 @@ const Checkout = () => {
                 toast.error('Please fill in your contact information');
                 return;
             }
+            if (!isValidPhone(guestInfo.phone)) {
+                toast.error('Please enter a valid mobile number for WhatsApp updates');
+                return;
+            }
             if (!address.name || !address.phone || !address.line1 || !address.city || !address.state || !address.pincode) {
                 toast.error('Please fill in your delivery address');
+                return;
+            }
+            if (!isValidPhone(address.phone)) {
+                toast.error('Please enter a valid mobile number in shipping address');
                 return;
             }
         }
@@ -620,9 +639,13 @@ const Checkout = () => {
                                                     <Input
                                                         value={guestInfo.phone}
                                                         onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
-                                                        placeholder="+91 98765 43210"
+                                                        placeholder="98765 43210"
                                                         className="bg-gray-50/50 border-gray-100 h-11"
                                                     />
+                                                    <p className="text-[10px] text-green-600 font-bold flex items-center gap-1">
+                                                        <Smartphone className="w-3 h-3" />
+                                                        You'll receive order updates on WhatsApp
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

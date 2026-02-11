@@ -16,8 +16,15 @@ export const sendOrderWhatsApp = async (to: string, templateName: string, compon
     try {
         const url = `https://graph.facebook.com/v17.0/${phoneNumberId}/messages`;
 
-        // Ensure phone number has '91' prefix or correct country code, and no '+'
-        const formattedTo = to.startsWith('+') ? to.slice(1) : to;
+        // Efficient formatting for Indian numbers
+        let formattedTo = to.replace(/\D/g, ''); // Strip non-numeric
+        if (formattedTo.length === 10) {
+            formattedTo = '91' + formattedTo;
+        } else if (formattedTo.length === 12 && formattedTo.startsWith('0')) {
+            formattedTo = '91' + formattedTo.slice(2);
+        } else if (formattedTo.length === 11 && formattedTo.startsWith('0')) {
+            formattedTo = '91' + formattedTo.slice(1);
+        }
 
         const data = {
             messaging_product: 'whatsapp',
