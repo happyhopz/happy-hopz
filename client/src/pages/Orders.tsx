@@ -7,7 +7,7 @@ import Footer from '@/components/Footer';
 import BackButton from '@/components/BackButton';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Calendar, IndianRupee } from 'lucide-react';
+import { Package, Calendar, IndianRupee, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 
