@@ -251,41 +251,16 @@ const getCommonStyles = () => `
     </style>
 `;
 
-const getOrderItemsHtml = (items: any[]) => items.map(item => {
-    let imageUrl = '';
-    try {
-        if (item.product && item.product.images) {
-            const imgs = typeof item.product.images === 'string'
-                ? JSON.parse(item.product.images)
-                : item.product.images;
-            imageUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
-        }
-    } catch (e) { }
-
-    return `
+const getOrderItemsHtml = (items: any[]) => items.map(item => `
     <tr>
-        <td style="padding: 15px 0; border-bottom: 1px solid #f1f5f9;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                    ${imageUrl ? `
-                    <td style="width: 60px; padding-right: 15px; vertical-align: middle;">
-                        <div style="width: 60px; height: 75px; overflow: hidden; border-radius: 12px; border: 1px solid #f1f5f9; background: #ffffff;">
-                            <img src="${imageUrl}" width="60" style="display: block; border: 0;" alt="${item.name}">
-                        </div>
-                    </td>
-                    ` : ''}
-                    <td style="vertical-align: middle;">
-                        <p style="margin: 0; font-size: 14px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: -0.5px;">${item.name || item.product?.name}</p>
-                        <p style="margin: 4px 0 0 0; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">SIZE ${item.size} • ${String(item.color).toUpperCase()}</p>
-                    </td>
-                </tr>
-            </table>
+        <td style="width: 70%;">
+            <p class="item-name">${item.name}</p>
+            <p class="item-meta">SIZE ${item.size} • ${item.color.toUpperCase()}</p>
         </td>
-        <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: 700; color: #64748b;">x${item.quantity}</td>
-        <td style="padding: 15px 0; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 800; color: #1e293b;">₹${(item.price * item.quantity).toFixed(0)}</td>
+        <td style="text-align: center; font-weight: 700; color: #64748b;">x${item.quantity}</td>
+        <td style="text-align: right; font-weight: 800; color: #1e293b;">₹${(item.price * item.quantity).toFixed(0)}</td>
     </tr>
-`;
-}).join('');
+`).join('');
 
 const getAddressHtml = (address: any) => `
     <div class="address-card">
