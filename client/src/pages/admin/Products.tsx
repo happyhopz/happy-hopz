@@ -310,14 +310,14 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
             </div>
             <div>
                 <Label className="mb-2 block">Available Sizes (EU) & Stock</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 p-4 border rounded-2xl bg-gray-50/30">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 border rounded-2xl bg-gray-50/30">
                     {ALL_EU_SIZES.map((size) => {
                         const isSelected = formData.sizes.includes(size);
                         const sizeStock = formData.inventory.find((i: any) => i.size === size)?.stock || 0;
 
                         return (
-                            <div key={size} className={`flex flex-col p-3 rounded-xl border-2 transition-all duration-200 ${isSelected ? 'border-primary bg-white shadow-sm' : 'border-gray-100 bg-white/50 opacity-60'}`}>
-                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                            <div key={size} className={`flex flex-col p-4 rounded-xl border-2 transition-all duration-200 ${isSelected ? 'border-primary bg-white shadow-md' : 'border-gray-100 bg-white/50 opacity-60'}`}>
+                                <label className="flex items-center gap-3 cursor-pointer mb-3">
                                     <input
                                         type="checkbox"
                                         checked={isSelected}
@@ -332,26 +332,29 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                                                 setFormData({ ...formData, sizes: newSizes, inventory: newInventory });
                                             }
                                         }}
-                                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
                                     />
-                                    <span className="text-xs font-black">EU {size}</span>
+                                    <span className="text-sm font-black text-foreground">EU {size}</span>
                                 </label>
                                 {isSelected && (
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={sizeStock}
-                                        onChange={(e) => {
-                                            const val = parseInt(e.target.value) || 0;
-                                            const newInventory = formData.inventory.map((i: any) =>
-                                                i.size === size ? { ...i, stock: val } : i
-                                            );
-                                            const newTotalStock = newInventory.reduce((sum: number, i: any) => sum + i.stock, 0);
-                                            setFormData({ ...formData, inventory: newInventory, stock: newTotalStock });
-                                        }}
-                                        className="h-8 text-xs font-bold border-gray-100"
-                                        placeholder="Qty"
-                                    />
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Current Stock</p>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            value={sizeStock}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value) || 0;
+                                                const newInventory = formData.inventory.map((i: any) =>
+                                                    i.size === size ? { ...i, stock: val } : i
+                                                );
+                                                const newTotalStock = newInventory.reduce((sum: number, i: any) => sum + i.stock, 0);
+                                                setFormData({ ...formData, inventory: newInventory, stock: newTotalStock });
+                                            }}
+                                            className="h-10 text-sm font-bold border-gray-200 bg-gray-50/50 focus:bg-white transition-colors"
+                                            placeholder="Quantity"
+                                        />
+                                    </div>
                                 )}
                             </div>
                         );
