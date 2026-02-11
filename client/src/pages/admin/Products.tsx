@@ -203,42 +203,74 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                 </div>
                 {/* Total Cost Display */}
                 {(formData.costPrice || formData.boxPrice || formData.tagPrice || formData.shippingCost || formData.otherCosts) && (
-                    <div className="mt-3 p-3 bg-primary/5 rounded-lg">
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="font-semibold">Total Cost per Unit:</span>
-                            <span className="font-bold text-primary">
-                                ₹{(
-                                    (parseFloat(formData.costPrice) || 0) +
-                                    (parseFloat(formData.boxPrice) || 0) +
-                                    (parseFloat(formData.tagPrice) || 0) +
-                                    (parseFloat(formData.shippingCost) || 0) +
-                                    (parseFloat(formData.otherCosts) || 0)
-                                ).toFixed(2)}
-                            </span>
+                    <div className="mt-3 p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-3">
+                        <div className="flex justify-between items-center text-xs text-gray-500 uppercase font-black tracking-widest">
+                            <span>Cost Breakdown</span>
+                            <span className="text-primary font-bold">Calculated Per Unit</span>
                         </div>
-                        {formData.price && (
-                            <div className="flex justify-between items-center text-sm mt-1">
-                                <span className="font-semibold">Estimated Profit per Unit:</span>
-                                <span className={`font-bold ${(parseFloat(formData.price) - (
-                                    (parseFloat(formData.costPrice) || 0) +
-                                    (parseFloat(formData.boxPrice) || 0) +
-                                    (parseFloat(formData.tagPrice) || 0) +
-                                    (parseFloat(formData.shippingCost) || 0) +
-                                    (parseFloat(formData.otherCosts) || 0)
-                                )) > 0 ? 'text-green-600' : 'text-red-600'
-                                    }`}>
+
+                        <div className="grid grid-cols-1 gap-2">
+                            <div className="flex justify-between items-center p-2 bg-white rounded-lg border border-gray-100">
+                                <span className="text-sm font-bold text-gray-700">Total Cost per Unit</span>
+                                <span className="font-black text-pink-600">
                                     ₹{(
-                                        parseFloat(formData.price) - (
-                                            (parseFloat(formData.costPrice) || 0) +
-                                            (parseFloat(formData.boxPrice) || 0) +
-                                            (parseFloat(formData.tagPrice) || 0) +
-                                            (parseFloat(formData.shippingCost) || 0) +
-                                            (parseFloat(formData.otherCosts) || 0)
-                                        )
+                                        (parseFloat(formData.costPrice) || 0) +
+                                        (parseFloat(formData.boxPrice) || 0) +
+                                        (parseFloat(formData.tagPrice) || 0) +
+                                        (parseFloat(formData.shippingCost) || 0) +
+                                        (parseFloat(formData.otherCosts) || 0)
                                     ).toFixed(2)}
                                 </span>
                             </div>
-                        )}
+
+                            {formData.price && (
+                                <>
+                                    <div className="flex justify-between items-center p-2 bg-green-50/50 rounded-lg border border-green-100">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-black text-green-700">Profit (1 Pair)</span>
+                                            <p className="text-[10px] text-green-600/70 font-bold uppercase tracking-tighter">Selling Price - Total Cost</p>
+                                        </div>
+                                        <span className="font-black text-green-700 text-lg">
+                                            ₹{(
+                                                parseFloat(formData.price) - (
+                                                    (parseFloat(formData.costPrice) || 0) +
+                                                    (parseFloat(formData.boxPrice) || 0) +
+                                                    (parseFloat(formData.tagPrice) || 0) +
+                                                    (parseFloat(formData.shippingCost) || 0) +
+                                                    (parseFloat(formData.otherCosts) || 0)
+                                                )
+                                            ).toFixed(2)}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex justify-between items-center p-3 bg-primary/10 rounded-xl border-2 border-primary/20 shadow-sm transition-all hover:shadow-md">
+                                        <div className="flex flex-col">
+                                            <span className="text-base font-black text-primary uppercase tracking-tight">Total Inventory Profit</span>
+                                            <p className="text-[10px] text-primary/70 font-bold uppercase tracking-widest">₹{(
+                                                parseFloat(formData.price) - (
+                                                    (parseFloat(formData.costPrice) || 0) +
+                                                    (parseFloat(formData.boxPrice) || 0) +
+                                                    (parseFloat(formData.tagPrice) || 0) +
+                                                    (parseFloat(formData.shippingCost) || 0) +
+                                                    (parseFloat(formData.otherCosts) || 0)
+                                                )
+                                            ).toFixed(2)} × {formData.stock || 0} units</p>
+                                        </div>
+                                        <span className="font-black text-primary text-2xl">
+                                            ₹{(
+                                                (parseFloat(formData.price) - (
+                                                    (parseFloat(formData.costPrice) || 0) +
+                                                    (parseFloat(formData.boxPrice) || 0) +
+                                                    (parseFloat(formData.tagPrice) || 0) +
+                                                    (parseFloat(formData.shippingCost) || 0) +
+                                                    (parseFloat(formData.otherCosts) || 0)
+                                                )) * (parseInt(formData.stock) || 0)
+                                            ).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
