@@ -186,4 +186,40 @@ export class NotificationService {
             console.error('Failed to create query notification:', error);
         }
     }
+
+    /**
+     * Generic create method for backward compatibility
+     */
+    static async create(data: any) {
+        try {
+            return await prisma.notification.create({
+                data: {
+                    ...data,
+                    metadata: typeof data.metadata === 'object' ? JSON.stringify(data.metadata) : data.metadata
+                }
+            });
+        } catch (error) {
+            console.error('Failed to manually create notification:', error);
+        }
+    }
+
+    /**
+     * Notify Admin of security events (Login, Signup, etc.)
+     */
+    static async notifySecurityEvent(title: string, message: string, userId: string, metadata?: any) {
+        try {
+            await prisma.notification.create({
+                data: {
+                    isAdmin: true,
+                    title: `Security: ${title}`,
+                    message,
+                    type: 'SECURITY',
+                    priority: 'MEDIUM',
+                    metadata: JSON.stringify({ userId, ...metadata })
+                }
+            });
+        } catch (error) {
+            console.error('Failed to create security notification:', error);
+        }
+    }
 }

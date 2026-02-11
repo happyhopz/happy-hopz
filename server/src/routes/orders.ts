@@ -222,7 +222,7 @@ router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: 
 router.get('/:id', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const order = await prisma.order.findUnique({
-            where: { id: req.params.id },
+            where: { id: req.params.id as string },
             include: { items: true, address: true, user: true }
         });
 

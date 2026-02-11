@@ -54,11 +54,33 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
         ] : []
     };
 
-    if (process.env.SENDGRID_API_KEY) {
-        console.log(`📧 [ORDER] Sending ${type} via SendGrid to ${email}`);
-        return sgMail.send(mailOptions);
-    }
+    return transporter.sendMail(mailOptions);
+};
 
+export const sendOrderConfirmationEmail = async (email: string, order: any) => {
+    return sendOrderEmail(email, order, 'CONFIRMATION');
+};
+
+export const sendVerificationEmail = async (email: string, code: string) => {
+    const mailOptions = {
+        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
+        to: email,
+        subject: 'Verify your Happy Hopz Account',
+        html: `<h2>Welcome to Happy Hopz!</h2><p>Your verification code is: <strong>${code}</strong></p>`
+    };
+    if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
+    return transporter.sendMail(mailOptions);
+};
+
+export const sendPasswordResetEmail = async (email: string, token: string) => {
+    const resetUrl = `https://happy-hopz.vercel.app/reset-password?token=${token}`;
+    const mailOptions = {
+        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
+        to: email,
+        subject: 'Reset your Happy Hopz Password',
+        html: `<p>You requested a password reset. Click below to proceed:</p><a href="${resetUrl}">Reset Password</a>`
+    };
+    if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
     return transporter.sendMail(mailOptions);
 };
 
