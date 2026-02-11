@@ -39,7 +39,7 @@ const OrderDetail = () => {
             setShowReasonInput(null);
             setReason('');
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { error?: string } } }) => {
             toast.error(error.response?.data?.error || 'Failed to cancel order');
         }
     });
@@ -52,7 +52,7 @@ const OrderDetail = () => {
             setShowReasonInput(null);
             setReason('');
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { error?: string } } }) => {
             toast.error(error.response?.data?.error || 'Failed to submit return request');
         }
     });
@@ -66,13 +66,13 @@ const OrderDetail = () => {
             queryClient.invalidateQueries({ queryKey: ['order', id] });
             toast.success('Order status updated');
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { error?: string } } }) => {
             toast.error(error.response?.data?.error || 'Failed to update status');
         }
     });
 
     const getStatusIcon = (status: string) => {
-        const icons: any = {
+        const icons: Record<string, React.ReactNode> = {
             CONFIRMED: <CheckCircle2 className="w-5 h-5 text-pink-500" />,
             SHIPPED: <Truck className="w-5 h-5 text-purple-500" />,
             OUT_FOR_DELIVERY: <Truck className="w-5 h-5 text-orange-500" />,
@@ -84,7 +84,7 @@ const OrderDetail = () => {
     };
 
     const getStatusColor = (status: string) => {
-        const colors: any = {
+        const colors: Record<string, string> = {
             CONFIRMED: 'bg-pink-500',
             SHIPPED: 'bg-purple-600',
             OUT_FOR_DELIVERY: 'bg-orange-500',
@@ -96,7 +96,7 @@ const OrderDetail = () => {
     };
 
     const getStatusLabel = (status: string) => {
-        const labels: any = {
+        const labels: Record<string, string> = {
             CONFIRMED: 'Confirmed',
             SHIPPED: 'Shipped',
             OUT_FOR_DELIVERY: 'Out for Delivery',
@@ -392,7 +392,15 @@ const OrderDetail = () => {
                             </div>
 
                             <div className="space-y-6">
-                                {order.items?.map((item: any) => (
+                                {order.items?.map((item: {
+                                    id: string;
+                                    name: string;
+                                    size: string;
+                                    color: string;
+                                    quantity: number;
+                                    price: number;
+                                    product?: { images?: string | string[] }
+                                }) => (
                                     <div key={item.id} className="group p-6 rounded-[32px] bg-slate-50/50 border border-slate-50 hover:bg-white hover:shadow-2xl hover:shadow-slate-200 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500 flex flex-col md:flex-row items-center gap-8">
                                         <div className="w-32 h-32 bg-white rounded-[24px] overflow-hidden border-4 border-white shadow-lg ring-1 ring-slate-100 flex-shrink-0 group-hover:rotate-6 transition-all">
                                             {(() => {

@@ -24,7 +24,7 @@ const Orders = () => {
     });
 
     const getStatusColor = (status: string) => {
-        const colors: any = {
+        const colors: Record<string, string> = {
             CONFIRMED: 'bg-pink-500',
             SHIPPED: 'bg-purple-600',
             OUT_FOR_DELIVERY: 'bg-orange-500',
@@ -36,7 +36,7 @@ const Orders = () => {
     };
 
     const getStatusLabel = (status: string) => {
-        const labels: any = {
+        const labels: Record<string, string> = {
             CONFIRMED: 'Confirmed',
             SHIPPED: 'Shipped',
             OUT_FOR_DELIVERY: 'Out for Delivery',
@@ -86,7 +86,15 @@ const Orders = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-6">
-                        {orders.map((order: any) => (
+                        {orders.map((order: {
+                            id: string;
+                            orderId?: string;
+                            status: string;
+                            paymentStatus?: string;
+                            createdAt?: string | Date;
+                            total?: number;
+                            items?: Array<{ name: string; quantity: number }>
+                        }) => (
                             <Link key={order.id} to={`/orders/${order.id}`}>
                                 <Card className="p-8 border-none bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 rounded-[32px] hover:ring-pink-200 transition-all duration-500 group overflow-hidden relative">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700 opacity-50" />
@@ -138,7 +146,7 @@ const Orders = () => {
 
                                     {/* Order Items Preview */}
                                     <div className="mt-8 flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-                                        {order.items?.slice(0, 5).map((item: any, idx: number) => (
+                                        {order.items?.slice(0, 5).map((item: { name: string; quantity: number }, idx: number) => (
                                             <div
                                                 key={idx}
                                                 className="flex-shrink-0 w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center border-2 border-slate-100 group-hover:border-pink-100 transition-colors"

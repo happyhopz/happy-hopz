@@ -1,0 +1,297 @@
+﻿
+> vite_react_shadcn_ts@0.0.0 lint
+> eslint .
+
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\AdminLayout.tsx
+   27:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  217:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:79  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\FeaturedShoes.tsx
+   60:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   74:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ImageUpload.tsx
+  59:8  warning  React Hook useCallback has a missing dependency: 'handleFiles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\Navbar.tsx
+  85:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\OmniSearch.tsx
+  115:98  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\PremiumCouponCard.tsx
+   9:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ReturnRequestForm.tsx
+  154:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\Reviews.tsx
+  43:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\admin\NotificationBell.tsx
+  18:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  80:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\badge.tsx
+  29:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\button.tsx
+  48:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\command.tsx
+  24:11  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\form.tsx
+  129:10  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\navigation-menu.tsx
+  111:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\sidebar.tsx
+  636:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\sonner.tsx
+  27:19  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\components\ui\toggle.tsx
+  37:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\contexts\NotificationContext.tsx
+  76:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\hooks\useAuth.tsx
+   45:33  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  103:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\lib\api.ts
+   35:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   42:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   53:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   72:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   98:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\Cart.tsx
+   35:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   54:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   77:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\Checkout.tsx
+   50:60   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   76:56   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:28   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  202:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  211:26   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  217:60   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  232:61   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  233:59   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  324:25   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  365:53   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  408:47   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  443:44   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  516:223  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  570:75   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  631:64   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  700:78   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  783:60   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\ForgotPassword.tsx
+  26:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\Login.tsx
+  43:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\MyReturns.tsx
+  67:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\Notifications.tsx
+  72:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\OrderDetail.tsx
+   42:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   69:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  395:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\Orders.tsx
+   27:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   39:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   89:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\ProductDetail.tsx
+   99:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  144:70  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  659:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  699:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  743:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  754:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\Products.tsx
+   41:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  273:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  311:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\ResetPassword.tsx
+  51:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\Settings.tsx
+  52:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\VerifyEmail.tsx
+  38:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\AdminReturns.tsx
+   64:8   warning  React Hook useEffect has a missing dependency: 'fetchReturns'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   78:25  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   93:25  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  119:25  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\CMS.tsx
+  15:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Contacts.tsx
+  84:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Coupons.tsx
+   22:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   40:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   44:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   51:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Dashboard.tsx
+  410:112  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  436:118  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  479:82   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  532:117  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  571:103  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Marketing.tsx
+   21:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  156:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  187:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Notifications.tsx
+   14:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   33:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   37:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   90:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  194:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  209:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\OrderDetail.tsx
+   46:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   53:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   79:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  222:98  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Orders.tsx
+   33:31  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+   71:23  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+   85:23  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+  107:63  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+  112:58  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+  170:47  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+  174:28  error  React Hook "useMutation" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+  182:26  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+  187:32  error  React Hook "useMutation" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+  191:27  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+  196:26  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+  355:57  error  Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Products.tsx
+   19:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:91  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:94  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  393:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  398:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  418:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  424:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  431:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  438:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  465:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  489:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  621:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  671:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Reviews.tsx
+  88:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Settings.tsx
+  26:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  63:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\src\pages\admin\Users.tsx
+  49:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  93:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Nitin\.gemini\antigravity\scratch\happy-hopz\client\tailwind.config.ts
+  99:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 193 problems (182 errors, 11 warnings)
+
+

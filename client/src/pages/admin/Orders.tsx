@@ -8,16 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingBag, Eye, Package, IndianRupee, Search, Download, Trash2, FileText, Plus } from 'lucide-react';
+import { ShoppingBag, Eye, Package, IndianRupee, Search, Download, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminOrders = () => {
-    useEffect(() => {
-        console.log('AdminOrders component mounted');
-    }, []);
-
     const { user, isAdmin, loading } = useAuth();
     const queryClient = useQueryClient();
+
+    // Hooks must be at the top
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [paymentFilter, setPaymentFilter] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -25,19 +23,17 @@ const AdminOrders = () => {
     const [endDate, setEndDate] = useState<string>('');
     const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
-
     const { data: orders, isLoading, error } = useQuery({
         queryKey: ['admin-orders', statusFilter, paymentFilter, searchTerm, startDate, endDate],
         queryFn: async () => {
             try {
                 const params: any = {};
-                if (statusFilter) params.status = statusFilter;
-                if (paymentFilter) params.paymentStatus = paymentFilter;
+                if (statusFilter && statusFilter !== 'ALL') params.status = statusFilter;
+                if (paymentFilter && paymentFilter !== 'ALL') params.paymentStatus = paymentFilter;
                 if (searchTerm) params.search = searchTerm;
                 if (startDate) params.startDate = startDate;
                 if (endDate) params.endDate = endDate;
                 const response = await adminAPI.getOrders(params);
-                console.log('Orders fetch response:', response.data);
                 return Array.isArray(response?.data) ? response.data : [];
             } catch (err) {
                 console.error('Failed to fetch orders:', err);
@@ -47,28 +43,36 @@ const AdminOrders = () => {
         enabled: !!isAdmin
     });
 
-    if (error) {
-        console.error('React Query error in AdminOrders:', error);
-    }
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            return await adminAPI.deleteOrder(id);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            toast.success('Order deleted successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to delete order');
+        }
+    });
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-8">
-                <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-muted-foreground font-nunito">Initializing admin session...</p>
-                </div>
-            </div>
-        );
-    }
+    const bulkDeleteMutation = useMutation({
+        mutationFn: async (orderIds: string[]) => {
+            return await adminAPI.bulkDeleteOrders(orderIds);
+        },
+        onSuccess: (data: any) => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            setSelectedOrders([]);
+            toast.success(data.data.message || 'Orders deleted successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to delete orders');
+        }
+    });
 
-    if (!user || !isAdmin) {
-        console.warn('Access denied: User not authenticated or not an admin');
-        return <Navigate to="/" />;
-    }
-
+    // Helper functions
     const getStatusColor = (status: string) => {
-        const colors: any = {
+        const colors: Record<string, string> = {
             PENDING: 'bg-gray-400 font-bold',
             CONFIRMED: 'bg-blue-500 font-bold',
             PROCESSING: 'bg-purple-500 font-bold',
@@ -82,7 +86,7 @@ const AdminOrders = () => {
     };
 
     const getPaymentColor = (status: string) => {
-        const colors: any = {
+        const colors: Record<string, string> = {
             PENDING: 'bg-yellow-500',
             COMPLETED: 'bg-green-500',
             FAILED: 'bg-red-500'
@@ -134,7 +138,6 @@ const AdminOrders = () => {
                     o.paymentStatus || 'N/A',
                     o.trackingNumber || 'N/A'
                 ].map(val => {
-                    // Handle potential commas in values by wrapping in quotes
                     const str = String(val).replace(/"/g, '""');
                     return `"${str}"`;
                 }).join(',');
@@ -164,39 +167,12 @@ const AdminOrders = () => {
     };
 
     const toggleSelectAll = () => {
-        if (selectedOrders.length === orders?.length) {
+        if (selectedOrders.length === (orders?.length || 0)) {
             setSelectedOrders([]);
         } else {
             setSelectedOrders(orders?.map((o: any) => o.id) || []);
         }
     };
-
-    const deleteMutation = useMutation({
-        mutationFn: async (id: string) => {
-            return await adminAPI.deleteOrder(id);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            toast.success('Order deleted successfully');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error || 'Failed to delete order');
-        }
-    });
-
-    const bulkDeleteMutation = useMutation({
-        mutationFn: async (orderIds: string[]) => {
-            return await adminAPI.bulkDeleteOrders(orderIds);
-        },
-        onSuccess: (data: any) => {
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            setSelectedOrders([]);
-            toast.success(data.data.message || 'Orders deleted successfully');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error || 'Failed to delete orders');
-        }
-    });
 
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
@@ -209,6 +185,26 @@ const AdminOrders = () => {
             bulkDeleteMutation.mutate(selectedOrders);
         }
     };
+
+    // Conditional returns AFTER all hooks
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center p-8">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-muted-foreground font-nunito">Initializing admin session...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!user || !isAdmin) {
+        return <Navigate to="/" />;
+    }
+
+    if (error) {
+        console.error('React Query error in AdminOrders:', error);
+    }
 
     return (
         <div className="animate-in fade-in duration-500">
@@ -247,7 +243,6 @@ const AdminOrders = () => {
                 </div>
             </div>
 
-
             {/* Search and Filters */}
             <Card className="p-6 mb-8 border-primary/10 shadow-sm">
                 <div className="space-y-4">
@@ -256,7 +251,7 @@ const AdminOrders = () => {
                             <input
                                 type="checkbox"
                                 className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
-                                checked={orders?.length > 0 && selectedOrders.length === orders?.length}
+                                checked={(orders?.length || 0) > 0 && selectedOrders.length === orders?.length}
                                 onChange={toggleSelectAll}
                             />
                             <span className="text-sm font-medium text-muted-foreground">Select All</span>
@@ -327,7 +322,7 @@ const AdminOrders = () => {
                     <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                     <p className="mt-4 text-muted-foreground font-nunito">Loading orders...</p>
                 </div>
-            ) : !orders || !Array.isArray(orders) || orders.length === 0 ? (
+            ) : !orders || orders.length === 0 ? (
                 <Card className="p-12 text-center border-dashed border-2">
                     <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
                     <h3 className="text-xl font-fredoka font-bold mb-2">No orders found</h3>
