@@ -408,8 +408,6 @@ const ProductDetail = () => {
                                 {product.sizes.map((size: string) => {
                                     const sizeStock = product.inventory?.find((i: any) => i.size === size)?.stock ?? 0;
                                     const isOutOfStock = sizeStock <= 0;
-                                    const isLowStock = sizeStock > 0 && sizeStock <= 3;
-
                                     return (
                                         <button
                                             key={size}
@@ -423,11 +421,6 @@ const ProductDetail = () => {
                                                 }`}
                                         >
                                             {size}
-                                            {isLowStock && !isOutOfStock && (
-                                                <span className="absolute -top-2 -right-1 bg-orange-500 text-white text-[8px] px-1 rounded-full animate-pulse">
-                                                    Low
-                                                </span>
-                                            )}
                                         </button>
                                     );
                                 })}
@@ -436,12 +429,10 @@ const ProductDetail = () => {
 
                         {/* Inventory Status Message */}
                         {selectedSize && (
-                            <p className={`text-xs font-bold ${product.inventory?.find((i: any) => i.size === selectedSize)?.stock <= 3 ? 'text-orange-600' : 'text-green-600'}`}>
+                            <p className={`text-xs font-bold ${product.inventory?.find((i: any) => i.size === selectedSize)?.stock <= 0 ? 'text-red-600' : 'text-green-600'}`}>
                                 {product.inventory?.find((i: any) => i.size === selectedSize)?.stock <= 0
                                     ? '❌ This size is currently out of stock'
-                                    : product.inventory?.find((i: any) => i.size === selectedSize)?.stock <= 3
-                                        ? `🔥 Only ${product.inventory?.find((i: any) => i.size === selectedSize)?.stock} pairs left in this size!`
-                                        : '✅ Size available in stock'}
+                                    : '✅ Size available in stock'}
                             </p>
                         )}
 
@@ -634,8 +625,8 @@ const ProductDetail = () => {
                                         </div>
                                         <div>
                                             <span className="text-muted-foreground">Stock</span>
-                                            <p className={`font-medium ${product.stock > 10 ? 'text-green-600' : 'text-orange-500'}`}>
-                                                {product.stock > 10 ? 'In Stock' : `Only ${product.stock} left!`}
+                                            <p className={`font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
                                             </p>
                                         </div>
                                     </div>
