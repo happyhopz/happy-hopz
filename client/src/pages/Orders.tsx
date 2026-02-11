@@ -25,22 +25,24 @@ const Orders = () => {
 
     const getStatusColor = (status: string) => {
         const colors: any = {
-            PLACED: 'bg-pink-500',
-            PACKED: 'bg-purple-500',
-            SHIPPED: 'bg-indigo-600',
-            DELIVERED: 'bg-green-500',
-            CANCELLED: 'bg-red-500'
+            CONFIRMED: 'bg-pink-500',
+            SHIPPED: 'bg-purple-600',
+            OUT_FOR_DELIVERY: 'bg-orange-500',
+            DELIVERED: 'bg-green-600',
+            CANCELLED: 'bg-slate-500',
+            REFUNDED: 'bg-slate-900'
         };
         return colors[status] || 'bg-gray-500';
     };
 
     const getStatusLabel = (status: string) => {
         const labels: any = {
-            PLACED: 'Order Placed',
-            PACKED: 'Packed',
+            CONFIRMED: 'Confirmed',
             SHIPPED: 'Shipped',
+            OUT_FOR_DELIVERY: 'Out for Delivery',
             DELIVERED: 'Delivered',
-            CANCELLED: 'Cancelled'
+            CANCELLED: 'Cancelled',
+            REFUNDED: 'Refunded'
         };
         return labels[status] || status;
     };
@@ -83,70 +85,76 @@ const Orders = () => {
                         </Link>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-6">
                         {orders.map((order: any) => (
                             <Link key={order.id} to={`/orders/${order.id}`}>
-                                <Card className="p-6 hover:shadow-float transition-shadow">
-                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <Card className="p-8 border-none bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 rounded-[32px] hover:ring-pink-200 transition-all duration-500 group overflow-hidden relative">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700 opacity-50" />
+                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 relative z-10">
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-xl font-fredoka font-bold">
-                                                    Order #{String(order.id || '').slice(0, 8)}
+                                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                                                    Order #{String(order.orderId || order.id || '').slice(-8)}
                                                 </h3>
-                                                <Badge className={`${getStatusColor(order.status)} text-white`}>
+                                                <Badge className={`${getStatusColor(order.status)} text-white px-3 py-1 uppercase font-black text-[9px] tracking-widest rounded-full shadow-lg shadow-pink-100`}>
                                                     {getStatusLabel(order.status)}
                                                 </Badge>
-                                                <Badge variant="outline">
-                                                    {order.paymentStatus === 'PENDING' ? 'Awaiting Payment' : order.paymentStatus}
-                                                </Badge>
+                                                {order.paymentStatus === 'PENDING' && (
+                                                    <Badge variant="outline" className="uppercase font-black text-[9px] tracking-widest border-orange-100 bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                                                        Awaiting Payment
+                                                    </Badge>
+                                                )}
                                             </div>
 
-                                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                                            <div className="flex flex-wrap gap-6 text-[11px] font-black uppercase tracking-[2px] text-slate-400">
                                                 <div className="flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4" />
-                                                    {order.createdAt ? (() => {
-                                                        try {
-                                                            return format(new Date(order.createdAt), 'MMM dd, yyyy');
-                                                        } catch (e) {
-                                                            return 'Invalid Date';
-                                                        }
-                                                    })() : 'N/A'}
+                                                    <Calendar className="w-4 h-4 text-pink-500" />
+                                                    {order.createdAt ? format(new Date(order.createdAt), 'MMM dd, yyyy') : 'N/A'}
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <Package className="w-4 h-4" />
-                                                    {order.items?.length || 0} items
+                                                    <Package className="w-4 h-4 text-purple-500" />
+                                                    {order.items?.length || 0} Products
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <IndianRupee className="w-4 h-4" />
-                                                    {(order.total || 0).toFixed(2)}
+                                                    <div className="w-1 h-1 bg-slate-200 rounded-full" />
+                                                    <span className="text-slate-900">Total Charged</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="text-right">
-                                            <div className="text-2xl font-fredoka font-bold text-primary flex items-center justify-end gap-1">
-                                                <IndianRupee className="w-5 h-5" />
-                                                {(order.total || 0).toFixed(2)}
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-right">
+                                                <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Total Bill</p>
+                                                <p className="text-3xl font-fredoka font-black text-slate-900 flex items-center justify-end">
+                                                    <IndianRupee className="w-5 h-5 mr-1 text-slate-300" />
+                                                    {(order.total || 0).toFixed(2)}
+                                                </p>
+                                            </div>
+                                            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-pink-500 group-hover:text-white transition-all duration-500 group-hover:border-pink-500">
+                                                <ArrowLeft className="w-5 h-5 rotate-180" />
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Order Items Preview */}
-                                    <div className="mt-4 flex gap-2 overflow-x-auto">
-                                        {order.items?.slice(0, 4).map((item: any, idx: number) => (
+                                    <div className="mt-8 flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                                        {order.items?.slice(0, 5).map((item: any, idx: number) => (
                                             <div
                                                 key={idx}
-                                                className="flex-shrink-0 w-16 h-16 bg-gradient-soft rounded-lg flex items-center justify-center"
+                                                className="flex-shrink-0 w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center border-2 border-slate-100 group-hover:border-pink-100 transition-colors"
                                             >
-                                                <span className="text-xs font-nunito font-semibold">
-                                                    {item.name?.slice(0, 10)}
-                                                </span>
+                                                <div className="p-2 text-center">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase truncate w-16 mb-1">{item.name}</p>
+                                                    <Badge variant="outline" className="text-[8px] font-black scale-75 border-slate-200 text-slate-500">
+                                                        {item.quantity}x
+                                                    </Badge>
+                                                </div>
                                             </div>
                                         ))}
-                                        {(order.items?.length || 0) > 4 && (
-                                            <div className="flex-shrink-0 w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
-                                                <span className="text-xs font-nunito font-semibold">
-                                                    +{order.items.length - 4}
+                                        {(order.items?.length || 0) > 5 && (
+                                            <div className="flex-shrink-0 w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center text-white border-2 border-slate-900 shadow-xl shadow-slate-200">
+                                                <span className="text-xs font-black">
+                                                    +{order.items.length - 5}
                                                 </span>
                                             </div>
                                         )}
