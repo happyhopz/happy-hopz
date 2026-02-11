@@ -32,6 +32,7 @@ import {
 import { toast } from 'sonner';
 import Reviews from '@/components/Reviews';
 import ShareProduct from '@/components/ShareProduct';
+import { SIZE_GUIDE_DATA, SIZE_LABELS } from '@/lib/constants';
 
 const getColorHex = (colorName: string) => {
     const colors: { [key: string]: string } = {
@@ -812,37 +813,17 @@ const ProductDetail = () => {
                                     <thead>
                                         <tr className="bg-primary text-white">
                                             <th className="px-2 py-2 text-left font-bold">Size</th>
-                                            <th className="px-2 py-2 text-left font-bold">Age</th>
-                                            <th className="px-2 py-2 text-left font-bold">US</th>
-                                            <th className="px-2 py-2 text-left font-bold">UK</th>
+                                            <th className="px-2 py-2 text-left font-bold">Age Group</th>
                                             <th className="px-2 py-2 text-left font-bold">EU</th>
                                             <th className="px-2 py-2 text-left font-bold">Inch</th>
                                             <th className="px-2 py-2 text-left font-bold">CM</th>
                                         </tr>
                                     </thead>
                                     <tbody className="font-nunito">
-                                        {[
-                                            { ourSize: 'XS', age: '1-3 m', us: '1 C', uk: '0 C', eu: '16', inch: '3.5', cm: '8.9' },
-                                            { ourSize: 'XS', age: '3-6 m', us: '2 C', uk: '1 C', eu: '17', inch: '3.75', cm: '9.5' },
-                                            { ourSize: 'XS', age: '6-9 m', us: '3 C', uk: '2 C', eu: '18', inch: '4.125', cm: '10.5' },
-                                            { ourSize: 'S', age: '10-12 m', us: '4 C', uk: '3 C', eu: '19', inch: '4.5', cm: '11.4' },
-                                            { ourSize: 'S', age: '15-18 m', us: '5 C', uk: '4 C', eu: '20', inch: '4.75', cm: '12.1' },
-                                            { ourSize: 'S', age: '1.5-2 y', us: '6 C', uk: '5 C', eu: '22', inch: '5.125', cm: '13' },
-                                            { ourSize: 'M', age: '2-2.5 y', us: '7 C', uk: '6 C', eu: '23', inch: '5.5', cm: '14' },
-                                            { ourSize: 'M', age: '2.5-3 y', us: '8 C', uk: '7 C', eu: '24', inch: '5.75', cm: '14.6' },
-                                            { ourSize: 'M', age: '3-4 y', us: '9 C', uk: '8 C', eu: '25', inch: '6.125', cm: '15.6' },
-                                            { ourSize: 'L', age: '4-4.5 y', us: '10 C', uk: '9 C', eu: '27', inch: '6.5', cm: '16.5' },
-                                            { ourSize: 'L', age: '5 y', us: '11 C', uk: '10 C', eu: '28', inch: '6.75', cm: '17.1' },
-                                            { ourSize: 'XL', age: '5-5.5 y', us: '12 C', uk: '11 C', eu: '30', inch: '7.125', cm: '18.1' },
-                                            { ourSize: 'XL', age: '5.5-6 y', us: '13 C', uk: '12 C', eu: '31', inch: '7.5', cm: '19.1' },
-                                            { ourSize: 'XXL', age: '7 y', us: '1 Y', uk: '13 C', eu: '32', inch: '7.75', cm: '19.7' },
-                                            { ourSize: 'XXL', age: '8 y', us: '2 Y', uk: '1 Y', eu: '33', inch: '8.125', cm: '20.6' },
-                                        ].map((row, idx) => (
+                                        {SIZE_GUIDE_DATA.map((row, idx) => (
                                             <tr key={`${row.ourSize}-${row.age}`} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                                                 <td className="px-2 py-1.5 font-bold text-primary">{row.ourSize}</td>
                                                 <td className="px-2 py-1.5">{row.age}</td>
-                                                <td className="px-2 py-1.5">{row.us}</td>
-                                                <td className="px-2 py-1.5">{row.uk}</td>
                                                 <td className="px-2 py-1.5">{row.eu}</td>
                                                 <td className="px-2 py-1.5">{row.inch}</td>
                                                 <td className="px-2 py-1.5">{row.cm}</td>
@@ -856,12 +837,9 @@ const ProductDetail = () => {
                             <div className="mt-4 p-3 bg-secondary/10 rounded-lg">
                                 <h4 className="font-bold text-xs mb-2">Quick Size Reference:</h4>
                                 <div className="grid grid-cols-3 gap-1 text-xs font-nunito">
-                                    <span><strong className="text-primary">XS</strong> = 1-9m</span>
-                                    <span><strong className="text-primary">S</strong> = 10m-2y</span>
-                                    <span><strong className="text-primary">M</strong> = 2-4y</span>
-                                    <span><strong className="text-primary">L</strong> = 4-5y</span>
-                                    <span><strong className="text-primary">XL</strong> = 5-6y</span>
-                                    <span><strong className="text-primary">XXL</strong> = 7-8y</span>
+                                    {Object.entries(SIZE_LABELS).map(([size, label]) => (
+                                        <span key={size}><strong className="text-primary">{size}</strong> = {label}</span>
+                                    ))}
                                 </div>
                             </div>
 

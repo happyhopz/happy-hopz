@@ -3,6 +3,7 @@ import Footer from '@/components/Footer';
 import BackButton from '@/components/BackButton';
 import { Ruler, HelpCircle, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { SIZE_GUIDE_DATA, SIZE_LABELS } from '@/lib/constants';
 
 const SizeGuide = () => {
     return (
@@ -78,14 +79,7 @@ const SizeGuide = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="font-nunito">
-                                        {[
-                                            { ourSize: 'XS', age: '0 - 9 Months', eu: '13 - 18', inch: '3.5" - 4.125"', cm: '8.9 - 10.5' },
-                                            { ourSize: 'S', age: '10 Months - 2 Years', eu: '19 - 22', inch: '4.5" - 5.125"', cm: '11.4 - 13' },
-                                            { ourSize: 'M', age: '2 - 4 Years', eu: '23 - 25', inch: '5.5" - 6.125"', cm: '14 - 15.6' },
-                                            { ourSize: 'L', age: '4 - 5 Years', eu: '26 - 28', inch: '6.25" - 6.75"', cm: '15.9 - 17.1' },
-                                            { ourSize: 'XL', age: '5 - 6 Years', eu: '29 - 31', inch: '6.8" - 7.5"', cm: '17.5 - 19.1' },
-                                            { ourSize: 'XXL', age: '7 - 8 Years', eu: '32 - 33', inch: '7.75" - 8.125"', cm: '19.7 - 20.6' },
-                                        ].map((row, idx) => (
+                                        {SIZE_GUIDE_DATA.map((row, idx) => (
                                             <tr key={row.ourSize} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white border-y border-gray-100'}>
                                                 <td className="px-3 py-4 font-bold text-primary text-base">{row.ourSize}</td>
                                                 <td className="px-3 py-4 font-medium">{row.age}</td>
@@ -100,12 +94,9 @@ const SizeGuide = () => {
                             <div className="mt-4 p-4 bg-primary/5 rounded-lg">
                                 <h3 className="font-bold text-sm mb-2">Quick Size Reference:</h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm font-nunito">
-                                    <span><strong className="text-primary">XS</strong> = 1-9 months</span>
-                                    <span><strong className="text-primary">S</strong> = 10 months - 2 years</span>
-                                    <span><strong className="text-primary">M</strong> = 2-4 years</span>
-                                    <span><strong className="text-primary">L</strong> = 4-5 years</span>
-                                    <span><strong className="text-primary">XL</strong> = 5-6 years</span>
-                                    <span><strong className="text-primary">XXL</strong> = 7-8 years</span>
+                                    {Object.entries(SIZE_LABELS).map(([size, label]) => (
+                                        <span key={size}><strong className="text-primary">{size}</strong> = {label}</span>
+                                    ))}
                                 </div>
                             </div>
                             <p className="text-xs text-muted-foreground mt-3 font-nunito">
