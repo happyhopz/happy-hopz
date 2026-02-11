@@ -277,8 +277,8 @@ const ProductDetail = () => {
                         },
                         "aggregateRating": {
                             "@type": "AggregateRating",
-                            "ratingValue": "4.2",
-                            "reviewCount": "4200"
+                            "ratingValue": product.avgRating?.toString() || "4.5",
+                            "reviewCount": product.ratingCount?.toString() || "0"
                         }
                     })}
                 </script>
@@ -367,10 +367,14 @@ const ProductDetail = () => {
                             {/* Rating */}
                             <div className="flex items-center gap-2 mt-3">
                                 <div className="flex items-center gap-1.5 bg-green-600 text-white px-2.5 py-1 rounded text-sm font-bold">
-                                    <span>4.2</span>
+                                    <span>{product.avgRating?.toFixed(1) || '4.5'}</span>
                                     <Star className="w-3.5 h-3.5 fill-white" />
                                 </div>
-                                <span className="text-muted-foreground text-sm">4.2K Ratings</span>
+                                <span className="text-muted-foreground text-sm">
+                                    {product.ratingCount > 999
+                                        ? `${(product.ratingCount / 1000).toFixed(1)}K`
+                                        : product.ratingCount} Ratings
+                                </span>
                             </div>
                         </div>
 
@@ -548,10 +552,7 @@ const ProductDetail = () => {
                                     <span className="font-bold text-sm tracking-wide">ESTIMATED DELIVERY</span>
                                 </div>
                                 <p className="text-xl font-fredoka font-bold text-blue-900">
-                                    {format(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), 'EEEE, MMM dd')} - {format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'MMM dd')}
-                                </p>
-                                <p className="text-xs text-blue-600/80 font-medium">
-                                    Express Shipping available for active Happy Hopz members!
+                                    {format(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), 'EEEE, MMM dd')} - {format(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'MMM dd')}
                                 </p>
                             </div>
                             <div className="space-y-3 pt-2">

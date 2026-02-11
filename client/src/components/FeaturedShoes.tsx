@@ -233,15 +233,27 @@ const ShoeCard = ({
             {product.name}
           </h3>
 
-          <div className="flex items-center gap-1 md:gap-2">
-            <span className="text-lg md:text-2xl font-fredoka font-bold text-cyan-600">
-              ₹{product.discountPrice || product.price}
-            </span>
-            {product.discountPrice && (
-              <span className="text-xs md:text-sm text-muted-foreground line-through">
-                ₹{product.price}
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1">
+              <span className="text-lg md:text-2xl font-fredoka font-bold text-cyan-600">
+                ₹{product.discountPrice || product.price}
               </span>
-            )}
+              {product.discountPrice && (
+                <span className="text-xs md:text-sm text-muted-foreground line-through">
+                  ₹{product.price}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1 text-[10px] md:text-xs">
+              <div className="flex items-center gap-0.5 bg-green-600 text-white px-1.5 py-0.5 rounded font-bold">
+                <span>{(product as any).avgRating?.toFixed(1) || '4.5'}</span>
+                <Star className="w-2.5 h-2.5 fill-white" />
+              </div>
+              <span className="text-muted-foreground">
+                ({(product as any).ratingCount || 0})
+              </span>
+            </div>
           </div>
 
 
@@ -318,8 +330,8 @@ const ShoeCard = ({
         <div className="absolute top-2 right-2 md:top-4 md:right-4 z-50">
           <ShareProduct product={product} iconOnly className="!w-8 !h-8 md:!w-10 md:!h-10 shadow-soft" />
         </div>
-      </Link>
-    </div>
+      </Link >
+    </div >
   );
 };
 

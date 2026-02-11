@@ -42,7 +42,7 @@ const Shipping = () => {
                             />
                             <HighlightCard
                                 icon={<Clock className="w-8 h-8" />}
-                                title="3-7 Days"
+                                title="3-5 Days"
                                 description="Standard delivery"
                             />
                             <HighlightCard
@@ -65,19 +65,19 @@ const Shipping = () => {
                                     <tbody className="font-nunito text-muted-foreground">
                                         <tr className="border-b">
                                             <td className="py-3">Metro Cities (Delhi, Mumbai, Bangalore, etc.)</td>
-                                            <td className="py-3">3-5 business days</td>
+                                            <td className="py-3">3-4 business days</td>
                                         </tr>
                                         <tr className="border-b">
                                             <td className="py-3">Tier 2 Cities</td>
-                                            <td className="py-3">4-6 business days</td>
+                                            <td className="py-3">4-5 business days</td>
                                         </tr>
                                         <tr className="border-b">
                                             <td className="py-3">Tier 3 Cities & Rural Areas</td>
-                                            <td className="py-3">5-7 business days</td>
+                                            <td className="py-3">5 business days</td>
                                         </tr>
                                         <tr className="border-b">
                                             <td className="py-3">Remote Areas (Northeast, Islands, etc.)</td>
-                                            <td className="py-3">7-10 business days</td>
+                                            <td className="py-3">5-7 business days</td>
                                         </tr>
                                     </tbody>
                                 </table>

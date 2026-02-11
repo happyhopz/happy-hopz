@@ -77,6 +77,8 @@ model Product {
   tagPrice       Float?
   cartItems      CartItem[]
   orderItems     OrderItem[]
+  avgRating      Float       @default(4.5)
+  ratingCount    Int         @default(0)
   reviews        Review[]
 }
 

@@ -345,7 +345,7 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
             sku, name, description, price, discountPrice, costPrice,
             category, ageGroup, sizes, colors, stock, inventory, images,
             status, tags, seoTitle, seoDescription,
-            isVariant, parentId
+            isVariant, parentId, avgRating, ratingCount
         } = req.body;
 
         const productData: any = {
@@ -355,6 +355,8 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
             price: parseFloat(String(price)) || 0,
             discountPrice: (discountPrice !== undefined && discountPrice !== null && discountPrice !== '') ? parseFloat(String(discountPrice)) : null,
             costPrice: (costPrice !== undefined && costPrice !== null && costPrice !== '') ? parseFloat(String(costPrice)) : null,
+            avgRating: (avgRating !== undefined && avgRating !== null && avgRating !== '') ? parseFloat(String(avgRating)) : 4.5,
+            ratingCount: (ratingCount !== undefined && ratingCount !== null && ratingCount !== '') ? parseInt(String(ratingCount)) : 0,
             category,
             ageGroup,
             sizes: Array.isArray(sizes) ? JSON.stringify(sizes) : sizes,
@@ -412,7 +414,7 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             boxPrice, tagPrice, shippingCost, otherCosts,
             category, ageGroup, sizes, colors, stock, inventory, images,
             status, tags, seoTitle, seoDescription,
-            isVariant, parentId
+            isVariant, parentId, avgRating, ratingCount
         } = req.body;
 
         // Deep Analysis Fix: Ensure all numeric fields are properly sanitised
@@ -430,6 +432,8 @@ router.put('/products/:id', async (req: AuthRequest, res: Response) => {
             tagPrice: (tagPrice !== undefined && tagPrice !== null && tagPrice !== '') ? parseFloat(String(tagPrice)) : null,
             shippingCost: (shippingCost !== undefined && shippingCost !== null && shippingCost !== '') ? parseFloat(String(shippingCost)) : null,
             otherCosts: (otherCosts !== undefined && otherCosts !== null && otherCosts !== '') ? parseFloat(String(otherCosts)) : null,
+            avgRating: (avgRating !== undefined && avgRating !== null && avgRating !== '') ? parseFloat(String(avgRating)) : undefined,
+            ratingCount: (ratingCount !== undefined && ratingCount !== null && ratingCount !== '') ? parseInt(String(ratingCount)) : undefined,
             category,
             ageGroup,
             sizes: Array.isArray(sizes) ? JSON.stringify(sizes) : sizes,

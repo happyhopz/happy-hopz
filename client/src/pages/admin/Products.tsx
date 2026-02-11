@@ -48,7 +48,9 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         otherCosts: product?.otherCosts || '',
         sku: product?.sku || '',
         seoTitle: product?.seoTitle || '',
-        seoDescription: product?.seoDescription || ''
+        seoDescription: product?.seoDescription || '',
+        avgRating: product?.avgRating || 4.5,
+        ratingCount: product?.ratingCount || 0
     });
 
     const [isGeneratingSEO, setIsGeneratingSEO] = useState(false);
@@ -91,7 +93,9 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
             sizes: Array.isArray(formData.sizes) ? formData.sizes.map((s: any) => String(s).trim()) : [],
             inventory: formData.inventory,
             colors: typeof formData.colors === 'string' ? formData.colors.split(',').map((c: any) => c.trim()) : formData.colors,
-            tags: formData.tags || []
+            tags: formData.tags || [],
+            avgRating: formData.avgRating === '' ? 4.5 : parseFloat(String(formData.avgRating)),
+            ratingCount: formData.ratingCount === '' ? 0 : parseInt(String(formData.ratingCount))
         };
 
         onSubmit(submissionData);
@@ -238,6 +242,38 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                     </div>
                 )}
             </div>
+
+            {/* Ratings Section */}
+            <div className="border-t pt-4 mt-2">
+                <Label className="text-base font-semibold mb-3 block">Storefront Ratings (Managed)</Label>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label className="text-sm">Average Rating (0-5)</Label>
+                        <Input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="5"
+                            value={formData.avgRating}
+                            onChange={(e) => setFormData({ ...formData, avgRating: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <Label className="text-sm">Rating Count (Total Reviews)</Label>
+                        <Input
+                            type="number"
+                            step="1"
+                            min="0"
+                            value={formData.ratingCount}
+                            onChange={(e) => setFormData({ ...formData, ratingCount: e.target.value })}
+                        />
+                    </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2 italic">
+                    These values appear on the storefront to build customer trust.
+                </p>
+            </div>
+
             <div>
                 <Label>SKU (Stock Keeping Unit)</Label>
                 <Input

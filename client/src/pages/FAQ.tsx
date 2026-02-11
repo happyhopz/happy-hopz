@@ -36,7 +36,7 @@ const faqData = [
             },
             {
                 q: 'How long does delivery take?',
-                a: 'Standard delivery takes 3-7 business days depending on your location. Metro cities usually receive orders within 3-5 days.'
+                a: 'Standard delivery takes 3-5 business days depending on your location. Metro cities usually receive orders within 3 days.'
             },
             {
                 q: 'Do you deliver to my area?',
