@@ -177,10 +177,10 @@ const TrackOrder = () => {
 
                             {/* Tracking Timeline */}
                             <div className="relative mb-12 px-2">
-                                <div className="absolute top-6 left-6 right-6 h-1 bg-slate-100 hidden md:block" />
+                                <div className="absolute top-7 left-6 right-6 h-1.5 bg-slate-100 hidden md:block rounded-full" />
                                 {currentStep !== -1 && (
                                     <div
-                                        className="absolute top-6 left-6 h-1 bg-primary/30 transition-all duration-1000 hidden md:block"
+                                        className="absolute top-7 left-6 h-1.5 bg-primary transition-all duration-1000 hidden md:block rounded-full shadow-[0_0_15px_rgba(255,107,157,0.3)]"
                                         style={{ width: `${(currentStep / (statusSteps.length - 1)) * 100}%` }}
                                     />
                                 )}
@@ -192,12 +192,12 @@ const TrackOrder = () => {
 
                                         return (
                                             <div key={step} className="flex md:flex-col items-center gap-4 md:gap-4 relative z-10 bg-white pr-4 md:pr-0">
-                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${isCompleted ? 'bg-primary text-white shadow-2xl shadow-primary/30 scale-110' : 'bg-slate-50 text-slate-300'
-                                                    } ${isActive ? 'ring-[12px] ring-primary/10 animate-pulse' : ''}`}>
+                                                <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-all duration-700 ${isCompleted ? 'bg-primary text-white shadow-2xl shadow-primary/40 scale-110' : 'bg-slate-50 text-slate-300'
+                                                    } ${isActive ? 'ring-[15px] ring-primary/20 animate-pulse border-4 border-white' : ''}`}>
                                                     {getStatusIcon(step)}
                                                 </div>
-                                                <div className="text-left md:text-center">
-                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${isCompleted ? 'text-slate-900' : 'text-slate-300'}`}>
+                                                <div className="text-left md:text-center mt-2">
+                                                    <p className={`text-[11px] font-black uppercase tracking-[0.1em] ${isActive ? 'text-primary scale-110 transform transition-all' : (isCompleted ? 'text-slate-900' : 'text-slate-200')}`}>
                                                         {step.replace(/_/g, ' ')}
                                                     </p>
                                                     {isCompleted && (
