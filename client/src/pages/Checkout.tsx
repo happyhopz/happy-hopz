@@ -432,6 +432,7 @@ const Checkout = () => {
     };
 
     const handlePlaceOrder = async () => {
+        // Deployment heartbeat: Triggering Vercel build for env variables
         if (!selectedAddressId && !isGuest) {
             toast.error('Please select a shipping address');
             return;
