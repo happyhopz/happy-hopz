@@ -138,7 +138,7 @@ const TrackOrder = () => {
             <main className="container mx-auto px-4 py-16">
                 {order ? (
                     <div className="max-w-4xl mx-auto space-y-8 animate-fade-up">
-                        {/* Status Timeline Card */}
+                        {/* 1. Status & Timeline Card */}
                         <Card className="p-8 md:p-12 rounded-[2.5rem] border-2 border-slate-100 shadow-xl bg-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[4rem] opacity-50" />
 
@@ -150,14 +150,26 @@ const TrackOrder = () => {
                                         </div>
                                         <h2 className="text-2xl font-fredoka font-black text-slate-900">Order #{order.orderId || order.id.slice(-8)}</h2>
                                     </div>
-                                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                                        <Calendar className="w-3 h-3" />
-                                        Placed {format(new Date(order.createdAt), 'MMM dd, yyyy')}
+                                    <div className="flex flex-wrap items-center gap-4">
+                                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                            <Calendar className="w-3 h-3" />
+                                            Placed {format(new Date(order.createdAt), 'MMM dd, yyyy')}
+                                        </p>
+                                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+                                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                            <IndianRupee className="w-3 h-3" />
+                                            Total: ₹{order.total}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                    <Badge className={`${getStatusColor(order.status)} text-white px-6 py-2 text-[10px] uppercase font-black tracking-widest rounded-full shadow-lg h-auto ring-4 ring-white`}>
+                                        {order.status}
+                                    </Badge>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        Payment: {order.paymentStatus}
                                     </p>
                                 </div>
-                                <Badge className={`${getStatusColor(order.status)} text-white px-6 py-2 text-[10px] uppercase font-black tracking-widest rounded-full shadow-lg h-auto`}>
-                                    {order.status}
-                                </Badge>
                             </div>
 
                             {/* Tracking Timeline */}
@@ -210,62 +222,110 @@ const TrackOrder = () => {
                                             <p className="text-lg font-black text-slate-900">#{order.trackingNumber}</p>
                                         </div>
                                     </div>
-                                    <Button variant="outline" className="rounded-2xl font-black text-xs uppercase tracking-widest border-2 hover:bg-white transition-all">
-                                        Track on Courier Site
+                                    <Button variant="outline" className="rounded-2xl font-black text-xs uppercase tracking-widest border-2 hover:bg-white transition-all shadow-sm">
+                                        Track Shipment
                                     </Button>
                                 </div>
                             )}
                         </Card>
 
-                        {/* Summary Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <Card className="p-8 rounded-[2rem] border-2 border-slate-100 shadow-xl bg-white space-y-6">
-                                <h3 className="font-fredoka font-black text-lg text-slate-900 flex items-center gap-2">
-                                    <MapPin className="w-5 h-5 text-pink-500" />
-                                    Shipping To
-                                </h3>
-                                <div className="space-y-1">
-                                    <p className="font-black text-slate-900">{order.address?.name}</p>
-                                    <p className="text-slate-500 font-medium text-sm leading-relaxed">
-                                        {order.address?.line1}<br />
-                                        {order.address?.line2 && <>{order.address.line2}<br /></>}
-                                        {order.address?.city}, {order.address?.state} - {order.address?.pincode}
-                                    </p>
-                                    <div className="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest">
-                                        <Phone className="w-3 h-3" />
-                                        {order.address?.phone || order.guestPhone}
-                                    </div>
-                                </div>
-                            </Card>
-
-                            <Card className="p-8 rounded-[2rem] border-2 border-slate-100 shadow-xl bg-white space-y-6">
-                                <h3 className="font-fredoka font-black text-lg text-slate-900 flex items-center gap-2">
-                                    <Package className="w-5 h-5 text-blue-500" />
-                                    Order Summary
-                                </h3>
-                                <div className="space-y-4">
-                                    {order.items?.map((item: any) => (
-                                        <div key={item.id} className="flex gap-4">
-                                            {item.product?.image && (
-                                                <img src={item.product.image} className="w-16 h-16 rounded-xl object-cover bg-slate-50 border border-slate-100" />
-                                            )}
-                                            <div className="flex-1">
-                                                <p className="font-bold text-slate-900 text-sm line-clamp-1">{item.name}</p>
-                                                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">
-                                                    EU {item.size} • Qty {item.quantity}
-                                                </p>
-                                            </div>
-                                            <p className="font-black text-slate-900 text-sm">₹{item.price}</p>
+                        {/* 2. Full Order Details Card */}
+                        <Card className="rounded-[2.5rem] border-2 border-slate-100 shadow-xl bg-white overflow-hidden">
+                            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                                {/* Shipping Info Section */}
+                                <div className="p-8 space-y-6 md:col-span-1">
+                                    <h3 className="font-fredoka font-black text-lg text-slate-900 flex items-center gap-2 uppercase tracking-tight">
+                                        <MapPin className="w-5 h-5 text-pink-500" />
+                                        Shipping To
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="font-black text-slate-900 text-base">{order.address?.name || order.guestName || 'Customer'}</p>
+                                            <p className="text-slate-500 font-medium text-sm leading-relaxed mt-1">
+                                                {order.address?.line1}<br />
+                                                {order.address?.line2 && <>{order.address.line2}<br /></>}
+                                                {order.address?.city}, {order.address?.state} - {order.address?.pincode}
+                                            </p>
                                         </div>
-                                    ))}
-                                    <Separator className="bg-slate-100" />
-                                    <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
-                                        <p className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Total Amount</p>
-                                        <p className="font-black text-2xl text-primary leading-none">₹{order.total}</p>
+                                        <div className="pt-4 border-t border-slate-50 flex items-center gap-3 text-slate-900 font-bold text-sm">
+                                            <div className="p-2 bg-slate-50 rounded-lg">
+                                                <Phone className="w-4 h-4 text-slate-400" />
+                                            </div>
+                                            {order.address?.phone || order.guestPhone || 'No phone provided'}
+                                        </div>
                                     </div>
                                 </div>
-                            </Card>
-                        </div>
+
+                                {/* Order Items Section */}
+                                <div className="p-8 space-y-6 md:col-span-2 bg-slate-50/30">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-fredoka font-black text-lg text-slate-900 flex items-center gap-2 uppercase tracking-tight">
+                                            <Package className="w-5 h-5 text-blue-500" />
+                                            Items Summary
+                                        </h3>
+                                        <Badge variant="secondary" className="bg-white text-slate-900 font-black border-2 border-slate-100">
+                                            {order.items?.length || 0} Items
+                                        </Badge>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {order.items?.map((item: any) => (
+                                            <div key={item.id} className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-transform hover:scale-[1.01]">
+                                                {item.product?.image && (
+                                                    <img src={item.product.image} className="w-20 h-20 rounded-xl object-cover bg-slate-50" alt={item.name} />
+                                                ) || (
+                                                        <div className="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center">
+                                                            <Package className="w-8 h-8 text-slate-300" />
+                                                        </div>
+                                                    )}
+                                                <div className="flex-1 space-y-1">
+                                                    <p className="font-black text-slate-900 text-base line-clamp-1">{item.name}</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-tighter bg-slate-50">Size: {item.size}</Badge>
+                                                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-tighter bg-slate-50">Qty: {item.quantity}</Badge>
+                                                    </div>
+                                                    <p className="font-black text-slate-400 text-xs mt-2">Price: ₹{item.price}</p>
+                                                </div>
+                                                <div className="text-right flex flex-col justify-center">
+                                                    <p className="font-black text-lg text-slate-900 tracking-tighter">₹{item.price * item.quantity}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {/* Full Pricing Breakdown */}
+                                        <div className="mt-8 p-6 bg-white rounded-3xl border-2 border-slate-100 space-y-3">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Subtotal</span>
+                                                <span className="font-black text-slate-900">₹{order.subtotal || (order.total - (order.tax || 0) - (order.shipping || 0) + (order.couponDiscount || 0))}</span>
+                                            </div>
+                                            {order.shipping > 0 && (
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Delivery Charges</span>
+                                                    <span className="font-black text-green-600">₹{order.shipping}</span>
+                                                </div>
+                                            )}
+                                            {order.couponDiscount > 0 && (
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Coupon Discount</span>
+                                                    <span className="font-black text-pink-500">-₹{order.couponDiscount}</span>
+                                                </div>
+                                            )}
+                                            {order.tax > 0 && (
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Taxes & Fees</span>
+                                                    <span className="font-black text-slate-900">₹{order.tax}</span>
+                                                </div>
+                                            )}
+                                            <Separator className="bg-slate-100 my-2" />
+                                            <div className="flex justify-between items-center bg-pink-500/5 -mx-6 -mb-6 p-6 rounded-b-3xl">
+                                                <span className="text-slate-900 font-black uppercase tracking-widest text-xs">Total Amount Paid</span>
+                                                <span className="font-black text-3xl text-primary tracking-tighter leading-none">₹{order.total}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
                     </div>
                 ) : (
                     <div className="max-w-xl mx-auto py-20 text-center space-y-8 animate-fade-in">

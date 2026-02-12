@@ -32,7 +32,10 @@ router.get('/my-orders', optionalAuthenticate, async (req: AuthRequest, res: Res
         if (req.user) {
             const orders = await prisma.order.findMany({
                 where: { userId: req.user.id },
-                include: { items: { include: { product: true } } },
+                include: {
+                    items: { include: { product: true } },
+                    address: true
+                },
                 orderBy: { createdAt: 'desc' }
             });
             return res.json(orders);
