@@ -399,8 +399,7 @@ const ProductDetail = () => {
                     <div className="lg:sticky lg:top-24 lg:self-start space-y-5">
                         {/* Brand & Title */}
                         <div>
-                            <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">Happy Hopz</h2>
-                            <h1 className="text-lg text-muted-foreground mt-1">{product.name}</h1>
+                            <h1 className="text-2xl md:text-3xl font-fredoka font-bold text-foreground tracking-tight">{product.name}</h1>
 
                             {/* Rating */}
                             <div className="flex items-center gap-2 mt-3">
@@ -709,8 +708,7 @@ const ProductDetail = () => {
                                         )}
                                     </div>
                                     <div className="space-y-1">
-                                        <h4 className="font-bold text-sm text-foreground truncate">Happy Hopz</h4>
-                                        <p className="text-xs text-muted-foreground truncate">{p.name}</p>
+                                        <p className="font-fredoka font-bold text-sm text-foreground truncate">{p.name}</p>
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-sm">₹{p.discountPrice || p.price}</span>
                                             {p.discountPrice && (
