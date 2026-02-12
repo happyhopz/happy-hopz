@@ -1,4 +1,4 @@
-import { ShoppingCart, User, Menu, X, ChevronDown, ShoppingBag, Bell } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, ChevronDown, ShoppingBag, Bell, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -176,6 +176,12 @@ const Navbar = () => {
                       <Link to="/orders" className="cursor-pointer">
                         <ShoppingBag className="w-4 h-4 mr-2" />
                         My Orders
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/track-order" className="cursor-pointer">
+                        <Search className="w-4 h-4 mr-2" />
+                        Track Order
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -405,6 +411,13 @@ const Navbar = () => {
                     </>
                   )}
                 </div>
+
+                <Link to="/track-order" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full rounded-full gap-2">
+                    <Search className="w-4 h-4" />
+                    Track Order
+                  </Button>
+                </Link>
 
                 {user ? (
                   <Button variant="hopz" size="sm" className="w-full" onClick={logout}>

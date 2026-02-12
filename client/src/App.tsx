@@ -44,6 +44,7 @@ import ResetPassword from './pages/ResetPassword';
 import MyReturns from './pages/MyReturns';
 import AdminReturns from './pages/admin/AdminReturns';
 import AdminNotifications from './pages/admin/Notifications';
+import TrackOrder from "./pages/TrackOrder";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/my-returns" element={<MyReturns />} />
+                <Route path="/track-order" element={<TrackOrder />} />
                 <Route element={<AdminLayout><Outlet /></AdminLayout>}>
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/products" element={<AdminProducts />} />

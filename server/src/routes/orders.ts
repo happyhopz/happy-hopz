@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { optionalAuthenticate, authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
@@ -273,6 +273,43 @@ router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: 
         res.json(result);
     } catch (error: any) {
         res.status(500).json({ error: error.message || 'Failed to update order status' });
+    }
+});
+
+// Public Order Tracking (Track by Order ID and Phone)
+router.post('/track', async (req: Request, res: Response) => {
+    try {
+        const { orderId, phone } = z.object({
+            orderId: z.string(),
+            phone: z.string()
+        }).parse(req.body);
+
+        const order = await prisma.order.findFirst({
+            where: {
+                OR: [{ id: orderId }, { orderId: orderId }]
+            },
+            include: {
+                items: { include: { product: true } },
+                address: true
+            }
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Verify phone matches (guest info or address info)
+        const normalize = (p: string) => p.replace(/\D/g, '').slice(-10);
+        const searchPhone = normalize(phone);
+        const orderPhone = normalize(order.guestPhone || order.address?.phone || '');
+
+        if (searchPhone !== orderPhone) {
+            return res.status(403).json({ error: 'Order details do not match the provided phone number' });
+        }
+
+        res.json(order);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message || 'Invalid tracking data' });
     }
 });
 

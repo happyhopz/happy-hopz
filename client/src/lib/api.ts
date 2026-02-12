@@ -74,7 +74,8 @@ export const ordersAPI = {
     getById: (id: string) => api.get(`/orders/${id}`),
     updateStatus: (id: string, data: any) => api.put(`/orders/${id}/status`, data),
     cancel: (id: string, data: { reason: string }) => api.patch(`/orders/${id}/cancel`, data),
-    return: (id: string, data: { reason: string }) => api.patch(`/orders/${id}/return`, data)
+    return: (id: string, data: { reason: string }) => api.patch(`/orders/${id}/return`, data),
+    track: (data: { orderId: string; phone: string }) => api.post('/orders/track', data)
 };
 
 // Payment API
