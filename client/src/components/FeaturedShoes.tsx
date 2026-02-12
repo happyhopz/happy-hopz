@@ -259,29 +259,31 @@ const ShoeCard = ({
 
 
           {/* Promotional Badge (Vibrant) */}
-          <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[45]">
-            {(() => {
-              const tags = product.tags || [];
-              const isSale = tags.includes('Sale') || product.discountPrice;
-              const isNew = tags.includes('New Arrivals');
+          {(() => {
+            const tags = product.tags || [];
+            const isSale = tags.includes('Sale') || product.discountPrice;
+            const isNew = tags.includes('New Arrivals');
 
-              if (isSale) {
-                return (
+            if (isSale) {
+              return (
+                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[45]">
                   <span className="px-2.5 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-red-500 to-pink-600 text-white text-[10px] md:text-sm font-fredoka font-bold rounded-full shadow-lg border border-white/20 animate-bounce-subtle">
                     SALE
                   </span>
-                );
-              }
-              if (isNew) {
-                return (
+                </div>
+              );
+            }
+            if (isNew) {
+              return (
+                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[45]">
                   <span className="px-2.5 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] md:text-sm font-fredoka font-bold rounded-full shadow-lg border border-white/20">
                     NEW
                   </span>
-                );
-              }
-              return null;
-            })()}
-          </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
           {/* Action Buttons */}
           <div className="flex flex-col gap-1.5 md:gap-2 mt-2 md:mt-4">
             <Button
