@@ -49,44 +49,50 @@ export const generateOrderPDF = async (order: any) => {
     ]);
 
     doc.autoTable({
-        startY: 85,
+        startY: 75,
         head: [['Product', 'Size', 'Color', 'Qty', 'Price', 'Total']],
         body: tableData,
-        headStyles: { fillColor: [255, 107, 107] },
-        theme: 'striped'
+        headStyles: { fillColor: [255, 107, 107], fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        theme: 'striped',
+        margin: { top: 10, bottom: 10 }
     });
 
     // Summary
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const finalY = (doc as any).lastAutoTable.finalY + 8;
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.text(`Subtotal:`, 140, finalY);
     doc.text(`₹${(order.subtotal || 0).toFixed(2)}`, 180, finalY, { align: 'right' });
 
-    doc.text(`Tax (GST):`, 140, finalY + 5);
-    doc.text(`₹${(order.tax || 0).toFixed(2)}`, 180, finalY + 5, { align: 'right' });
+    doc.text(`Tax (GST):`, 140, finalY + 4);
+    doc.text(`₹${(order.tax || 0).toFixed(2)}`, 180, finalY + 4, { align: 'right' });
 
-    doc.text(`Shipping:`, 140, finalY + 10);
-    doc.text(`₹${(order.shipping || 0).toFixed(2)}`, 180, finalY + 10, { align: 'right' });
+    doc.text(`Shipping:`, 140, finalY + 8);
+    doc.text(`₹${(order.shipping || 0).toFixed(2)}`, 180, finalY + 8, { align: 'right' });
+
+    let currentY = finalY + 12;
 
     if (order.couponDiscount > 0) {
         doc.setTextColor(34, 197, 94); // Green
-        doc.text(`Discount (${order.couponCode}):`, 140, finalY + 15);
-        doc.text(`-₹${order.couponDiscount.toFixed(2)}`, 180, finalY + 15, { align: 'right' });
+        doc.text(`Discount (${order.couponCode}):`, 140, currentY);
+        doc.text(`-₹${order.couponDiscount.toFixed(2)}`, 180, currentY, { align: 'right' });
         doc.setTextColor(0);
+        currentY += 4;
     }
 
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Grand Total:`, 140, finalY + 25);
-    doc.text(`₹${order.total.toFixed(2)}`, 180, finalY + 25, { align: 'right' });
+    doc.text(`Grand Total:`, 140, currentY + 4);
+    doc.text(`₹${order.total.toFixed(2)}`, 180, currentY + 4, { align: 'right' });
 
     // Footer
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(150);
-    doc.text('This is a computer generated invoice and does not require a physical signature.', 105, 280, { align: 'center' });
-    doc.text('Thank you for shopping with Happy Hopz!', 105, 285, { align: 'center' });
+    doc.setTextColor(180);
+    const pageHeight = doc.internal.pageSize.height;
+    doc.text('This is a computer generated invoice and does not require a physical signature.', 105, pageHeight - 15, { align: 'center' });
+    doc.text('Thank you for shopping with Happy Hopz!', 105, pageHeight - 10, { align: 'center' });
 
     return Buffer.from(doc.output('arraybuffer'));
 };
