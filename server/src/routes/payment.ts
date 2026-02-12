@@ -23,44 +23,47 @@ const paymentIntentSchema = z.object({
 router.post('/intent', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { amount, orderId } = paymentIntentSchema.parse(req.body);
+        console.log(`[Payment Intent] Request for Order: ${orderId}, Amount: ${amount}, User: ${req.user?.id || 'GUEST'}`);
 
-        // Verify order exists and belongs to user (if logged in)
+        // Verify order exists
         const order = await (prisma.order as any).findFirst({
             where: {
-                OR: [{ id: orderId }, { orderId: orderId }],
-                // If user is logged in, ensure it's their order
-                // If guest, we allow it as long as the order exists and has no userId
-                ...(req.user ? { userId: req.user.id } : { userId: null })
+                OR: [{ id: orderId }, { orderId: orderId }]
             }
         });
 
         if (!order) {
-            return res.status(404).json({ error: 'Order not found or access denied' });
+            console.error(`[Payment Intent] Order NOT found: ${orderId}`);
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Ownership check: If order has a userId, it MUST match the current user
+        if (order.userId && (!req.user || order.userId !== req.user.id)) {
+            console.error(`[Payment Intent] Access Denied. Order userId: ${order.userId}, Req userId: ${req.user?.id}`);
+            return res.status(403).json({ error: 'Access denied to this order' });
         }
 
         // Convert amount to paise (INR)
         const options = {
             amount: Math.round(amount * 100),
             currency: 'INR',
-            receipt: `receipt_${orderId.slice(0, 10)}`,
+            receipt: `receipt_${order.id.slice(0, 10)}`,
             notes: {
-                orderId: orderId
+                orderId: order.id
             }
         };
 
         const rzpOrder = await razorpay.orders.create(options);
+        console.log(`[Payment Intent] Razorpay Order Created: ${rzpOrder.id}`);
 
         res.json({
             id: rzpOrder.id,
             amount: rzpOrder.amount,
             currency: rzpOrder.currency,
-            orderId: orderId // Internal Order ID
+            orderId: order.id
         });
     } catch (error) {
         console.error('Razorpay order creation failed:', error);
-        if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: 'Validation failed', details: error.errors });
-        }
         res.status(500).json({ error: 'Failed to create payment intent' });
     }
 });
@@ -92,6 +95,11 @@ router.post('/verify', optionalAuthenticate, async (req: AuthRequest, res: Respo
 
             if (!order) {
                 return res.status(404).json({ error: 'Order not found for verification' });
+            }
+
+            // Ownership check for verification
+            if (order.userId && (!req.user || order.userId !== req.user.id)) {
+                return res.status(403).json({ error: 'Access denied' });
             }
 
             // Update order status
