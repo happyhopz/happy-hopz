@@ -714,11 +714,18 @@ router.put('/users/:id/role', authenticate, requireAdmin, async (req: AuthReques
     }
 });
 
-// GET Shipping Label (HTML/Printable)
+import { generateShippingLabelPDF } from '../utils/pdfUtils';
+
+// GET Shipping Label (PDF)
 router.get('/orders/:id/shipping-label', authenticate, requireStaff, async (req: AuthRequest, res: Response) => {
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: req.params.id as string },
+        const order = await prisma.order.findFirst({
+            where: {
+                OR: [
+                    { id: req.params.id as string },
+                    { orderId: req.params.id as string }
+                ]
+            },
             include: {
                 user: true,
                 address: true,
@@ -728,45 +735,13 @@ router.get('/orders/:id/shipping-label', authenticate, requireStaff, async (req:
 
         if (!order) return res.status(404).json({ error: 'Order not found' });
 
-        const o = order as any;
-        const html = `
-            <html>
-                <head>
-                    <style>
-                        body { font-family: sans-serif; padding: 40px; }
-                        .label { border: 2px solid #000; padding: 20px; max-width: 400px; }
-                        .header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="label">
-                        <div class="header">
-                            <h2>HAPPY HOPZ</h2>
-                            <p>Order ID: ${o.id.slice(0, 8)}</p>
-                        </div>
-                        <div class="to">
-                            <strong>SHIP TO:</strong><br/>
-                            ${o.address?.name || o.user?.name || 'Customer'}<br/>
-                            ${o.address?.street || 'N/A'}<br/>
-                            ${o.address?.city || 'N/A'}, ${o.address?.state || 'N/A'} ${o.address?.zipCode || 'N/A'}<br/>
-                            India
-                        </div>
-                        <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;">
-                            <strong>ITEMS:</strong> ${o.items?.length || 0}<br/>
-                            <strong>WEIGHT:</strong> Approx. ${(o.items?.length || 0) * 0.5}kg
-                        </div>
-                        <div style="margin-top: 20px; text-align: center;">
-                            <div style="font-size: 10px; margin-bottom: 5px;">*SCANNABLE BARCODE*</div>
-                            <div style="background: #000; height: 40px; width: 100%;"></div>
-                        </div>
-                    </div>
-                    <script>window.print();</script>
-                </body>
-            </html>
-        `;
+        const pdfBuffer = await generateShippingLabelPDF(order);
 
-        res.send(html);
+        res.contentType('application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename=shipping_label_${order.orderId || order.id}.pdf`);
+        res.send(pdfBuffer);
     } catch (error) {
+        console.error('Shipping Label Error:', error);
         res.status(500).json({ error: 'Failed to generate shipping label' });
     }
 });
