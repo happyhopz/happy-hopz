@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { ordersAPI } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card } from '@/components/ui/card';
@@ -13,9 +14,26 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const TrackOrder = () => {
+    const { user } = useAuth();
     const [orderId, setOrderId] = useState('');
     const [phone, setPhone] = useState('');
     const [order, setOrder] = useState<any>(null);
+
+    // Auto-fetch user's latest order if logged in
+    const { data: userOrders, isLoading: isLoadingUserOrders } = useQuery({
+        queryKey: ['my-orders', user?.id],
+        queryFn: async () => {
+            const res = await ordersAPI.getMyOrders();
+            return res.data;
+        },
+        enabled: !!user
+    });
+
+    useEffect(() => {
+        if (userOrders && userOrders.length > 0 && !order) {
+            setOrder(userOrders[0]);
+        }
+    }, [userOrders]);
 
     const trackMutation = useMutation({
         mutationFn: ordersAPI.track,
@@ -256,8 +274,12 @@ const TrackOrder = () => {
                             <Search className="w-12 h-12 text-slate-200 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={1} />
                         </div>
                         <div className="space-y-2">
-                            <h3 className="text-2xl font-fredoka font-black text-slate-300 uppercase tracking-widest">No Results Yet</h3>
-                            <p className="text-slate-300 font-bold uppercase tracking-[2px] text-xs">Enter your details above to start tracking</p>
+                            <h3 className="text-2xl font-fredoka font-black text-slate-300 uppercase tracking-widest">
+                                {user ? "No Orders Found" : "No Results Yet"}
+                            </h3>
+                            <p className="text-slate-300 font-bold uppercase tracking-[2px] text-xs">
+                                {user ? "You haven't placed any orders yet." : "Enter your details above to start tracking"}
+                            </p>
                         </div>
                     </div>
                 )}
