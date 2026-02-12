@@ -174,6 +174,8 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
             }
 
             return order;
+        }, {
+            timeout: 20000 // 20 seconds timeout for complex order transactions
         });
 
         // Trigger Notifications (Async) - ONLY for COD/Confirmed orders
