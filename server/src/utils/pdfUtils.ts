@@ -164,14 +164,26 @@ export const generateShippingLabelPDF = async (order: any) => {
     const splitItems = doc.splitTextToSize(`ITEMS: ${itemsText}`, width - 2 * margin - 20);
     doc.text(splitItems, margin + 10, boxY + 74);
 
-    // Footer / Barcode Placeholder
+    // Footer / Stylized Barcode Illustration
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('STANDARD SHIPPING', width / 2, 330, { align: 'center' });
 
-    // Simple black box to represent barcode area
-    doc.setFillColor(0, 0, 0);
-    doc.rect(margin + 20, 345, width - 2 * margin - 40, 50, 'F');
+    // Draw a stylized barcode (array of thin black lines)
+    doc.setDrawColor(0);
+    doc.setLineWidth(1);
+    const barcodeX = margin + 30;
+    const barcodeY = 345;
+    const barcodeWidth = width - 2 * margin - 60;
+    const barcodeHeight = 40;
+
+    for (let i = 0; i < barcodeWidth; i += 2) {
+        // Vary line length or skip a few for a "barcode" effect
+        const skip = Math.random() > 0.8;
+        if (!skip) {
+            doc.line(barcodeX + i, barcodeY, barcodeX + i, barcodeY + barcodeHeight);
+        }
+    }
 
     doc.setFontSize(7);
     doc.setTextColor(150);
