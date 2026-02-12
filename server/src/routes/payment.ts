@@ -25,6 +25,12 @@ router.post('/intent', optionalAuthenticate, async (req: AuthRequest, res: Respo
         const { amount, orderId } = paymentIntentSchema.parse(req.body);
         console.log(`[Payment Intent] Request for Order: ${orderId}, Amount: ${amount}, User: ${req.user?.id || 'GUEST'}`);
 
+        // Safety check for keys
+        if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID.includes('placeholder')) {
+            console.error('[Payment Intent] CRITICAL: Razorpay Key ID is missing or placeholder!');
+            return res.status(500).json({ error: 'Payment gateway not configured correctly on server (Key missing).' });
+        }
+
         // Verify order exists
         const order = await (prisma.order as any).findFirst({
             where: {
@@ -37,10 +43,10 @@ router.post('/intent', optionalAuthenticate, async (req: AuthRequest, res: Respo
             return res.status(404).json({ error: 'Order not found' });
         }
 
-        // Ownership check: If order has a userId, it MUST match the current user
+        // Ownership check
         if (order.userId && (!req.user || order.userId !== req.user.id)) {
             console.error(`[Payment Intent] Access Denied. Order userId: ${order.userId}, Req userId: ${req.user?.id}`);
-            return res.status(403).json({ error: 'Access denied to this order' });
+            return res.status(403).json({ error: 'Access denied: This order belongs to a different account.' });
         }
 
         // Convert amount to paise (INR)
@@ -53,18 +59,24 @@ router.post('/intent', optionalAuthenticate, async (req: AuthRequest, res: Respo
             }
         };
 
-        const rzpOrder = await razorpay.orders.create(options);
-        console.log(`[Payment Intent] Razorpay Order Created: ${rzpOrder.id}`);
+        try {
+            const rzpOrder = await razorpay.orders.create(options);
+            console.log(`[Payment Intent] Razorpay Order Created: ${rzpOrder.id}`);
 
-        res.json({
-            id: rzpOrder.id,
-            amount: rzpOrder.amount,
-            currency: rzpOrder.currency,
-            orderId: order.id
-        });
-    } catch (error) {
-        console.error('Razorpay order creation failed:', error);
-        res.status(500).json({ error: 'Failed to create payment intent' });
+            res.json({
+                id: rzpOrder.id,
+                amount: rzpOrder.amount,
+                currency: rzpOrder.currency,
+                orderId: order.id
+            });
+        } catch (rzpError: any) {
+            console.error('[Payment Intent] Razorpay SDK Error:', rzpError);
+            const errorMsg = rzpError.description || rzpError.message || 'Razorpay order creation failed';
+            res.status(400).json({ error: `Razorpay Error: ${errorMsg}` });
+        }
+    } catch (error: any) {
+        console.error('[Payment Intent] Internal Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to create payment intent' });
     }
 });
 
