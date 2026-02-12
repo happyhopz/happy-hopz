@@ -391,6 +391,26 @@ const ProductDetail = () => {
                                         </CarouselItem>
                                     ))}
                                 </CarouselContent>
+
+                                {/* Pagination Dots */}
+                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-50 px-3 py-2 rounded-full bg-black/10 backdrop-blur-sm transition-opacity hover:bg-black/20">
+                                    {product.images.map((_: string, idx: number) => (
+                                        <button
+                                            key={idx}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setSelectedImageIndex(idx);
+                                                api?.scrollTo(idx);
+                                            }}
+                                            className={`w-2 h-2 rounded-full transition-all duration-300 ${selectedImageIndex === idx
+                                                    ? 'bg-cyan-500 w-6 shadow-[0_0_8px_rgba(6,182,212,0.6)]'
+                                                    : 'bg-white/60 hover:bg-white/90'
+                                                }`}
+                                            aria-label={`Go to slide ${idx + 1}`}
+                                        />
+                                    ))}
+                                </div>
                             </Carousel>
                         </div>
                     </div>
