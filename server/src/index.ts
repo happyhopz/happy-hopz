@@ -161,12 +161,13 @@ app.listen(PORT, async () => {
 
         const envs = ['SUPABASE_DATABASE_URL', 'PROD_DATABASE_URL', 'DATABASE_URL'];
         envs.forEach(key => {
-            if (process.env[key]) {
+            const secret = process.env[key];
+            if (secret && typeof secret === 'string' && secret.startsWith('postgresql')) {
                 try {
-                    const url = new URL(process.env[key] as string);
+                    const url = new URL(secret);
                     console.log(`📡 [${key}] matches host: ${url.hostname}`);
                 } catch (e) {
-                    console.log(`📡 [${key}] exists but is not a valid URL`);
+                    console.log(`📡 [${key}] is present but URL format is slightly off, skipping detail log.`);
                 }
             }
         });
