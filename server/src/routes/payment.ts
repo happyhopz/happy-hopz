@@ -22,7 +22,15 @@ const paymentIntentSchema = z.object({
 
 router.post('/intent', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { amount, orderId } = paymentIntentSchema.parse(req.body);
+        const validation = paymentIntentSchema.safeParse(req.body);
+        if (!validation.success) {
+            console.error('[Payment Intent] Validation Error:', validation.error.errors);
+            return res.status(400).json({
+                error: 'Invalid payment data',
+                details: validation.error.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')
+            });
+        }
+        const { amount, orderId } = validation.data;
         console.log(`[Payment Intent] Request for Order: ${orderId}, Amount: ${amount}, User: ${req.user?.id || 'GUEST'}`);
 
         // Safety check for keys

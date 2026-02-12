@@ -477,8 +477,16 @@ const Checkout = () => {
                     orderId: orderRes.id // Use real DB ID for traceability
                 });
 
+                const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+                if (!rzpKey || rzpKey.includes('placeholder')) {
+                    console.error('[Razorpay] Key is missing or placeholder:', rzpKey);
+                    toast.error('Payment gateway is not configured for the frontend (VITE_RAZORPAY_KEY_ID missing).');
+                    setIsProcessing(false);
+                    return;
+                }
+
                 const options = {
-                    key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+                    key: rzpKey,
                     amount: intentRes.data.amount,
                     currency: intentRes.data.currency,
                     name: 'Happy Hopz',

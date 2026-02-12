@@ -90,10 +90,10 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
 
         const validation = orderSchema.safeParse(req.body);
         if (!validation.success) {
-            console.error('❌ [Order Validation Failed]:', JSON.stringify(validation.error.format(), null, 2));
+            console.error('[Order Create] Validation Error:', validation.error.errors);
             return res.status(400).json({
                 error: 'Invalid order data',
-                details: validation.error.format()
+                details: validation.error.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')
             });
         }
         const data = validation.data;
