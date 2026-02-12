@@ -11,7 +11,7 @@ if (process.env.SENDGRID_API_KEY) {
 const VERIFIED_SENDER = 'happyhopz308@gmail.com';
 
 // Fallback to nodemailer for local development without SendGrid
-const SITE_URL = process.env.CLIENT_URL || 'https://www.happyhopz.com';
+const SITE_URL = (process.env.CLIENT_URL || 'https://www.happyhopz.com').replace(/\/$/, '');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -205,7 +205,6 @@ const getCommonStyles = () => `
             padding-top: 15px;
         }
         .pricing-row td { padding: 6px 0; font-size: 14px; font-weight: 500; color: #475569; }
-        .total-row { border-top: 1px solid #f1f5f9; }
         .total-row td { 
             padding-top: 15px; 
             font-size: 20px; 
@@ -266,47 +265,50 @@ const getOrderItemsHtml = (items: any[]) => items.map(item => {
                 : item.product.images;
             imageUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
 
-            // Resolve relative URLs
-            if (imageUrl && !imageUrl.startsWith('http')) {
-                imageUrl = `${SITE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+            // Resolve relative URLs (Avoid prepending to absolute URLs or data URIs)
+            if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+                const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+                imageUrl = `${SITE_URL}${cleanPath}`;
             }
         }
-    } catch (e) { }
+    } catch (e) {
+        console.error('Error parsing item images for email:', e);
+    }
 
     return `
     <tr>
-        <td style="padding: 15px 0; border-bottom: 1px solid #f1f5f9;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <td style="padding: 15px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; vertical-align: middle;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
                 <tr>
                     ${imageUrl ? `
                     <td style="width: 60px; padding-right: 15px; vertical-align: middle;">
-                        <div style="width: 60px; height: 75px; overflow: hidden; border-radius: 12px; border: 1px solid #f1f5f9; background: #ffffff;">
-                            <img src="${imageUrl}" width="60" style="display: block; border: 0;" alt="${item.name}">
+                        <div style="width: 60px; height: 75px; overflow: hidden; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
+                            <img src="${imageUrl}" width="60" border="0" style="display: block; width: 60px; object-fit: cover;" alt="${item.name}">
                         </div>
                     </td>
                     ` : ''}
                     <td style="vertical-align: middle;">
-                        <p style="margin: 0; font-size: 14px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: -0.5px;">${item.name || item.product?.name}</p>
-                        <p style="margin: 4px 0 0 0; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">SIZE ${item.size} • ${String(item.color).toUpperCase()}</p>
+                        <p style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; color: #1e293b; text-transform: uppercase;">${item.name || item.product?.name}</p>
+                        <p style="margin: 4px 0 0 0; font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">SIZE ${item.size} • ${String(item.color).toUpperCase()}</p>
                     </td>
                 </tr>
             </table>
         </td>
-        <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: 700; color: #64748b;">x${item.quantity}</td>
-        <td style="padding: 15px 0; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 800; color: #1e293b;">₹${(item.price * item.quantity).toFixed(0)}</td>
+        <td style="padding: 15px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; text-align: center; font-family: 'Outfit', sans-serif; font-weight: 700; color: #64748b;">x${item.quantity}</td>
+        <td style="padding: 15px; border-bottom: 1px solid #e2e8f0; text-align: right; font-family: 'Outfit', sans-serif; font-weight: 800; color: #1e293b;">₹${(item.price * item.quantity).toFixed(0)}</td>
     </tr>
 `;
 }).join('');
 
 const getAddressHtml = (address: any) => `
-    <div class="address-card">
-        <div class="address-header">📍 Delivery Address</div>
-        <p style="margin: 0; font-weight: 800; color: #0f172a; font-size: 15px;">${address?.name}</p>
-        <p style="margin: 8px 0; font-size: 13px; color: #475569; line-height: 1.6; font-weight: 500;">
+    <div style="background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; margin-top: 30px; font-family: 'Outfit', sans-serif;">
+        <div style="font-weight: 800; text-transform: uppercase; font-size: 11px; color: #64748b; letter-spacing: 1px; margin-bottom: 15px;">📍 Delivery Address</div>
+        <p style="margin: 0; font-weight: 800; color: #0f172a; font-size: 15px; font-family: 'Outfit', sans-serif;">${address?.name}</p>
+        <p style="margin: 8px 0; font-size: 13px; color: #475569; line-height: 1.6; font-weight: 500; font-family: 'Outfit', sans-serif;">
             ${address?.line1}, ${address?.line2 ? address.line2 + ', ' : ''}<br>
             ${address?.city}, ${address?.state} - ${address?.pincode}
         </p>
-        <p style="margin-top: 12px; font-size: 13px; font-weight: 800; color: #0f172a;">📞 ${address?.phone}</p>
+        <p style="margin-top: 12px; font-size: 13px; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">📞 ${address?.phone}</p>
     </div>
 `;
 
@@ -325,28 +327,28 @@ const getExpectedDeliveryHtml = (order: any) => {
 const getOrderConfirmationHtml = (order: any, name: string) => {
     return `
         ${getCommonStyles()}
-        <div class="email-container">
-            <div class="main-card">
-                <div class="header">
-                    <h2 style="color: #e11d48; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -1px;">Order Confirmed! 🎊</h2>
-                    <div class="order-id-pill">${order.orderId || order.id}</div>
+        <div style="font-family: 'Outfit', sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; color: #1e293b;">
+            <div style="border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); background: #ffffff;">
+                <div style="text-align: center; padding: 40px 20px; background: #fff5f5; border-bottom: 2px solid #fff1f2;">
+                    <h2 style="color: #e11d48; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -1px; font-family: 'Outfit', sans-serif;">Order Confirmed! 🎊</h2>
+                    <div style="display: inline-block; background: #f1f5f9; color: #64748b; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-top: 10px; text-transform: uppercase;">${order.orderId || order.id}</div>
                 </div>
                 
-                <div class="content-body">
-                    <p style="margin-top: 0; font-size: 16px; line-height: 1.6;">Hi <strong style="color: #e11d48;">${name}</strong>,</p>
-                    <p style="color: #475569; line-height: 1.6;">Great choice! Your order is being processed and will be shipped soon. We're excited to get these to you!</p>
+                <div style="padding: 40px 30px;">
+                    <p style="margin-top: 0; font-size: 16px; line-height: 1.6; font-family: 'Outfit', sans-serif;">Hi <strong style="color: #e11d48;">${name}</strong>,</p>
+                    <p style="color: #475569; line-height: 1.6; font-family: 'Outfit', sans-serif;">Great choice! Your order is being processed and will be shipped soon. We're excited to get these to you!</p>
                     
-                    <div class="spam-note">💡 Pro-tip: Check your <u>Spam folder</u> if you don't see our updates!</div>
+                    <div style="background: #fffafa; padding: 15px; border-radius: 12px; color: #e11d48; font-weight: 600; text-align: center; border: 1px solid #fecaca; margin: 20px 0; font-size: 13px;">💡 Pro-tip: Check your <u>Spam folder</u> if you don't see our updates!</div>
 
                     ${getExpectedDeliveryHtml(order)}
 
-                    <div class="section-title">📦 Order Summary</div>
-                    <table class="tabular-box">
+                    <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 30px 0 15px 0; text-transform: uppercase; letter-spacing: 2px; font-family: 'Outfit', sans-serif;">📦 Order Summary</div>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; margin: 15px 0; table-layout: fixed;">
                         <thead>
                             <tr>
-                                <th>Item Details</th>
-                                <th style="text-align: center;">Qty</th>
-                                <th style="text-align: right;">Total</th>
+                                <th style="background: #f8fafc; text-align: left; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif;">Item Details</th>
+                                <th style="background: #f8fafc; text-align: center; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif; width: 50px;">Qty</th>
+                                <th style="background: #f8fafc; text-align: right; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; font-family: 'Outfit', sans-serif; width: 80px;">Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -354,25 +356,25 @@ const getOrderConfirmationHtml = (order: any, name: string) => {
                         </tbody>
                     </table>
 
-                    <div class="tabular-box" style="padding: 20px;">
-                        <table class="pricing-table">
-                            <tr class="pricing-row">
-                                <td>Bag Total</td>
-                                <td style="text-align: right;">₹${(order.subtotal || 0).toFixed(0)}</td>
+                    <div style="border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; background: #ffffff; margin-top: 20px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; font-family: 'Outfit', sans-serif;">
+                            <tr>
+                                <td style="padding: 6px 0; font-size: 14px; color: #475569;">Bag Total</td>
+                                <td style="text-align: right; padding: 6px 0; font-size: 14px; color: #475569;">₹${(order.subtotal || 0).toFixed(0)}</td>
                             </tr>
-                            <tr class="pricing-row">
-                                <td>GST (${order.tax ? 'Applied' : 'Dynamic'})</td>
-                                <td style="text-align: right;">₹${(order.tax || 0).toFixed(0)}</td>
+                            <tr>
+                                <td style="padding: 6px 0; font-size: 14px; color: #475569;">GST (${order.tax ? 'Applied' : 'Dynamic'})</td>
+                                <td style="text-align: right; padding: 6px 0; font-size: 14px; color: #475569;">₹${(order.tax || 0).toFixed(0)}</td>
                             </tr>
-                            <tr class="pricing-row">
-                                <td>Delivery</td>
-                                <td style="text-align: right; color: ${order.shipping === 0 ? '#10b981' : '#475569'};">
+                            <tr>
+                                <td style="padding: 6px 0; font-size: 14px; color: #475569;">Delivery</td>
+                                <td style="text-align: right; padding: 6px 0; font-size: 14px; color: ${order.shipping === 0 ? '#10b981' : '#475569'}; font-weight: strong;">
                                     ${order.shipping === 0 ? 'FREE' : '₹' + (order.shipping || 0).toFixed(0)}
                                 </td>
                             </tr>
-                            <tr class="total-row">
-                                <td style="padding-top: 15px; font-weight: 800; color: #0f172a;">Order Total</td>
-                                <td style="text-align: right; padding-top: 15px; font-weight: 800; color: #e11d48; font-size: 24px;">₹${(order.total || 0).toFixed(0)}</td>
+                            <tr>
+                                <td style="padding-top: 15px; font-weight: 800; color: #0f172a; border-top: 1px solid #f1f5f9;">Order Total</td>
+                                <td style="text-align: right; padding-top: 15px; font-weight: 800; color: #e11d48; font-size: 24px; border-top: 1px solid #f1f5f9;">₹${(order.total || 0).toFixed(0)}</td>
                             </tr>
                         </table>
                     </div>
@@ -380,11 +382,11 @@ const getOrderConfirmationHtml = (order: any, name: string) => {
                     ${getAddressHtml(order.address)}
 
                     <div style="text-align: center; margin-top: 40px;">
-                        <a href="https://happy-hopz.vercel.app/orders/${order.id}" class="track-button">Track Order Journey</a>
+                        <a href="https://happy-hopz.vercel.app/orders/${order.id}" style="display: inline-block; background: #e11d48; color: #ffffff !important; padding: 18px 35px; text-decoration: none; border-radius: 40px; font-weight: 800; text-align: center; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; font-family: 'Outfit', sans-serif;">Track Order Journey</a>
                     </div>
                 </div>
             </div>
-            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">© 2026 Happy Hopz Footwear • Made with ❤️ for little feet</p>
+            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-family: 'Outfit', sans-serif;">© 2026 Happy Hopz Footwear • Made with ❤️ for little feet</p>
         </div>
     `;
 };
@@ -432,37 +434,37 @@ const getStatusUpdateHtml = (order: any, name: string) => {
 
     return `
         ${getCommonStyles()}
-        <div class="email-container">
-            <div class="main-card">
-                <div class="header" style="background: ${statusColor}10; border-bottom: 2px solid ${statusColor}15; padding: 50px 20px;">
+        <div style="font-family: 'Outfit', sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; color: #1e293b;">
+            <div style="border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); background: #ffffff;">
+                <div style="text-align: center; padding: 50px 20px; background: ${statusColor}10; border-bottom: 2px solid ${statusColor}15;">
                     <span style="font-size: 48px;">${statusIcon}</span>
-                    <h2 style="color: ${statusColor}; margin: 15px 0 5px 0; font-size: 32px; font-weight: 800;">${statusTitle}</h2>
-                    <div class="order-id-pill">${order.orderId || order.id}</div>
+                    <h2 style="color: ${statusColor}; margin: 15px 0 5px 0; font-size: 32px; font-weight: 800; font-family: 'Outfit', sans-serif;">${statusTitle}</h2>
+                    <div style="display: inline-block; background: #f1f5f9; color: #64748b; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-top: 10px; text-transform: uppercase;">${order.orderId || order.id}</div>
                 </div>
 
-                <div class="content-body">
-                    <p style="margin-top: 0; font-size: 16px; line-height: 1.6;">Hi <strong style="color: ${statusColor};">${name}</strong>,</p>
-                    <p style="color: #475569; line-height: 1.6; font-size: 15px;">${statusMessage}</p>
+                <div style="padding: 40px 30px;">
+                    <p style="margin-top: 0; font-size: 16px; line-height: 1.6; font-family: 'Outfit', sans-serif;">Hi <strong style="color: ${statusColor};">${name}</strong>,</p>
+                    <p style="color: #475569; line-height: 1.6; font-size: 15px; font-family: 'Outfit', sans-serif;">${statusMessage}</p>
 
                     ${getExpectedDeliveryHtml(order)}
 
                     ${order.trackingNumber ? `
                         <div style="background: ${statusColor}08; padding: 25px; border-radius: 16px; margin: 30px 0; border: 1px dashed ${statusColor}40; text-align: center;">
                             <p style="margin: 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 2px;">Tracking Courier</p>
-                            <p style="margin: 8px 0; font-weight: 800; font-size: 18px; color: #0f172a;">${order.courierPartner || 'Delhivery'}</p>
+                            <p style="margin: 8px 0; font-weight: 800; font-size: 18px; color: #0f172a; font-family: 'Outfit', sans-serif;">${order.courierPartner || 'Delhivery'}</p>
                             <div style="background: #ffffff; display: inline-block; padding: 8px 15px; border-radius: 8px; font-family: monospace; font-size: 20px; color: ${statusColor}; font-weight: 800; border: 1px solid ${statusColor}20;">
                                 ${order.trackingNumber}
                             </div>
                         </div>
                     ` : ''}
 
-                    <div class="section-title">📜 Order Summary</div>
-                    <table class="tabular-box">
+                    <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 30px 0 15px 0; text-transform: uppercase; letter-spacing: 2px; font-family: 'Outfit', sans-serif;">📜 Order Summary</div>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; margin: 15px 0;">
                         <thead>
                             <tr>
-                                <th>Item Details</th>
-                                <th style="text-align: center;">Qty</th>
-                                <th style="text-align: right;">Subtotal</th>
+                                <th style="background: #f8fafc; text-align: left; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif;">Item Details</th>
+                                <th style="background: #f8fafc; text-align: center; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif; width: 50px;">Qty</th>
+                                <th style="background: #f8fafc; text-align: right; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; font-family: 'Outfit', sans-serif; width: 80px;">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -470,8 +472,8 @@ const getStatusUpdateHtml = (order: any, name: string) => {
                         </tbody>
                     </table>
 
-                    <div class="tabular-box" style="padding: 20px; border: none; background: #f8fafc;">
-                        <table style="width: 100%;">
+                    <div style="border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; background: #f8fafc;">
+                        <table style="width: 100%; font-family: 'Outfit', sans-serif;">
                             <tr>
                                 <td style="font-weight: 800; color: #64748b; font-size: 12px; text-transform: uppercase;">Total Paid</td>
                                 <td style="text-align: right; font-weight: 800; color: ${statusColor}; font-size: 22px;">₹${(order.total || 0).toFixed(0)}</td>
@@ -482,11 +484,11 @@ const getStatusUpdateHtml = (order: any, name: string) => {
                     ${getAddressHtml(order.address)}
 
                     <div style="text-align: center; margin-top: 40px;">
-                        <a href="https://happy-hopz.vercel.app/orders/${order.id}" class="track-button" style="background: ${statusColor}; box-shadow: 0 10px 20px ${statusColor}30;">View Full Journey</a>
+                        <a href="https://happy-hopz.vercel.app/orders/${order.id}" style="display: inline-block; background: ${statusColor}; color: #ffffff !important; padding: 18px 35px; text-decoration: none; border-radius: 40px; font-weight: 800; text-align: center; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; box-shadow: 0 10px 20px ${statusColor}30;">View Full Journey</a>
                     </div>
                 </div>
             </div>
-            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">© 2026 Happy Hopz Footwear • Premium Kids Collection</p>
+            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-family: 'Outfit', sans-serif;">© 2026 Happy Hopz Footwear • Premium Kids Collection</p>
         </div>
     `;
 };
