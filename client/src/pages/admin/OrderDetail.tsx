@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, User, MapPin, IndianRupee, Truck, Printer, FileText, Send, Calendar as CalendarIcon, History, Check, Clock, Phone } from 'lucide-react';
+import { Package, User, MapPin, IndianRupee, Truck, Printer, FileText, Send, Calendar as CalendarIcon, History, Check, Clock, Phone, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -28,7 +28,9 @@ const AdminOrderDetail = () => {
     const { data: order, isLoading } = useQuery({
         queryKey: ['admin-order', id],
         queryFn: async () => {
-            const response = await adminAPI.getOrder(id!);
+            // Defensive check: Remove leading # if present (from notifications or manual entry)
+            const cleanId = id?.startsWith('#') ? id.slice(1) : id;
+            const response = await adminAPI.getOrder(cleanId!);
             if (response.data) {
                 setStatus(response.data.status || '');
                 setTrackingNumber(response.data.trackingNumber || '');
