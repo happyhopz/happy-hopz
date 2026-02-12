@@ -162,10 +162,13 @@ const TrackOrder = () => {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
-                                    <Badge className={`${getStatusColor(order.status)} text-white px-6 py-2 text-[10px] uppercase font-black tracking-widest rounded-full shadow-lg h-auto ring-4 ring-white`}>
-                                        {order.status}
-                                    </Badge>
+                                <div className="flex flex-col items-end gap-3">
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-1">Current Status</p>
+                                        <Badge className={`${getStatusColor(order.status)} text-white px-8 py-3 text-sm uppercase font-black tracking-widest rounded-2xl shadow-xl shadow-slate-200 h-auto ring-8 ring-slate-50 border-2 border-white`}>
+                                            {order.status}
+                                        </Badge>
+                                    </div>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                         Payment: {order.paymentStatus}
                                     </p>
@@ -189,8 +192,8 @@ const TrackOrder = () => {
 
                                         return (
                                             <div key={step} className="flex md:flex-col items-center gap-4 md:gap-4 relative z-10 bg-white pr-4 md:pr-0">
-                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${isCompleted ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-slate-50 text-slate-300'
-                                                    } ${isActive ? 'ring-8 ring-primary/10' : ''}`}>
+                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${isCompleted ? 'bg-primary text-white shadow-2xl shadow-primary/30 scale-110' : 'bg-slate-50 text-slate-300'
+                                                    } ${isActive ? 'ring-[12px] ring-primary/10 animate-pulse' : ''}`}>
                                                     {getStatusIcon(step)}
                                                 </div>
                                                 <div className="text-left md:text-center">
