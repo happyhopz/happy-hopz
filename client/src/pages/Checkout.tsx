@@ -836,16 +836,14 @@ const Checkout = () => {
                                         })}
                                     </div>
 
-                                    {paymentMethod === 'UPI' && paymentSettings.UPI && (
-                                        <div className="mt-6 p-6 border-2 border-pink-100 rounded-2xl bg-pink-50/30 text-center animate-in fade-in slide-in-from-top-4 duration-300">
-                                            <p className="text-sm font-bold text-pink-600 mb-4">Scan QR to pay ₹{total.toFixed(2)}</p>
-                                            <img src={upiQr} alt="UPI QR" className="w-48 h-48 mx-auto rounded-xl shadow-lg border-4 border-white" />
-                                            <p className="text-[10px] text-gray-400 mt-4 italic">Order will be processed after payment verification</p>
-                                        </div>
-                                    )}
+                                    {/* Legacy static QR removed for unified Razorpay experience */}
                                     <Separator className="my-8" />
-                                    <Button onClick={handlePlaceOrder} disabled={createOrderMutation.isPending || isProcessing} className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white text-sm md:text-lg font-black shadow-lg shadow-orange-200">
-                                        {createOrderMutation.isPending || isProcessing ? 'PROCESSING...' : paymentMethod === 'COD' ? `PAY ₹${total.toFixed(0)} ON DELIVERY` : `CONFIRM PAYMENT ₹${total.toFixed(0)}`}
+                                    <Button onClick={handlePlaceOrder} disabled={createOrderMutation.isPending || isProcessing} className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white text-sm md:text-lg font-black shadow-lg shadow-orange-200 uppercase">
+                                        {createOrderMutation.isPending || isProcessing
+                                            ? 'PROCESSING...'
+                                            : paymentMethod === 'COD'
+                                                ? `PLACE ORDER • ₹${total.toFixed(0)}`
+                                                : `PAY ₹${total.toFixed(0)} ONLINE`}
                                     </Button>
                                 </div>
                             )}
