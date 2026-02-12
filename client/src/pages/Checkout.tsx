@@ -493,6 +493,18 @@ const Checkout = () => {
                     name: 'Happy Hopz',
                     description: 'Order Payment',
                     order_id: intentRes.data.id,
+                    config: {
+                        display: {
+                            blocks: {
+                                utp: {
+                                    name: "UPI / QR Code",
+                                    instruments: [{ method: "upi" }]
+                                }
+                            },
+                            sequence: ["block.utp", "block.other"],
+                            preferences: { show_default_blocks: true }
+                        }
+                    },
                     handler: async (response: any) => {
                         try {
                             // Step 3: Verify Signature on Backend
@@ -513,7 +525,10 @@ const Checkout = () => {
                     prefill: {
                         name: user?.name || guestInfo.name,
                         email: user?.email || guestInfo.email,
-                        contact: user?.phone || guestInfo.phone
+                        contact: user?.phone || guestInfo.phone,
+                        method: paymentMethod === 'UPI' ? 'upi' :
+                            paymentMethod === 'CARD' ? 'card' :
+                                paymentMethod === 'NETBANKING' ? 'netbanking' : undefined
                     },
                     theme: {
                         color: '#DB2777' // pink-600
