@@ -16,11 +16,11 @@ svg = f'''<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.
     </linearGradient>
 </defs>
 <circle cx="256" cy="256" r="256" fill="url(#grad1)" />
-<!-- Centering the logo and giving it a slight margin to ensure the circular background framing works well -->
-<image href="data:image/png;base64,{b64}" x="40" y="40" width="432" height="432" />
+<!-- Maximizing size to make it visible in small browser tabs -->
+<image href="data:image/png;base64,{b64}" x="0" y="0" width="512" height="512" />
 </svg>'''
 
 with open(output_path, 'w') as f:
     f.write(svg)
 
-print(f"✅ Circular Favicon SVG generated at {output_path}")
+print(f"✅ Maximum scale Favicon SVG generated at {output_path}")
