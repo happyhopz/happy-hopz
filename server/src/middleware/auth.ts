@@ -11,7 +11,12 @@ export interface AuthRequest extends Request {
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
+        let token = req.headers.authorization?.split(' ')[1];
+
+        // NEW: Fallback for file downloads (e.g., shipping labels) where window.open is used
+        if (!token && req.query.token) {
+            token = req.query.token as string;
+        }
 
         if (!token) {
             return res.status(401).json({ error: 'No token provided' });

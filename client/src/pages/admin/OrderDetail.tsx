@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Navigate } from 'react-router-dom';
-import { productsAPI, cartAPI, adminAPI, contentAPI, settingsAPI } from '@/lib/api';
+import { productsAPI, cartAPI, adminAPI, contentAPI, settingsAPI, API_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import BackButton from '@/components/BackButton';
@@ -173,6 +173,12 @@ const AdminOrderDetail = () => {
                     <div className="flex gap-2">
                         <Button variant="outline" className="border-2 border-slate-200" onClick={() => window.print()}>
                             <Printer className="w-4 h-4 mr-2" /> Print Invoice
+                        </Button>
+                        <Button variant="outline" className="border-2 border-slate-200" onClick={() => {
+                            const token = localStorage.getItem('token');
+                            window.open(`${API_URL}/admin/orders/${order.id}/shipping-label?token=${token}`, '_blank');
+                        }}>
+                            <FileText className="w-4 h-4 mr-2" /> Label
                         </Button>
                         <Button variant="hopz" onClick={() => resendMutation.mutate()} disabled={resendMutation.isPending}>
                             <Send className="w-4 h-4 mr-2" /> {resendMutation.isPending ? 'Sending...' : 'Resend Receipt'}

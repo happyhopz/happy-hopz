@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminAPI } from '@/lib/api';
+import { adminAPI, API_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -415,7 +415,10 @@ const AdminOrders = () => {
                                                 <Trash2 className="w-4 h-4 mr-2" />
                                                 Delete
                                             </Button>
-                                            <Button variant="outline" size="sm" className="font-bold border-primary/20 text-primary hover:bg-primary/5" onClick={() => window.open(`/api/admin/orders/${order.id}/shipping-label`, '_blank')}>
+                                            <Button variant="outline" size="sm" className="font-bold border-primary/20 text-primary hover:bg-primary/5" onClick={() => {
+                                                const token = localStorage.getItem('token');
+                                                window.open(`${API_URL}/admin/orders/${order.id}/shipping-label?token=${token}`, '_blank');
+                                            }}>
                                                 <FileText className="w-4 h-4 mr-2" />
                                                 Label
                                             </Button>

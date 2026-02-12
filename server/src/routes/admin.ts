@@ -5,6 +5,7 @@ import { authenticate, requireAdmin, AuthRequest, requireStaff } from '../middle
 import { z } from 'zod';
 import { sendOrderConfirmationEmail } from '../utils/email';
 import { logActivity } from '../lib/logger';
+import { generateShippingLabelPDF } from '../utils/pdfUtils';
 
 const router = Router();
 
@@ -713,8 +714,6 @@ router.put('/users/:id/role', authenticate, requireAdmin, async (req: AuthReques
         res.status(500).json({ error: 'Failed to update user role' });
     }
 });
-
-import { generateShippingLabelPDF } from '../utils/pdfUtils';
 
 // GET Shipping Label (PDF)
 router.get('/orders/:id/shipping-label', authenticate, requireStaff, async (req: AuthRequest, res: Response) => {
