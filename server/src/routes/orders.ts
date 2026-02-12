@@ -117,6 +117,9 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
 
             const customOrderId = generateOrderId();
 
+            const isOnlinePayment = data.paymentMethod !== 'COD';
+            const initialStatus = isOnlinePayment ? 'PENDING' : 'CONFIRMED';
+
             const order = await (tx.order as any).create({
                 data: {
                     orderId: customOrderId,
@@ -129,12 +132,12 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     shipping: data.shipping,
                     total: data.total,
                     couponCode: data.couponCode,
-                    status: 'CONFIRMED',
+                    status: initialStatus,
                     paymentStatus: data.paymentStatus || 'PENDING',
                     paymentMethod: data.paymentMethod || 'ONLINE',
                     addressId: finalAddressId,
                     statusHistory: [
-                        { status: 'CONFIRMED', updatedAt: new Date(), updatedBy: req.user?.id || 'SYSTEM' }
+                        { status: initialStatus, updatedAt: new Date(), updatedBy: req.user?.id || 'SYSTEM' }
                     ],
                     items: {
                         create: data.items
@@ -173,16 +176,19 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
             return order;
         });
 
-        // Trigger Notifications (Async)
-        NotificationService.notifyOrderPlaced(result).catch(err =>
-            console.error('Failed to trigger order notifications:', err)
-        );
+        // Trigger Notifications (Async) - ONLY for COD/Confirmed orders
+        // Online payments will trigger notifications in the verify route
+        if (result.status === 'CONFIRMED') {
+            NotificationService.notifyOrderPlaced(result).catch(err =>
+                console.error('Failed to trigger order notifications:', err)
+            );
 
-        NotificationService.notifyNewOrder(
-            result.orderId || result.id,
-            result.address.name || data.guestName || 'Guest',
-            data.total
-        ).catch(e => console.error(e));
+            NotificationService.notifyNewOrder(
+                result.orderId || result.id,
+                result.address.name || data.guestName || 'Guest',
+                data.total
+            ).catch(e => console.error(e));
+        }
 
         res.status(201).json(result);
     } catch (error: any) {

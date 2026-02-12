@@ -32,6 +32,12 @@ import {
 import { toast } from 'sonner';
 import Reviews from '@/components/Reviews';
 import ShareProduct from '@/components/ShareProduct';
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselApi,
+} from "@/components/ui/carousel";
 import { SIZE_GUIDE_DATA, SIZE_LABELS } from '@/lib/constants';
 
 const getColorHex = (colorName: string) => {
@@ -77,6 +83,7 @@ const ProductDetail = () => {
     const [showDeliveryDetails, setShowDeliveryDetails] = useState(false);
     const [showSizeChart, setShowSizeChart] = useState(false);
     const [showSizeGuider, setShowSizeGuider] = useState(false);
+    const [api, setApi] = useState<CarouselApi>();
 
     const { data: product, isLoading: loadingProduct } = useQuery({
         queryKey: ['product', id],
@@ -125,8 +132,24 @@ const ProductDetail = () => {
         setSelectedSize('');
         setSelectedColor('');
         setSelectedImageIndex(0);
+        api?.scrollTo(0);
         window.scrollTo(0, 0);
-    }, [id]);
+    }, [id, api]);
+
+    // Sync Carousel with selectedImageIndex
+    useEffect(() => {
+        if (!api) return;
+        api.scrollTo(selectedImageIndex);
+    }, [selectedImageIndex, api]);
+
+    // Update selectedImageIndex when carousel changes
+    useEffect(() => {
+        if (!api) return;
+
+        api.on("select", () => {
+            setSelectedImageIndex(api.selectedScrollSnap());
+        });
+    }, [api]);
 
     const handleAddToCart = async () => {
         if (!selectedSize) {
@@ -332,28 +355,43 @@ const ProductDetail = () => {
                             )}
                         </div>
 
-                        {/* Main Image */}
-                        <div className="flex-1 grid grid-cols-1 gap-4">
-                            <div className="relative bg-white rounded-3xl overflow-hidden aspect-[4/5] group flex items-center justify-center border border-border/50 shadow-sm">
-                                <img
-                                    src={product.images[selectedImageIndex] || product.images[0]}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
+                        {/* Main Image Carousel */}
+                        <div className="flex-1 overflow-hidden">
+                            <Carousel
+                                setApi={setApi}
+                                className="w-full"
+                                opts={{
+                                    align: "start",
+                                    loop: false,
+                                }}
+                            >
+                                <CarouselContent>
+                                    {product.images.map((img: string, idx: number) => (
+                                        <CarouselItem key={idx}>
+                                            <div className="relative bg-white rounded-3xl overflow-hidden aspect-[4/5] group flex items-center justify-center border border-border/50 shadow-sm">
+                                                <img
+                                                    src={img}
+                                                    alt={`${product.name} - View ${idx + 1}`}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
 
-                                {/* Floating Badges */}
-                                {discountPercent > 0 && (
-                                    <Badge
-                                        style={{ backgroundColor: '#06b6d4' }}
-                                        className="absolute top-4 left-4 text-white font-bold px-3 py-1.5 z-50 shadow-md"
-                                    >
-                                        SALE {discountPercent}% OFF
-                                    </Badge>
-                                )}
-                                <div className="absolute top-4 right-4 z-50">
-                                    <ShareProduct product={product} iconOnly />
-                                </div>
-                            </div>
+                                                {/* Floating Badges */}
+                                                {discountPercent > 0 && (
+                                                    <Badge
+                                                        style={{ backgroundColor: '#06b6d4' }}
+                                                        className="absolute top-4 left-4 text-white font-bold px-3 py-1.5 z-50 shadow-md"
+                                                    >
+                                                        SALE {discountPercent}% OFF
+                                                    </Badge>
+                                                )}
+                                                <div className="absolute top-4 right-4 z-50">
+                                                    <ShareProduct product={product} iconOnly />
+                                                </div>
+                                            </div>
+                                        </CarouselItem>
+                                    ))}
+                                </CarouselContent>
+                            </Carousel>
                         </div>
                     </div>
 

@@ -260,8 +260,11 @@ const Checkout = () => {
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
-            toast.success('Order placed successfully! 🎊');
-            navigate(`/orders/${data.id}`);
+            // For COD, we navigate immediately. For Online, we wait for payment verification.
+            if (data.paymentMethod === 'COD') {
+                toast.success('Order placed successfully! 🎊');
+                navigate(`/orders/${data.id}`);
+            }
         },
         onError: (error: any) => {
             const msg = error.response?.data?.error || 'Order placement failed';
@@ -461,15 +464,17 @@ const Checkout = () => {
                 couponCode: appliedCoupon ? appliedCoupon.code : undefined
             };
 
+            // Step 1: Always create the order first (Safety First Flow)
+            const orderRes = await createOrderMutation.mutateAsync(baseOrderData);
+
             if (paymentMethod === 'COD') {
-                await createOrderMutation.mutateAsync(baseOrderData);
                 if (isGuest) localStorage.removeItem('cart');
+                // Success navigation handled by mutation onSuccess
             } else {
-                // Online Payment Flow (Razorpay)
-                const tempOrderId = `tmp_${Date.now()}`;
+                // Step 2: Online Payment Flow (Razorpay)
                 const intentRes = await paymentAPI.createIntent({
                     amount: total,
-                    orderId: tempOrderId
+                    orderId: orderRes.id // Use real DB ID for traceability
                 });
 
                 const options = {
@@ -481,20 +486,17 @@ const Checkout = () => {
                     order_id: intentRes.data.id,
                     handler: async (response: any) => {
                         try {
-                            // Verify Signature
+                            // Step 3: Verify Signature on Backend
                             await paymentAPI.verify({
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature
-                            });
-
-                            // Create Order on Success
-                            await createOrderMutation.mutateAsync({
-                                ...baseOrderData,
-                                paymentStatus: 'COMPLETED'
+                                razorpay_signature: response.razorpay_signature,
+                                orderId: orderRes.id // Pass internal ID for verification update
                             });
 
                             if (isGuest) localStorage.removeItem('cart');
+                            toast.success('Payment successful! Order confirmed. 🎊');
+                            navigate(`/orders/${orderRes.id}`);
                         } catch (err) {
                             toast.error('Payment verification failed. Please contact support.');
                         }
@@ -510,6 +512,8 @@ const Checkout = () => {
                     modal: {
                         ondismiss: () => {
                             setIsProcessing(false);
+                            // Keep the user on checkout so they can try again if they want
+                            toast.info('Payment window closed. Your order is pending.');
                         }
                     }
                 };
