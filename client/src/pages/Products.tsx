@@ -408,31 +408,29 @@ const ProductCard = ({
                 </div>
 
                 {/* Promotional Badge (Vibrant) */}
-                {(() => {
-                    const tags = product.tags || [];
-                    const isSale = tags.includes('Sale') || product.discountPrice;
-                    const isNew = tags.includes('New Arrivals');
+                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[45]">
+                    {(() => {
+                        const tags = product.tags || [];
+                        const isSale = tags.includes('Sale') || product.discountPrice;
+                        const isNew = tags.includes('New Arrivals');
 
-                    if (isSale) {
-                        return (
-                            <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[45]">
+                        if (isSale) {
+                            return (
                                 <span className="px-2.5 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-red-500 to-pink-600 text-white text-[10px] md:text-sm font-fredoka font-bold rounded-full shadow-lg border border-white/20 animate-bounce-subtle">
                                     SALE
                                 </span>
-                            </div>
-                        );
-                    }
-                    if (isNew) {
-                        return (
-                            <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[45]">
+                            );
+                        }
+                        if (isNew) {
+                            return (
                                 <span className="px-2.5 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] md:text-sm font-fredoka font-bold rounded-full shadow-lg border border-white/20">
                                     NEW
                                 </span>
-                            </div>
-                        );
-                    }
-                    return null;
-                })()}
+                            );
+                        }
+                        return null;
+                    })()}
+                </div>
 
                 <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col gap-2 z-50">
                     <ShareProduct product={product} iconOnly className="!w-8 !h-8 md:!w-10 md:!h-10 shadow-lg" />

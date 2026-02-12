@@ -341,32 +341,15 @@ const ProductDetail = () => {
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
 
-                                {/* Floating Badges (Vibrant) */}
-                                {(() => {
-                                    const tags = product.tags || [];
-                                    const isSale = tags.includes('Sale') || product.discountPrice;
-                                    const isNew = tags.includes('New Arrivals');
-
-                                    if (isSale) {
-                                        return (
-                                            <div className="absolute top-4 left-4 z-50">
-                                                <span className="px-3 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-fredoka font-bold rounded-full shadow-xl border border-white/20 animate-bounce-subtle uppercase">
-                                                    SALE {discountPercent > 0 ? `${discountPercent}% OFF` : ''}
-                                                </span>
-                                            </div>
-                                        );
-                                    }
-                                    if (isNew) {
-                                        return (
-                                            <div className="absolute top-4 left-4 z-50">
-                                                <span className="px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-fredoka font-bold rounded-full shadow-xl border border-white/20 uppercase">
-                                                    NEW ARRIVAL
-                                                </span>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                })()}
+                                {/* Floating Badges */}
+                                {discountPercent > 0 && (
+                                    <Badge
+                                        style={{ backgroundColor: '#06b6d4' }}
+                                        className="absolute top-4 left-4 text-white font-bold px-3 py-1.5 z-50 shadow-md"
+                                    >
+                                        SALE {discountPercent}% OFF
+                                    </Badge>
+                                )}
                                 <div className="absolute top-4 right-4 z-50">
                                     <ShareProduct product={product} iconOnly />
                                 </div>
