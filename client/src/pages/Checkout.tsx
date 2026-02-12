@@ -302,7 +302,7 @@ const Checkout = () => {
     ];
 
     const paymentOptions = [
-        { id: 'COD', label: 'Cash on Delivery', description: 'Pay when you receive', icon: Banknote },
+        { id: 'COD', label: 'Pay on Delivery', description: 'Pay when you receive', icon: Banknote },
         { id: 'CARD', label: 'Credit / Debit Card', description: 'Visa, Mastercard, RuPay', icon: CreditCard },
         { id: 'UPI', label: 'UPI', description: 'GPay, PhonePe, Paytm', icon: Smartphone },
         { id: 'NETBANKING', label: 'Net Banking', description: 'All major banks', icon: Landmark },
@@ -810,8 +810,8 @@ const Checkout = () => {
                                                     className={`w-full p-4 rounded-xl border-2 transition-all flex items-center justify-between ${!isAvailable
                                                         ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
                                                         : paymentMethod === option.id
-                                                            ? 'border-pink-500 bg-pink-50'
-                                                            : 'border-pink-100 hover:border-pink-300'
+                                                            ? 'border-pink-500 bg-pink-50/50 shadow-md ring-2 ring-pink-500/20'
+                                                            : 'border-pink-100 hover:border-pink-200 hover:bg-white'
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-4">
