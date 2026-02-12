@@ -404,8 +404,8 @@ const ProductDetail = () => {
                                                 api?.scrollTo(idx);
                                             }}
                                             className={`w-2 h-2 rounded-full transition-all duration-300 ${selectedImageIndex === idx
-                                                    ? 'bg-cyan-500 w-6 shadow-[0_0_8px_rgba(6,182,212,0.6)]'
-                                                    : 'bg-white/60 hover:bg-white/90'
+                                                ? 'bg-cyan-500 w-6 shadow-[0_0_8px_rgba(6,182,212,0.6)]'
+                                                : 'bg-white/60 hover:bg-white/90'
                                                 }`}
                                             aria-label={`Go to slide ${idx + 1}`}
                                         />
@@ -771,7 +771,7 @@ const ProductDetail = () => {
                 <div className="flex gap-3 max-w-lg mx-auto">
                     <Button
                         variant="outline"
-                        className="group relative flex-1 h-14 rounded-xl font-bold border-2 border-pink-500 text-black overflow-hidden transition-all active:scale-95 bg-white"
+                        className="group relative flex-1 h-14 rounded-xl font-bold border-2 border-pink-500 text-black overflow-hidden transition-all active:scale-95 bg-white text-xs"
                         onClick={handleAddToCart}
                         disabled={adding}
                     >
