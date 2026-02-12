@@ -79,23 +79,26 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Helper for numeric sanitation
+        const parseNum = (val: any) => (val === undefined || val === null || val === '') ? null : parseFloat(String(val));
+
         // Comprehensive Fix: Ensure all types are correct before sending to API
         const submissionData = {
             ...formData,
-            price: formData.price === '' ? 0 : parseFloat(String(formData.price)),
-            discountPrice: formData.discountPrice === '' ? null : parseFloat(String(formData.discountPrice)),
-            costPrice: formData.costPrice === '' ? null : parseFloat(String(formData.costPrice)),
-            boxPrice: formData.boxPrice === '' ? null : parseFloat(String(formData.boxPrice)),
-            tagPrice: formData.tagPrice === '' ? null : parseFloat(String(formData.tagPrice)),
-            shippingCost: formData.shippingCost === '' ? null : parseFloat(String(formData.shippingCost)),
-            otherCosts: formData.otherCosts === '' ? null : parseFloat(String(formData.otherCosts)),
-            stock: formData.stock === '' ? 0 : parseInt(String(formData.stock)),
+            price: parseNum(formData.price) || 0,
+            discountPrice: parseNum(formData.discountPrice),
+            costPrice: parseNum(formData.costPrice),
+            boxPrice: parseNum(formData.boxPrice),
+            tagPrice: parseNum(formData.tagPrice),
+            shippingCost: parseNum(formData.shippingCost),
+            otherCosts: parseNum(formData.otherCosts),
+            stock: parseNum(formData.stock) || 0,
             sizes: Array.isArray(formData.sizes) ? formData.sizes.map((s: any) => String(s).trim()) : [],
             inventory: formData.inventory,
             colors: typeof formData.colors === 'string' ? formData.colors.split(',').map((c: any) => c.trim()) : formData.colors,
             tags: formData.tags || [],
-            avgRating: formData.avgRating === '' ? 4.5 : parseFloat(String(formData.avgRating)),
-            ratingCount: formData.ratingCount === '' ? 0 : parseInt(String(formData.ratingCount))
+            avgRating: parseNum(formData.avgRating) || 4.5,
+            ratingCount: parseNum(formData.ratingCount) || 0
         };
 
         onSubmit(submissionData);
