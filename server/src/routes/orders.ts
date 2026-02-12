@@ -319,8 +319,13 @@ router.post('/track', async (req: Request, res: Response) => {
 // Get single order (Admin or Owner)
 router.get('/:id', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: req.params.id as string },
+        const order = await prisma.order.findFirst({
+            where: {
+                OR: [
+                    { id: req.params.id as string },
+                    { orderId: req.params.id as string }
+                ]
+            },
             include: { items: { include: { product: true } }, address: true, user: true }
         });
 

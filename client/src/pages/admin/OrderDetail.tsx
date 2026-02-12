@@ -102,8 +102,25 @@ const AdminOrderDetail = () => {
         });
     };
 
-    if (isLoading) return <div className="p-20 text-center">Loading Order...</div>;
-    if (!order) return <div className="p-20 text-center">Order Not Found</div>;
+    if (isLoading) return (
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-20">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6" />
+            <p className="text-xl font-fredoka font-bold text-slate-400 animate-pulse">Synchronizing Order Intelligence...</p>
+        </div>
+    );
+
+    if (!order) return (
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-20 text-center">
+            <div className="w-24 h-24 bg-red-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-xl shadow-red-100/50 ring-1 ring-red-100">
+                <ShieldAlert className="w-12 h-12 text-red-500" />
+            </div>
+            <h2 className="text-3xl font-fredoka font-black text-slate-900 mb-2">Order Manifest Not Found</h2>
+            <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto">
+                We couldn't retrieve the details for this order. It may have been archived or the ID in the notification might be incorrect.
+            </p>
+            <BackButton to="/admin/orders" label="Return to Command Center" />
+        </div>
+    );
 
     const statusHistory = (order.statusHistory as any[]) || [];
 
