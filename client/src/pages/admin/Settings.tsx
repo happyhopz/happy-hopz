@@ -91,9 +91,9 @@ const AdminSettings = () => {
 
     const defaultContent = {
         siteName: 'Happy Hopz',
-        contactEmail: 'hello@happyhopz.com',
-        contactPhone: '+91 98765 43210',
-        address: '123, Footwear Plaza, New Delhi, India',
+        contactEmail: 'happyhopz308@gmail.com',
+        contactPhone: '+91 9711864674',
+        address: '114, Azad Rd, Vivekanand Puri, Sarai Rohilla, New Delhi, Delhi, 110007',
         socials: {
             instagram: 'https://instagram.com/happyhopz',
             facebook: 'https://facebook.com/happyhopz'

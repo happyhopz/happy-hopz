@@ -52,9 +52,9 @@ const AdminOrderDetail = () => {
             } catch (error) {
                 return {
                     siteName: 'Happy Hopz',
-                    contactEmail: 'hello@happyhopz.com',
-                    contactPhone: '+91 98765 43210',
-                    address: '123, Footwear Plaza, New Delhi, India',
+                    contactEmail: 'happyhopz308@gmail.com',
+                    contactPhone: '+91 9711864674',
+                    address: '114, Azad Rd, Vivekanand Puri, Sarai Rohilla, New Delhi, Delhi, 110007',
                 };
             }
         },
@@ -321,10 +321,10 @@ const AdminOrderDetail = () => {
                         <h1 className="text-4xl font-black tracking-tighter text-slate-900">HAPPY HOPZ</h1>
                         <p className="text-sm font-bold mt-1 text-slate-500 italic">Premium Kids Footwear</p>
                         <div className="mt-4 text-[10px] leading-tight text-slate-500 font-medium">
-                            <p>{siteContent?.address || '123, Footwear Plaza, New Delhi, India'}</p>
-                            <p>Phone: {siteContent?.contactPhone || '+91 98765 43210'}</p>
-                            <p>Email: {siteContent?.contactEmail || 'hello@happyhopz.com'}</p>
-                            <p className="font-bold text-slate-900 mt-1">GSTIN: {dynamicSettings?.gstin || '07AABCD1234E1Z5'}</p>
+                            <p>{siteContent?.address || '114, Azad Rd, Vivekanand Puri, Sarai Rohilla, New Delhi, Delhi, 110007'}</p>
+                            <p>Phone: {siteContent?.contactPhone || '+91 9711864674'}</p>
+                            <p>Email: {siteContent?.contactEmail || 'happyhopz308@gmail.com'}</p>
+                            <p className="font-bold text-slate-900 mt-1">GSTIN: {dynamicSettings?.gstin || '07GGIPS6410J1Z0'}</p>
                         </div>
                     </div>
                     <div className="text-right">

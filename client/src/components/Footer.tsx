@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, Instagram, Facebook, Mail, Phone } from 'lucide-react';
+import { Heart, Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
 import pandaLogo from '@/assets/happy-hopz-logo.png';
 
 const Footer = () => {
@@ -77,6 +77,15 @@ const Footer = () => {
               Contact Us
             </h4>
             <div className="flex flex-col gap-4">
+              <div className="flex items-start gap-4 text-muted-foreground text-sm font-nunito group">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center border border-border/40">
+                  <MapPin className="w-5 h-5 text-primary" />
+                </div>
+                <span className="font-medium leading-relaxed">
+                  114, Azad Rd, Vivekanand Puri, Sarai Rohilla, New Delhi, Delhi, 110007
+                </span>
+              </div>
+
               <a
                 href="mailto:happyhopz308@gmail.com?subject=Enquiry from Happy Hopz Website"
                 className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
