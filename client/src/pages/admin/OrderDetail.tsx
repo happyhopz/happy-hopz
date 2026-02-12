@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Navigate } from 'react-router-dom';
-import { adminAPI } from '@/lib/api';
+import { productsAPI, cartAPI, adminAPI, contentAPI, settingsAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import BackButton from '@/components/BackButton';
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, User, MapPin, IndianRupee, Truck, Printer, FileText, Send, Calendar as CalendarIcon, History, Check, Clock } from 'lucide-react';
+import { Package, User, MapPin, IndianRupee, Truck, Printer, FileText, Send, Calendar as CalendarIcon, History, Check, Clock, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -40,6 +40,35 @@ const AdminOrderDetail = () => {
             return response.data;
         },
         enabled: isAdmin && !!id
+    });
+
+    // Site Content (General/Contact/Social)
+    const { data: siteContent } = useQuery({
+        queryKey: ['site-content'],
+        queryFn: async () => {
+            try {
+                const response = await contentAPI.get('site_settings');
+                return response.data;
+            } catch (error) {
+                return {
+                    siteName: 'Happy Hopz',
+                    contactEmail: 'hello@happyhopz.com',
+                    contactPhone: '+91 98765 43210',
+                    address: '123, Footwear Plaza, New Delhi, India',
+                };
+            }
+        },
+        enabled: isAdmin
+    });
+
+    // Dynamic Site Settings (GST)
+    const { data: dynamicSettings } = useQuery({
+        queryKey: ['site-settings'],
+        queryFn: async () => {
+            const response = await settingsAPI.get();
+            return response.data;
+        },
+        enabled: isAdmin
     });
 
     const updateStatusMutation = useMutation({
@@ -80,9 +109,39 @@ const AdminOrderDetail = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans">
-            <Navbar />
-            <main className="container mx-auto px-4 py-8 max-w-7xl">
-                <div className="flex items-center justify-between mb-8">
+            <style>
+                {`
+                @media print {
+                    @page {
+                        margin: 1cm;
+                        size: A4;
+                    }
+                    body {
+                        background: white !important;
+                        -webkit-print-color-adjust: exact;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                    .print-only {
+                        display: block !important;
+                    }
+                    .admin-container {
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                }
+                .print-only {
+                    display: none;
+                }
+                `}
+            </style>
+            <div className="no-print">
+                <Navbar />
+            </div>
+
+            <main className="container mx-auto px-4 py-8 max-w-7xl admin-container">
+                <div className="flex items-center justify-between mb-8 no-print">
                     <div>
                         <BackButton to="/admin/orders" label="Back to Dashboard" />
                         <h1 className="text-3xl font-black mt-2">Order #{order.orderId || order.id.slice(0, 8)}</h1>
@@ -98,7 +157,7 @@ const AdminOrderDetail = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 no-print">
                     <div className="lg:col-span-2 space-y-8">
                         {/* Status Manager */}
                         <Card className="p-8 border-none shadow-xl shadow-slate-200/50 bg-white ring-1 ring-slate-100">
@@ -253,6 +312,123 @@ const AdminOrderDetail = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Professional Printable Invoice */}
+            <div className="print-only w-full max-w-[210mm] mx-auto bg-white p-8 font-sans text-slate-900">
+                {/* Invoice Header */}
+                <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8 mb-8">
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tighter text-slate-900">HAPPY HOPZ</h1>
+                        <p className="text-sm font-bold mt-1 text-slate-500 italic">Premium Kids Footwear</p>
+                        <div className="mt-4 text-[10px] leading-tight text-slate-500 font-medium">
+                            <p>{siteContent?.address || '123, Footwear Plaza, New Delhi, India'}</p>
+                            <p>Phone: {siteContent?.contactPhone || '+91 98765 43210'}</p>
+                            <p>Email: {siteContent?.contactEmail || 'hello@happyhopz.com'}</p>
+                            <p className="font-bold text-slate-900 mt-1">GSTIN: {dynamicSettings?.gstin || '07AABCD1234E1Z5'}</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <h2 className="text-2xl font-black uppercase tracking-widest text-slate-900">Tax Invoice</h2>
+                        <div className="mt-4 text-[11px] font-bold space-y-1">
+                            <p><span className="text-slate-400">ORDER ID:</span> #{order.orderId || order.id.slice(0, 8)}</p>
+                            <p><span className="text-slate-400">DATE:</span> {format(new Date(order.createdAt), 'dd MMM yyyy')}</p>
+                            <p><span className="text-slate-400">PAYMENT:</span> {order.paymentMethod || 'ONLINE'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Billing Details */}
+                <div className="grid grid-cols-2 gap-12 mb-8">
+                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <h3 className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 mb-2">Billed To</h3>
+                        <p className="font-black text-slate-900 text-sm uppercase">{order.address.name}</p>
+                        <p className="text-[11px] text-slate-600 font-medium leading-relaxed mt-2">
+                            {order.address.line1}, {order.address.line2 && `${order.address.line2}, `}
+                            {order.address.city}, {order.address.state} - {order.address.pincode}
+                        </p>
+                        <p className="text-[11px] font-bold text-slate-900 mt-3 flex items-center gap-2">
+                            <Phone className="w-3 h-3" /> {order.address.phone}
+                        </p>
+                    </div>
+                    <div className="flex flex-col justify-center border-l-2 border-slate-100 pl-8">
+                        <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Shipping Method</p>
+                        <p className="text-xs font-bold">{order.courierPartner || 'Standard Shipping'}</p>
+                        <p className="text-[10px] font-medium text-slate-500 mt-1">Status: {order.status}</p>
+                    </div>
+                </div>
+
+                {/* Items Table */}
+                <div className="mb-8 overflow-hidden rounded-2xl border border-slate-900">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-900 text-white">
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest">S.No</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest">Product Description</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-center">Qty</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-right">Unit Price</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {order.items.map((item: any, idx: number) => (
+                                <tr key={item.id}>
+                                    <td className="p-4 text-xs font-bold text-slate-400">{idx + 1}</td>
+                                    <td className="p-4">
+                                        <p className="text-xs font-black text-slate-900 uppercase">{item.name}</p>
+                                        <p className="text-[10px] font-bold text-slate-500 mt-0.5">Size: {item.size} | Color: {item.color}</p>
+                                    </td>
+                                    <td className="p-4 text-xs font-bold text-center">{item.quantity}</td>
+                                    <td className="p-4 text-xs font-bold text-right">₹{item.price.toFixed(2)}</td>
+                                    <td className="p-4 text-xs font-black text-right text-slate-900">₹{(item.price * item.quantity).toFixed(2)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Summary Box */}
+                <div className="flex justify-end pr-4">
+                    <div className="w-[300px] space-y-3">
+                        <div className="flex justify-between text-[11px] font-bold text-slate-500">
+                            <span>Subtotal</span>
+                            <span>₹{(order.subtotal || (order.total - (order.shipping || 0))).toFixed(2)}</span>
+                        </div>
+                        {order.tax > 0 && (
+                            <div className="flex justify-between text-[11px] font-bold text-slate-500">
+                                <span>GST ({dynamicSettings?.gst_percentage || 18}%)</span>
+                                <span>₹{order.tax.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between text-[11px] font-bold text-slate-500">
+                            <span>Shipping</span>
+                            <span>{order.shipping > 0 ? `₹${order.shipping.toFixed(2)}` : 'FREE'}</span>
+                        </div>
+                        {order.couponDiscount > 0 && (
+                            <div className="flex justify-between text-[11px] font-bold text-pink-500">
+                                <span>Discount ({order.couponCode})</span>
+                                <span>-₹{order.couponDiscount.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-center bg-slate-900 text-white p-4 rounded-xl mt-4">
+                            <span className="text-[10px] font-black uppercase tracking-widest">Total Payable</span>
+                            <span className="text-xl font-black">₹{order.total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Invoice Footer */}
+                <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between items-end">
+                    <div className="text-[10px] font-medium text-slate-400 italic">
+                        <p>Note: This is a computer-generated receipt and does not require a physical signature.</p>
+                        <p className="mt-1">Generated on {format(new Date(), 'dd MMMM yyyy HH:mm')}</p>
+                    </div>
+                    <div className="text-center">
+                        <div className="w-32 h-1 bg-slate-900 mb-2 mx-auto"></div>
+                        <p className="text-[10px] font-black uppercase tracking-widest">Authorized Signatory</p>
+                        <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase">For Happy Hopz</p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
