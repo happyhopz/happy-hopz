@@ -521,9 +521,11 @@ const Checkout = () => {
                 const rzp = new (window as any).Razorpay(options);
                 rzp.open();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Order placement failed:', error);
             setIsProcessing(false);
+            const errorMessage = error.response?.data?.error || error.message || 'Something went wrong. Please try again.';
+            toast.error(`Order Failed: ${errorMessage}`);
         }
     };
 

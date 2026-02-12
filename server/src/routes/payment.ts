@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { optionalAuthenticate, authenticate, AuthRequest } from '../middleware/auth';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
@@ -20,9 +20,23 @@ const paymentIntentSchema = z.object({
     orderId: z.string()
 });
 
-router.post('/intent', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/intent', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { amount, orderId } = paymentIntentSchema.parse(req.body);
+
+        // Verify order exists and belongs to user (if logged in)
+        const order = await (prisma.order as any).findFirst({
+            where: {
+                OR: [{ id: orderId }, { orderId: orderId }],
+                // If user is logged in, ensure it's their order
+                // If guest, we allow it as long as the order exists and has no userId
+                ...(req.user ? { userId: req.user.id } : { userId: null })
+            }
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found or access denied' });
+        }
 
         // Convert amount to paise (INR)
         const options = {
@@ -59,7 +73,7 @@ const verifySchema = z.object({
     orderId: z.string() // Our internal DB ID or custom ID
 });
 
-router.post('/verify', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/verify', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = verifySchema.parse(req.body);
 
