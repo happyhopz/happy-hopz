@@ -41,7 +41,6 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         images: product?.images || [],
         status: product?.status || 'ACTIVE',
         tags: product?.tags || [],
-        subCategory: product?.subCategory || 'Boys',
         costPrice: product?.costPrice || '',
         boxPrice: product?.boxPrice || '',
         tagPrice: product?.tagPrice || '',
@@ -95,7 +94,6 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
             inventory: formData.inventory,
             colors: typeof formData.colors === 'string' ? formData.colors.split(',').map((c: any) => c.trim()) : formData.colors,
             tags: formData.tags || [],
-            subCategory: formData.subCategory,
             avgRating: formData.avgRating === '' ? 4.5 : parseFloat(String(formData.avgRating)),
             ratingCount: formData.ratingCount === '' ? 0 : parseInt(String(formData.ratingCount))
         };
@@ -350,16 +348,14 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                     </div>
                 </div>
             </div>
-        </div>
-            </div >
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <Label>Main Category</Label>
+                    <Label>Category</Label>
                     <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                        <SelectTrigger className="rounded-xl">
+                        <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl">
+                        <SelectContent>
                             <SelectItem value="Sneakers">Sneakers</SelectItem>
                             <SelectItem value="Sandals">Sandals</SelectItem>
                             <SelectItem value="Boots">Boots</SelectItem>
@@ -371,27 +367,12 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                     </Select>
                 </div>
                 <div>
-                    <Label>Sub Category (Nav Section)</Label>
-                    <Select value={formData.subCategory || 'Boys'} onValueChange={(value) => setFormData({ ...formData, subCategory: value })}>
-                        <SelectTrigger className="rounded-xl border-cyan-200 bg-cyan-50/30">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            <SelectItem value="Boys">Boys</SelectItem>
-                            <SelectItem value="Girls">Girls</SelectItem>
-                            <SelectItem value="Trending">Trending</SelectItem>
-                            <SelectItem value="Hampers">Hampers</SelectItem>
-                            <SelectItem value="New Arrivals">New Arrivals</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
                     <Label>Age Group</Label>
                     <Select value={formData.ageGroup} onValueChange={(value) => setFormData({ ...formData, ageGroup: value })}>
-                        <SelectTrigger className="rounded-xl">
+                        <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl">
+                        <SelectContent>
                             <SelectItem value="0-3 years">0-3 years</SelectItem>
                             <SelectItem value="3-6 years">3-6 years</SelectItem>
                             <SelectItem value="6-9 years">6-9 years</SelectItem>
@@ -483,10 +464,10 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                 />
             </div>
             <div>
-                <Label>Promotional Display Tags</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2 p-4 border rounded-2xl bg-cyan-50/20 border-cyan-100">
-                    {['New Arrivals', 'Sale'].map((tag) => (
-                        <label key={tag} className="flex items-center gap-3 cursor-pointer p-2 bg-white rounded-xl border border-cyan-100/50 hover:shadow-sm transition-all">
+                <Label>Product Tags</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2 p-4 border rounded-lg">
+                    {['New Arrivals', 'Trending', 'Boys', 'Girls', 'Best Seller', 'Sale', 'Hampers'].map((tag) => (
+                        <label key={tag} className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={formData.tags.includes(tag)}
@@ -497,14 +478,14 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                                         setFormData({ ...formData, tags: formData.tags.filter((t: string) => t !== tag) });
                                     }
                                 }}
-                                className="w-5 h-5 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500"
+                                className="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
                             />
-                            <span className="text-sm font-bold text-foreground tracking-tight">{tag}</span>
+                            <span className="text-sm font-nunito">{tag}</span>
                         </label>
                     ))}
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-2 px-1 italic">
-                    These tags will appear as vibrant badges on the product cards.
+                <p className="text-xs text-muted-foreground mt-2">
+                    Select tags to categorize this product in different sections (New Arrivals, Boys, Girls, etc.)
                 </p>
             </div>
             <div>
@@ -522,7 +503,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
             <Button type="submit" variant="hopz" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Saving...' : product ? 'Save Product' : 'Create Product'}
             </Button>
-        </form >
+        </form>
     );
 };
 

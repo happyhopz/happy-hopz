@@ -21,7 +21,7 @@ import { AdminNotificationBell } from './admin/NotificationBell';
 const menuItems = [
   {
     label: 'New Arrivals',
-    href: '/products?subCategory=New Arrivals',
+    href: '/products?search=new',
     dropdown: [
       { label: 'Latest Sneakers', href: '/products?category=Sneakers' },
       { label: 'New Sandals', href: '/products?category=Sandals' },
@@ -31,34 +31,34 @@ const menuItems = [
   },
   {
     label: 'Boys',
-    href: '/products?subCategory=Boys',
+    href: '/products?search=Boys',
     dropdown: [
-      { label: 'Sneakers', href: '/products?category=Sneakers&subCategory=Boys' },
-      { label: 'Sandals', href: '/products?category=Sandals&subCategory=Boys' },
-      { label: 'School Shoes', href: '/products?category=School&subCategory=Boys' },
-      { label: 'Party Wear', href: '/products?category=Party Wear&subCategory=Boys' },
-      { label: 'Sports Shoes', href: '/products?category=Sports Shoes&subCategory=Boys' }
+      { label: 'Sneakers', href: '/products?category=Sneakers&search=Boys' },
+      { label: 'Sandals', href: '/products?category=Sandals&search=Boys' },
+      { label: 'School Shoes', href: '/products?category=School&search=Boys' },
+      { label: 'Party Wear', href: '/products?category=Party Wear&search=Boys' },
+      { label: 'Sports Shoes', href: '/products?category=Sports Shoes&search=Boys' }
     ],
   },
   {
     label: 'Girls',
-    href: '/products?subCategory=Girls',
+    href: '/products?search=Girls',
     dropdown: [
-      { label: 'Sneakers', href: '/products?category=Sneakers&subCategory=Girls' },
-      { label: 'Sandals', href: '/products?category=Sandals&subCategory=Girls' },
-      { label: 'School Shoes', href: '/products?category=School&subCategory=Girls' },
-      { label: 'Party Wear', href: '/products?category=Party Wear&subCategory=Girls' },
-      { label: 'Ballet Flats', href: '/products?category=Ballet&subCategory=Girls' }
+      { label: 'Sneakers', href: '/products?category=Sneakers&search=Girls' },
+      { label: 'Sandals', href: '/products?category=Sandals&search=Girls' },
+      { label: 'School Shoes', href: '/products?category=School&search=Girls' },
+      { label: 'Party Wear', href: '/products?category=Party Wear&search=Girls' },
+      { label: 'Ballet Flats', href: '/products?category=Ballet&search=Girls' }
     ],
   },
   {
     label: 'Trending',
-    href: '/products?subCategory=Trending',
+    href: '/products',
     dropdown: [
-      { label: 'Top Picks', href: '/products?subCategory=Trending' },
+      { label: 'Top Picks', href: '/products?search=Trending' },
       { label: 'Best Sellers', href: '/products?search=Best Seller' },
       { label: 'Customer Favorites', href: '/products?search=Favourite' },
-      { label: 'Hampers', href: '/products?subCategory=Hampers' }
+      { label: 'Hampers', href: '/products?search=Hampers' }
     ],
   },
 ];

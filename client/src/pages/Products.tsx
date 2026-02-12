@@ -23,7 +23,6 @@ const Products = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [search, setSearch] = useState(searchParams.get('search') || '');
     const [category, setCategory] = useState(searchParams.get('category') || '');
-    const [subCategory, setSubCategory] = useState(searchParams.get('subCategory') || '');
     const [ageGroup, setAgeGroup] = useState(searchParams.get('ageGroup') || '');
     const [priceRange, setPriceRange] = useState([0, 10000]);
     const queryClient = useQueryClient();
@@ -79,12 +78,11 @@ const Products = () => {
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
 
     const { data: products, isLoading } = useQuery({
-        queryKey: ['products', search, category, subCategory, ageGroup],
+        queryKey: ['products', search, category, ageGroup],
         queryFn: async () => {
             const params: any = {};
             if (search) params.search = search;
             if (category) params.category = category;
-            if (subCategory) params.subCategory = subCategory;
             if (ageGroup) params.ageGroup = ageGroup;
             const response = await productsAPI.getAll(params);
             return response.data;
@@ -94,7 +92,6 @@ const Products = () => {
     useEffect(() => {
         setSearch(searchParams.get('search') || '');
         setCategory(searchParams.get('category') || '');
-        setSubCategory(searchParams.get('subCategory') || '');
         setAgeGroup(searchParams.get('ageGroup') || '');
     }, [searchParams]);
 
@@ -102,7 +99,6 @@ const Products = () => {
         const params: any = {};
         if (search) params.search = search;
         if (category) params.category = category;
-        if (subCategory) params.subCategory = subCategory;
         if (ageGroup) params.ageGroup = ageGroup;
         setSearchParams(params);
     };
@@ -407,24 +403,41 @@ const ProductCard = ({
                     </div>
                 </div>
 
-                {/* Promotional Badge (Vibrant) */}
+                {/* Floating Badge (Refined to Single Display) */}
                 <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[45]">
                     {(() => {
-                        const tags = product.tags || [];
-                        const isSale = tags.includes('Sale') || product.discountPrice;
-                        const isNew = tags.includes('New Arrivals');
+                        // Priority 1: Check for explicit Tags (Show only the first one)
+                        if (product.tags && product.tags.length > 0) {
+                            const tag = product.tags[0];
+                            const lowT = tag.toLowerCase();
+                            const isCyanTag = lowT.includes('sale') || lowT.includes('new');
 
-                        if (isSale) {
+                            const getTagColor = (t: string) => {
+                                if (isCyanTag) return 'bg-[#06b6d4]';
+                                if (lowT.includes('best')) return 'bg-orange-500';
+                                if (lowT.includes('trending')) return 'bg-purple-500';
+                                if (lowT.includes('hampers')) return 'bg-pink-500';
+                                if (lowT.includes('favourite')) return 'bg-indigo-500';
+                                return 'bg-cyan-500';
+                            };
+
                             return (
-                                <span className="px-2.5 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-red-500 to-pink-600 text-white text-[10px] md:text-sm font-fredoka font-bold rounded-full shadow-lg border border-white/20 animate-bounce-subtle">
-                                    SALE
+                                <span
+                                    style={isCyanTag ? { backgroundColor: '#06b6d4' } : {}}
+                                    className={`px-2 py-0.5 md:px-3 md:py-1 ${getTagColor(tag)} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none animate-fade-in`}
+                                >
+                                    {lowT.includes('sale') ? 'Sale' : tag}
                                 </span>
                             );
                         }
-                        if (isNew) {
+                        // Priority 2: Fallback to "Sale" if discounted
+                        if (product.discountPrice) {
                             return (
-                                <span className="px-2.5 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] md:text-sm font-fredoka font-bold rounded-full shadow-lg border border-white/20">
-                                    NEW
+                                <span
+                                    style={{ backgroundColor: '#06b6d4' }}
+                                    className="px-2 py-0.5 md:px-3 md:py-1 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none animate-fade-in"
+                                >
+                                    Sale
                                 </span>
                             );
                         }
