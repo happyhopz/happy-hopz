@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npx prisma generate && tsc",
+    "build": "prisma generate && tsc",
     "build:migrate": "npx prisma generate && npx prisma db push --accept-data-loss --skip-generate && tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
@@ -48,7 +48,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.16.5",
     "@types/nodemailer": "^7.0.9",
-    "prisma": "^5.22.0",
+    "prisma": "5.22.0",
     "tsx": "^4.19.2",
     "typescript": "^5.8.3"
   }
