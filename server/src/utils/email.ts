@@ -11,6 +11,8 @@ if (process.env.SENDGRID_API_KEY) {
 const VERIFIED_SENDER = 'happyhopz308@gmail.com';
 
 // Fallback to nodemailer for local development without SendGrid
+const SITE_URL = process.env.CLIENT_URL || 'https://www.happyhopz.com';
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -180,13 +182,17 @@ const getCommonStyles = () => `
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
         }
+        .tabular-box th:last-child { border-right: none; }
         .tabular-box td {
             padding: 15px;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
             vertical-align: middle;
         }
+        .tabular-box td:last-child { border-right: none; }
         .tabular-box tr:last-child td { border-bottom: none; }
         
         .item-name { font-weight: 700; color: #1e293b; font-size: 14px; margin: 0; }
@@ -259,6 +265,11 @@ const getOrderItemsHtml = (items: any[]) => items.map(item => {
                 ? JSON.parse(item.product.images)
                 : item.product.images;
             imageUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
+
+            // Resolve relative URLs
+            if (imageUrl && !imageUrl.startsWith('http')) {
+                imageUrl = `${SITE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+            }
         }
     } catch (e) { }
 
