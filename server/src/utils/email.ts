@@ -363,7 +363,7 @@ const getOrderConfirmationHtml = (order: any, name: string) => {
                             </tr>
                         </thead>
                         <tbody>
-                            ${getOrderItemsHtml(order.items || [])}
+                            ${getOrderItemsHtml(order.items || [], order._inlineAttachments)}
                         </tbody>
                     </table>
 
@@ -479,7 +479,7 @@ const getStatusUpdateHtml = (order: any, name: string) => {
                             </tr>
                         </thead>
                         <tbody>
-                            ${getOrderItemsHtml(order.items || [])}
+                            ${getOrderItemsHtml(order.items || [], order._inlineAttachments)}
                         </tbody>
                     </table>
 
