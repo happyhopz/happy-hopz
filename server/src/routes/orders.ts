@@ -5,11 +5,131 @@ import { optionalAuthenticate, authenticate, requireAdmin, AuthRequest } from '.
 import { sendOrderEmail, sendAdminOrderNotification } from '../utils/email';
 import { NotificationService } from '../services/notificationService';
 import { generateOrderId } from '../utils/orderUtils';
+import { razorpay } from '../lib/razorpay';
 
 const router = Router();
 
 // ... existing helper functions (validatePrice, etc.) ...
 // Simplified for rewrite, I'll keep the ones I need or just keep the original ones if possible.
+
+// --- 🛰️ ORDER MANAGEMENT (Priority Routes) ---
+
+// Diagnostic Route
+router.get('/health', (req, res) => res.json({ status: 'ok', message: 'Orders router is active', version: '2.1-RESILIENT' }));
+
+// ❌ Cancel Order (User or Admin)
+// Supported as BOTH PATCH and PUT for maximum compatibility
+router.all('/:id/cancel', authenticate, async (req: AuthRequest, res: Response) => {
+    if (req.method !== 'PATCH' && req.method !== 'PUT') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    try {
+        console.log(`📡 [${req.method}] /orders/${req.params.id}/cancel - Initiated by ${req.user?.role} ${req.user?.id}`);
+        const { reason } = z.object({
+            reason: z.string().optional().default('Cancelled by user')
+        }).parse(req.body);
+
+        const orderIdParam = req.params.id;
+
+        const result = await prisma.$transaction(async (tx) => {
+            const order = await (tx.order as any).findFirst({
+                where: { OR: [{ id: orderIdParam }, { orderId: orderIdParam }] },
+                include: { items: { include: { product: true } }, address: true, user: true }
+            });
+
+            if (!order) throw new Error('Order not found');
+
+            // Permission Check: Owner or Admin
+            const isAdmin = req.user!.role === 'ADMIN';
+            const isOwner = order.userId === req.user!.id;
+            if (!isAdmin && !isOwner) throw new Error('Access denied');
+
+            // Status Check: Can only cancel PENDING or CONFIRMED
+            const cancellableStatuses = ['PENDING', 'CONFIRMED'];
+            if (!cancellableStatuses.includes(order.status)) {
+                throw new Error(`Order cannot be cancelled in '${order.status}' status`);
+            }
+
+            // Handle Automated Refund for Online Payments
+            if (order.paymentMethod === 'ONLINE' && order.paymentStatus === 'COMPLETED' && order.transactionId) {
+                try {
+                    console.log(`[Cancel Order] Initiating refund for Order: ${order.orderId}, Payment ID: ${order.transactionId}`);
+                    await razorpay.payments.refund(order.transactionId, {
+                        speed: 'normal',
+                        notes: {
+                            reason: reason,
+                            orderId: order.orderId
+                        }
+                    });
+                    console.log(`[Cancel Order] Refund initiated successfully for Order: ${order.orderId}`);
+                } catch (rzpError: any) {
+                    console.error('[Cancel Order] Razorpay Refund Error:', rzpError);
+                }
+            }
+
+            // Restore Stock
+            for (const item of order.items) {
+                const product = await tx.product.findUnique({ where: { id: item.productId } });
+                if (product) {
+                    const inventory = (product as any).inventory ? JSON.parse((product as any).inventory) : [];
+                    const updatedInventory = inventory.map((inv: any) => {
+                        if (inv.size === item.size) {
+                            return { ...inv, stock: inv.stock + item.quantity };
+                        }
+                        return inv;
+                    });
+                    const totalStock = updatedInventory.reduce((sum: number, i: any) => sum + i.stock, 0);
+
+                    await (tx.product as any).update({
+                        where: { id: item.productId },
+                        data: {
+                            inventory: JSON.stringify(updatedInventory),
+                            stock: totalStock
+                        }
+                    });
+                }
+            }
+
+            const history = (order.statusHistory as any[]) || [];
+            const newHistory = [
+                ...history,
+                { status: 'CANCELLED', updatedAt: new Date(), updatedBy: req.user!.id, notes: reason }
+            ];
+
+            const updatedOrder = await (tx.order as any).update({
+                where: { id: order.id },
+                data: {
+                    status: 'CANCELLED',
+                    paymentStatus: (order.paymentMethod === 'ONLINE' && order.paymentStatus === 'COMPLETED') ? 'REFUNDED' : order.paymentStatus,
+                    statusHistory: newHistory
+                },
+                include: { items: { include: { product: true } }, address: true, user: true }
+            });
+
+            // Notify Customer & Admin
+            NotificationService.notifyStatusUpdate(updatedOrder).catch(err =>
+                console.error('Failed to send cancellation notification:', err)
+            );
+
+            NotificationService.create({
+                isAdmin: true,
+                title: 'Order Cancelled ❌',
+                message: `Order #${order.orderId || order.id} was cancelled by ${isAdmin ? 'Admin' : 'Customer'}. Reason: ${reason}`,
+                type: 'ORDER',
+                priority: 'HIGH',
+                metadata: JSON.stringify({ orderId: order.id, customerName: order.address?.name || 'Customer' })
+            }).catch(e => console.error('Failed to notify admin of cancellation:', e));
+
+            return updatedOrder;
+        });
+
+        res.json(result);
+    } catch (error: any) {
+        console.error(`🔴 [Cancel Order Error] ${error.message}`);
+        res.status(400).json({ error: error.message || 'Failed to cancel order' });
+    }
+});
 
 // Get all orders (Admin only)
 router.get('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
@@ -285,6 +405,7 @@ router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: 
         res.status(500).json({ error: error.message || 'Failed to update order status' });
     }
 });
+
 
 // Public Order Tracking (Track by Order ID and Phone)
 router.post('/track', async (req: Request, res: Response) => {

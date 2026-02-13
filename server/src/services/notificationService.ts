@@ -151,6 +151,13 @@ export class NotificationService {
                         { type: 'text', text: orderId },
                         { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
                     ];
+                } else if (fullOrder.status === 'CANCELLED' || fullOrder.status === 'REFUNDED') {
+                    template = 'hhz_order_cancelled';
+                    params = [
+                        { type: 'text', text: orderId },
+                        { type: 'text', text: fullOrder.status === 'REFUNDED' ? 'processed and refunded' : 'cancelled as per request' },
+                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                    ];
                 }
 
                 const components = [{ type: 'body', parameters: params }];

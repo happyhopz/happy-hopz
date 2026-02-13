@@ -5,14 +5,9 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { NotificationService } from '../services/notificationService';
+import { razorpay } from '../lib/razorpay';
 
 const router = Router();
-
-// Initialize Razorpay
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder'
-});
 
 // Create payment intent (Razorpay Order)
 const paymentIntentSchema = z.object({
