@@ -5,9 +5,10 @@ import { ArrowLeft } from 'lucide-react';
 interface BackButtonProps {
     label?: string;
     to?: string;
+    className?: string;
 }
 
-const BackButton = ({ label = 'Back', to }: BackButtonProps) => {
+const BackButton = ({ label = 'Back', to, className }: BackButtonProps) => {
     const navigate = useNavigate();
 
     const handleClick = () => {
@@ -22,7 +23,7 @@ const BackButton = ({ label = 'Back', to }: BackButtonProps) => {
         <Button
             variant="ghost"
             onClick={handleClick}
-            className="mb-4 hover:bg-secondary/50"
+            className={`mb-4 hover:bg-secondary/50 ${className || ''}`}
         >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {label}
