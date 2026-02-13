@@ -73,14 +73,14 @@ const OrderDetail = () => {
 
     const getStatusIcon = (status: string) => {
         const icons: Record<string, React.ReactNode> = {
-            CONFIRMED: <CheckCircle2 className="w-5 h-5 text-pink-500" />,
+            CONFIRMED: <CheckCircle2 className="w-5 h-5 text-blue-500" />,
             SHIPPED: <Truck className="w-5 h-5 text-purple-500" />,
             OUT_FOR_DELIVERY: <Truck className="w-5 h-5 text-orange-500" />,
             DELIVERED: <CheckCircle2 className="w-5 h-5 text-green-500" />,
-            CANCELLED: <XCircle className="w-5 h-5 text-slate-400" />,
-            REFUNDED: <IndianRupee className="w-5 h-5 text-slate-400" />
+            CANCELLED: <XCircle className="w-5 h-5 text-slate-500" />,
+            REFUNDED: <IndianRupee className="w-5 h-5 text-slate-500" />
         };
-        return icons[status] || <Clock className="w-5 h-5 text-gray-400" />;
+        return icons[status] || <Clock className="w-5 h-5 text-slate-500" />;
     };
 
     const getStatusColor = (status: string) => {
@@ -307,7 +307,7 @@ const OrderDetail = () => {
                         {/* Shipping Progress Tracker */}
                         {!['CANCELLED', 'REFUNDED'].includes(order.status) && (
                             <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-1.5 h-full bg-pink-500" />
+                                <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600" />
                                 <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
                                     <div>
                                         <h2 className="text-xl font-black text-slate-900 tracking-tight">Shipping Progress</h2>
@@ -334,7 +334,7 @@ const OrderDetail = () => {
                                                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-md border-2 ${isCompleted ? 'bg-slate-900 border-white text-white rotate-[5deg] scale-105' : 'bg-white border-slate-50 text-slate-200'
                                                         }`}>
                                                         {isCompleted && index < currentStep ? (
-                                                            <CheckCircle2 className="w-6 h-6 text-pink-400" />
+                                                            <CheckCircle2 className="w-6 h-6 text-blue-400" />
                                                         ) : (
                                                             getStatusIcon(step)
                                                         )}
@@ -343,13 +343,13 @@ const OrderDetail = () => {
                                                         <p className={`text-[8px] font-black uppercase tracking-[1px] ${isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
                                                             {getStatusLabel(step)}
                                                         </p>
-                                                        {isActive && <div className="w-1 h-1 bg-pink-500 rounded-full mx-auto mt-1 animate-ping" />}
+                                                        {isActive && <div className="w-1 h-1 bg-blue-600 rounded-full mx-auto mt-1 animate-ping" />}
                                                     </div>
                                                 </div>
                                             );
                                         })}
                                     </div>
-                                    <div className="absolute top-[42px] left-10 right-10 h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                                    <div className="absolute top-[42px] left-10 right-10 h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                                         <div
                                             className="h-full bg-slate-900 transition-all duration-[2000ms] shadow-sm ease-out rounded-full"
                                             style={{ width: `${(currentStep / (statusSteps.length - 1)) * 100}%` }}
@@ -362,10 +362,10 @@ const OrderDetail = () => {
                                         <div className="absolute right-0 top-0 w-64 h-64 bg-pink-500 opacity-10 rounded-full blur-[80px] -mr-32 -mt-32" />
                                         <div className="flex items-center gap-6 relative z-10">
                                             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-xl">
-                                                <Truck className="w-8 h-8 text-pink-400" />
+                                                <Truck className="w-8 h-8 text-blue-400" />
                                             </div>
                                             <div>
-                                                <h4 className="text-[10px] font-black text-pink-400 uppercase tracking-[4px] mb-2">Estimated Arrival</h4>
+                                                <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[4px] mb-2">Estimated Arrival</h4>
                                                 <p className="text-3xl font-fredoka font-black">
                                                     {format(new Date(order.estimatedDelivery), 'EEEE, MMM dd')}
                                                 </p>
@@ -583,10 +583,10 @@ const OrderDetail = () => {
                             <Card className="p-6 border border-slate-100 bg-white shadow-sm rounded-3xl relative overflow-hidden">
                                 <h2 className="text-xl font-black text-slate-900 mb-6 tracking-tight leading-none">Order Activity</h2>
                                 <div className="space-y-6 relative ml-2">
-                                    <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-100" />
+                                    <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-200" />
                                     {order.statusHistory.slice().reverse().map((history: any, idx: number) => (
                                         <div key={idx} className="flex gap-4 relative z-10">
-                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0 mt-1 ${idx === 0 ? 'bg-pink-500 animate-pulse' : 'bg-slate-200'
+                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0 mt-1 ${idx === 0 ? 'bg-blue-600 animate-pulse' : 'bg-slate-400'
                                                 }`}>
                                                 <div className="w-1 h-1 rounded-full bg-white" />
                                             </div>

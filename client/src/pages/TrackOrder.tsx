@@ -58,7 +58,7 @@ const TrackOrder = () => {
 
     const getStatusIcon = (status: string) => {
         const icons: Record<string, React.ReactNode> = {
-            CONFIRMED: <CheckCircle2 className="w-5 h-5 text-pink-500" />,
+            CONFIRMED: <CheckCircle2 className="w-5 h-5 text-blue-500" />,
             SHIPPED: <Truck className="w-5 h-5 text-purple-500" />,
             OUT_FOR_DELIVERY: <Truck className="w-5 h-5 text-orange-500" />,
             DELIVERED: <CheckCircle2 className="w-5 h-5 text-green-500" />,
@@ -192,12 +192,12 @@ const TrackOrder = () => {
 
                                         return (
                                             <div key={step} className="flex md:flex-col items-center gap-4 md:gap-4 relative z-10 bg-white pr-4 md:pr-0">
-                                                <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-all duration-700 ${isCompleted ? 'bg-primary text-white shadow-2xl shadow-primary/40 scale-110' : 'bg-slate-50 text-slate-300'
+                                                <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-all duration-700 ${isCompleted ? 'bg-primary text-white shadow-2xl shadow-primary/40 scale-110' : 'bg-slate-50 text-slate-500'
                                                     } ${isActive ? 'ring-[15px] ring-primary/20 animate-pulse border-4 border-white' : ''}`}>
                                                     {getStatusIcon(step)}
                                                 </div>
                                                 <div className="text-left md:text-center mt-2">
-                                                    <p className={`text-[11px] font-black uppercase tracking-[0.1em] ${isActive ? 'text-primary scale-110 transform transition-all' : (isCompleted ? 'text-slate-900' : 'text-slate-200')}`}>
+                                                    <p className={`text-[11px] font-black uppercase tracking-[0.1em] ${isActive ? 'text-primary scale-110 transform transition-all' : (isCompleted ? 'text-slate-900' : 'text-slate-400')}`}>
                                                         {step.replace(/_/g, ' ')}
                                                     </p>
                                                     {isCompleted && (
@@ -238,7 +238,7 @@ const TrackOrder = () => {
                                 {/* Shipping Info Section */}
                                 <div className="p-8 space-y-6 md:col-span-1">
                                     <h3 className="font-fredoka font-black text-lg text-slate-900 flex items-center gap-2 uppercase tracking-tight">
-                                        <MapPin className="w-5 h-5 text-pink-500" />
+                                        <MapPin className="w-5 h-5 text-blue-500" />
                                         Shipping To
                                     </h3>
                                     <div className="space-y-4">

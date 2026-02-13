@@ -605,14 +605,14 @@ const Checkout = () => {
                             const isActive = step.id === currentStep;
                             return (
                                 <div key={step.id} className="flex items-center">
-                                    <div className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${isActive ? 'text-pink-700 font-bold' : isCompleted ? 'text-green-600' : 'text-gray-500'}`}>
-                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${isCompleted ? 'bg-green-600 text-white' : isActive ? 'border-2 border-pink-700 text-pink-700' : 'border border-gray-400 text-gray-500'}`}>
+                                    <div className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${isActive ? 'text-pink-700 font-bold' : isCompleted ? 'text-green-600' : 'text-gray-700'}`}>
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${isCompleted ? 'bg-green-600 text-white' : isActive ? 'border-2 border-pink-700 text-pink-700' : 'border border-gray-600 text-gray-700'}`}>
                                             {isCompleted ? <Check className="w-3 h-3" /> : index + 1}
                                         </div>
                                         <span className="hidden sm:inline text-xs uppercase tracking-normal">{step.label}</span>
                                         <span className="sm:hidden text-xs uppercase tracking-tight">{step.shortLabel}</span>
                                     </div>
-                                    {index < steps.length - 1 && <div className="w-8 sm:w-16 h-[1px] bg-gray-400 mx-1" />}
+                                    {index < steps.length - 1 && <div className="w-8 sm:w-16 h-[1px] bg-gray-600 mx-1" />}
                                 </div>
                             );
                         })}

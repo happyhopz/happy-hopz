@@ -191,7 +191,7 @@ const AdminOrderDetail = () => {
                         {/* Status Manager */}
                         <Card className="p-8 border-none shadow-xl shadow-slate-200/50 bg-white ring-1 ring-slate-100">
                             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <History className="w-5 h-5 text-pink-500" /> Update Order Status
+                                <History className="w-5 h-5 text-blue-600" /> Update Order Status
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
@@ -306,14 +306,14 @@ const AdminOrderDetail = () => {
                         {/* Status Timeline */}
                         <Card className="p-6 border-none shadow-xl bg-white border-2 border-slate-100">
                             <h3 className="text-lg font-bold mb-6">Status Timeline</h3>
-                            <div className="space-y-8 relative before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
+                            <div className="space-y-8 relative before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200">
                                 {statusHistory.length > 0 ? [...statusHistory].reverse().map((h: any, i: number) => (
                                     <div key={i} className="relative pl-10">
-                                        <div className={`absolute left-0 top-1.5 w-[32px] h-[32px] rounded-full flex items-center justify-center z-10 transition-all ${i === 0 ? 'bg-pink-600 text-white ring-4 ring-pink-100' : 'bg-white border-2 border-slate-200 text-slate-400 scale-90'}`}>
+                                        <div className={`absolute left-0 top-1.5 w-[32px] h-[32px] rounded-full flex items-center justify-center z-10 transition-all ${i === 0 ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-white border-2 border-slate-300 text-slate-600 scale-90'}`}>
                                             {i === 0 ? <Check className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                                         </div>
                                         <div>
-                                            <p className={`font-black uppercase text-[10px] tracking-widest ${i === 0 ? 'text-pink-600' : 'text-slate-400'}`}>{h.status}</p>
+                                            <p className={`font-black uppercase text-[10px] tracking-widest ${i === 0 ? 'text-blue-600' : 'text-slate-600'}`}>{h.status}</p>
                                             <p className="text-[10px] font-bold text-slate-900 mt-1">{format(new Date(h.updatedAt), 'MMM dd, yyyy HH:mm')}</p>
                                             <p className="text-[9px] font-medium text-slate-400 mt-1 uppercase">Authored by {h.updatedBy || 'System'}</p>
                                         </div>
@@ -401,7 +401,7 @@ const AdminOrderDetail = () => {
                         <tbody className="divide-y divide-slate-100">
                             {order.items.map((item: any, idx: number) => (
                                 <tr key={item.id}>
-                                    <td className="p-2 text-[10px] font-bold text-slate-400">{idx + 1}</td>
+                                    <td className="p-2 text-[10px] font-bold text-slate-700">{idx + 1}</td>
                                     <td className="p-2">
                                         <p className="text-[10px] font-black text-slate-900 uppercase">{item.name}</p>
                                         <p className="text-[9px] font-bold text-slate-500">Size: {item.size} | Color: {item.color}</p>
