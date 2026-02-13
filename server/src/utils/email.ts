@@ -143,17 +143,6 @@ const getCommonStyles = () => `
             letter-spacing: 1px;
         }
         .content-body { padding: 40px 30px; }
-        .spam-note { 
-            background: #fffafa; 
-            padding: 15px; 
-            border-radius: 12px; 
-            color: #e11d48; 
-            font-weight: 600; 
-            text-align: center; 
-            border: 1px solid #fecaca; 
-            margin: 20px 0; 
-            font-size: 13px; 
-        }
         .section-title { 
             font-size: 14px; 
             font-weight: 800; 
@@ -338,7 +327,6 @@ const getOrderConfirmationHtml = (order: any, name: string) => {
                     <p style="margin-top: 0; font-size: 16px; line-height: 1.6; font-family: 'Outfit', sans-serif;">Hi <strong style="color: #e11d48;">${name}</strong>,</p>
                     <p style="color: #475569; line-height: 1.6; font-family: 'Outfit', sans-serif;">Great choice! Your order is being processed and will be shipped soon. We're excited to get these to you!</p>
                     
-                    <div style="background: #fffafa; padding: 15px; border-radius: 12px; color: #e11d48; font-weight: 600; text-align: center; border: 1px solid #fecaca; margin: 20px 0; font-size: 13px;">💡 Pro-tip: Check your <u>Spam folder</u> if you don't see our updates!</div>
 
                     ${getExpectedDeliveryHtml(order)}
 
