@@ -35,11 +35,22 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
 
     if (type === 'CONFIRMATION') {
         subject = `🎉 Order Confirmed – Happy Hopz (${orderId})`;
+        order._inlineAttachments = [];
         bodyHtml = getOrderConfirmationHtml(order, customerName);
     } else {
         subject = getStatusSubject(order.status, orderId);
+        order._inlineAttachments = [];
         bodyHtml = getStatusUpdateHtml(order, customerName);
     }
+
+    const allAttachments = attachments ? [
+        {
+            filename: attachments.filename,
+            content: attachments.content,
+            type: 'application/pdf',
+            disposition: 'attachment'
+        }
+    ] : [];
 
     const mailOptions: any = {
         from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
@@ -51,14 +62,7 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
             'Importance': 'high',
             'Priority': 'urgent'
         },
-        attachments: attachment ? [
-            {
-                filename: attachment.filename,
-                content: attachment.content,
-                type: 'application/pdf',
-                disposition: 'attachment'
-            }
-        ] : []
+        attachments: [...allAttachments, ...(order._inlineAttachments || [])]
     };
 
     if (process.env.SENDGRID_API_KEY) {
@@ -245,8 +249,10 @@ const getCommonStyles = () => `
     </style>
 `;
 
-const getOrderItemsHtml = (items: any[]) => items.map(item => {
+const getOrderItemsHtml = (items: any[], attachments: any[] = []) => items.map((item, index) => {
     let imageUrl = '';
+    const cid = `product_image_${index}`;
+
     try {
         if (item.product && item.product.images) {
             const imgs = typeof item.product.images === 'string'
@@ -254,8 +260,23 @@ const getOrderItemsHtml = (items: any[]) => items.map(item => {
                 : item.product.images;
             imageUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
 
-            // Resolve relative URLs (Avoid prepending to absolute URLs or data URIs)
-            if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+            // Handle Base64 images with CID for reliable email rendering
+            if (imageUrl && imageUrl.startsWith('data:image')) {
+                const parts = imageUrl.split(';base64,');
+                const contentType = parts[0].split(':')[1];
+                const base64Data = parts[1];
+
+                attachments.push({
+                    cid: cid,
+                    content: base64Data,
+                    encoding: 'base64',
+                    filename: `item-${index}.jpg`,
+                    type: contentType,
+                    disposition: 'inline'
+                });
+                imageUrl = `cid:${cid}`;
+            } else if (imageUrl && !imageUrl.startsWith('http')) {
+                // Resolve relative URLs (Avoid prepending to absolute URLs)
                 const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
                 imageUrl = `${SITE_URL}${cleanPath}`;
             }
@@ -263,6 +284,8 @@ const getOrderItemsHtml = (items: any[]) => items.map(item => {
     } catch (e) {
         console.error('Error parsing item images for email:', e);
     }
+
+    const itemName = item.name || item.product?.name || 'Product';
 
     return `
     <tr>
@@ -272,12 +295,12 @@ const getOrderItemsHtml = (items: any[]) => items.map(item => {
                     ${imageUrl ? `
                     <td style="width: 60px; padding-right: 15px; vertical-align: middle;">
                         <div style="width: 60px; height: 75px; overflow: hidden; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
-                            <img src="${imageUrl}" width="60" border="0" style="display: block; width: 60px; object-fit: cover;" alt="${item.name}">
+                            <img src="${imageUrl}" width="60" border="0" style="display: block; width: 60px; object-fit: cover;" alt="${itemName}">
                         </div>
                     </td>
                     ` : ''}
                     <td style="vertical-align: middle;">
-                        <p style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; color: #1e293b; text-transform: uppercase;">${item.name || item.product?.name}</p>
+                        <p style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; color: #1e293b; text-transform: uppercase;">${itemName}</p>
                         <p style="margin: 4px 0 0 0; font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">SIZE ${item.size} • ${String(item.color).toUpperCase()}</p>
                     </td>
                 </tr>

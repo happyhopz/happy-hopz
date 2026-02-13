@@ -146,7 +146,11 @@ const Orders = () => {
                                                 {firstImage ? (
                                                     <img
                                                         src={firstImage}
-                                                        alt={order.orderId}
+                                                        alt={firstItem?.product?.name || "Product"}
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = '';
+                                                            (e.target as HTMLImageElement).nextSibling?.parentElement?.classList.add('flex-items-center', 'justify-center');
+                                                        }}
                                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                     />
                                                 ) : (

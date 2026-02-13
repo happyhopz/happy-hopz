@@ -427,7 +427,12 @@ const OrderDetail = () => {
                                                     // console.error('Image parse error', e);
                                                 }
                                                 return imageUrl ? (
-                                                    <img src={imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                                                    <img
+                                                        src={imageUrl}
+                                                        alt={item.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                                                    />
                                                 ) : <div className="w-full h-full bg-slate-50 flex items-center justify-center"><Package className="w-6 h-6 text-slate-200" /></div>;
                                             })()}
                                         </div>
