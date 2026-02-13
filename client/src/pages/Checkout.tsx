@@ -14,6 +14,14 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { INDIAN_STATES } from '@/lib/constants';
+import {
     CreditCard,
     Smartphone,
     Banknote,
@@ -776,7 +784,24 @@ const Checkout = () => {
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Name *</Label><Input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} className="bg-white border-pink-100" /></div>
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Mobile *</Label><Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} className="bg-white border-pink-100" /></div>
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Pincode *</Label><Input value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value })} maxLength={6} className="bg-white border-pink-100" /></div>
-                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">State *</Label><Input value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} className="bg-white border-pink-100" /></div>
+                                                <div className="space-y-1.5 font-bold">
+                                                    <Label className="text-xs font-bold text-gray-600 uppercase">State *</Label>
+                                                    <Select
+                                                        value={address.state}
+                                                        onValueChange={(value) => setAddress({ ...address, state: value })}
+                                                    >
+                                                        <SelectTrigger className="bg-white border-pink-100 h-10">
+                                                            <SelectValue placeholder="Select State" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="max-h-[300px]">
+                                                            {INDIAN_STATES.map((state) => (
+                                                                <SelectItem key={state} value={state}>
+                                                                    {state}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
                                                 <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Address *</Label><Input value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} className="bg-white border-pink-100" /></div>
                                                 <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">City *</Label><Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} className="bg-white border-pink-100" /></div>
                                             </div>
