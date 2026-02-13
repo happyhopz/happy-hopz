@@ -17,7 +17,7 @@ const Orders = () => {
     const { data: orders, isLoading } = useQuery({
         queryKey: ['orders'],
         queryFn: async () => {
-            const response = await ordersAPI.getAll();
+            const response = await ordersAPI.getMyOrders();
             return Array.isArray(response.data) ? response.data : [];
         },
         enabled: !!user
