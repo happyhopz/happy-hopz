@@ -43,10 +43,10 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
         bodyHtml = getStatusUpdateHtml(order, customerName);
     }
 
-    const allAttachments = attachments ? [
+    const allAttachments = attachment ? [
         {
-            filename: attachments.filename,
-            content: attachments.content,
+            filename: attachment.filename,
+            content: attachment.content,
             type: 'application/pdf',
             disposition: 'attachment'
         }
