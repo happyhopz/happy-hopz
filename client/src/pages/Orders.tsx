@@ -25,7 +25,7 @@ const Orders = () => {
 
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
-            CONFIRMED: 'bg-pink-500',
+            CONFIRMED: 'bg-blue-600',
             SHIPPED: 'bg-purple-600',
             OUT_FOR_DELIVERY: 'bg-orange-500',
             DELIVERED: 'bg-green-600',
@@ -104,7 +104,7 @@ const Orders = () => {
                                                 <h3 className="text-2xl font-black text-slate-900 tracking-tight">
                                                     Order #{String(order.orderId || order.id || '').slice(-8)}
                                                 </h3>
-                                                <Badge className={`${getStatusColor(order.status)} text-white px-3 py-1 uppercase font-black text-[9px] tracking-widest rounded-full shadow-lg shadow-pink-100`}>
+                                                <Badge variant="default" className={`${getStatusColor(order.status)} text-white px-3 py-1 uppercase font-black text-[9px] tracking-widest rounded-full shadow-lg ${order.status === 'CONFIRMED' ? 'shadow-blue-100' : 'shadow-pink-100'} border-none`}>
                                                     {getStatusLabel(order.status)}
                                                 </Badge>
                                                 {order.paymentStatus === 'PENDING' && (

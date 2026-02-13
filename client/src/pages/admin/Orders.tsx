@@ -74,7 +74,7 @@ const AdminOrders = () => {
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
             PENDING: 'bg-gray-400 font-bold',
-            CONFIRMED: 'bg-blue-500 font-bold',
+            CONFIRMED: 'bg-blue-600 font-bold',
             PROCESSING: 'bg-purple-500 font-bold',
             SHIPPED: 'bg-indigo-600 font-bold',
             OUT_FOR_DELIVERY: 'bg-orange-500 font-bold',

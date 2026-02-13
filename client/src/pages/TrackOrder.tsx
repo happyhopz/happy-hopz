@@ -70,7 +70,7 @@ const TrackOrder = () => {
 
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
-            CONFIRMED: 'bg-pink-500',
+            CONFIRMED: 'bg-blue-600',
             SHIPPED: 'bg-purple-600',
             OUT_FOR_DELIVERY: 'bg-orange-500',
             DELIVERED: 'bg-green-600',
@@ -165,7 +165,7 @@ const TrackOrder = () => {
                                 <div className="flex flex-col items-end gap-3">
                                     <div className="text-right">
                                         <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-1">Current Status</p>
-                                        <Badge className={`${getStatusColor(order.status)} text-white px-8 py-3 text-sm uppercase font-black tracking-widest rounded-2xl shadow-xl shadow-slate-200 h-auto ring-8 ring-slate-50 border-2 border-white`}>
+                                        <Badge className={`${getStatusColor(order.status)} text-white px-8 py-3 text-sm uppercase font-black tracking-widest rounded-2xl shadow-xl ${order.status === 'CONFIRMED' ? 'shadow-blue-200' : 'shadow-slate-200'} h-auto ring-8 ring-slate-50 border-2 border-white`}>
                                             {order.status}
                                         </Badge>
                                     </div>

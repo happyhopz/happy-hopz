@@ -85,7 +85,7 @@ const OrderDetail = () => {
 
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
-            CONFIRMED: 'bg-pink-500',
+            CONFIRMED: 'bg-blue-600',
             SHIPPED: 'bg-purple-600',
             OUT_FOR_DELIVERY: 'bg-orange-500',
             DELIVERED: 'bg-green-600',
@@ -180,7 +180,7 @@ const OrderDetail = () => {
                                     Placed {order.createdAt ? format(new Date(order.createdAt), 'MMMM dd, yyyy') : 'N/A'}
                                 </p>
                                 <div className="w-1 h-1 bg-slate-200 rounded-full" />
-                                <Badge className={`${getStatusColor(order.status)} text-white px-4 py-1.5 uppercase tracking-widest font-black text-[9px] rounded-full shadow-lg shadow-pink-100 ring-4 ring-white`}>
+                                <Badge variant="default" className={`${getStatusColor(order.status)} text-white px-4 py-1.5 uppercase tracking-widest font-black text-[9px] rounded-full shadow-lg shadow-blue-100 ring-4 ring-white border-none`}>
                                     {getStatusLabel(order.status)}
                                 </Badge>
                             </div>
