@@ -403,41 +403,23 @@ const ProductCard = ({
                     </div>
                 </div>
 
-                {/* Floating Badge (Refined to Single Display) */}
+                {/* Floating Badge (Refined to New Arrival/Best Seller Only) */}
                 <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[45]">
                     {(() => {
-                        // Priority 1: Check for explicit Tags (Show only the first one)
-                        if (product.tags && product.tags.length > 0) {
-                            const tag = product.tags[0];
+                        const allowedTags = ['new arrival', 'best seller'];
+                        const tag = product.tags?.find((t: string) =>
+                            allowedTags.some(allowed => t.toLowerCase().includes(allowed))
+                        );
+
+                        if (tag) {
                             const lowT = tag.toLowerCase();
-                            const isCyanTag = lowT.includes('sale') || lowT.includes('new');
-
-                            const getTagColor = (t: string) => {
-                                if (isCyanTag) return 'bg-[#06b6d4]';
-                                if (lowT.includes('best')) return 'bg-orange-500';
-                                if (lowT.includes('trending')) return 'bg-purple-500';
-                                if (lowT.includes('hampers')) return 'bg-pink-500';
-                                if (lowT.includes('favourite')) return 'bg-indigo-500';
-                                return 'bg-cyan-500';
-                            };
+                            const isNewArrival = lowT.includes('new');
 
                             return (
                                 <span
-                                    style={isCyanTag ? { backgroundColor: '#06b6d4' } : {}}
-                                    className={`px-2 py-0.5 md:px-3 md:py-1 ${getTagColor(tag)} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none animate-fade-in`}
+                                    className={`px-2 py-0.5 md:px-3 md:py-1 ${isNewArrival ? 'bg-[#06b6d4]' : 'bg-orange-500'} text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none animate-fade-in`}
                                 >
-                                    {lowT.includes('sale') ? 'Sale' : tag}
-                                </span>
-                            );
-                        }
-                        // Priority 2: Fallback to "Sale" if discounted
-                        if (product.discountPrice) {
-                            return (
-                                <span
-                                    style={{ backgroundColor: '#06b6d4' }}
-                                    className="px-2 py-0.5 md:px-3 md:py-1 text-white text-[10px] md:text-xs font-nunito font-bold rounded-full shadow-sm pointer-events-none animate-fade-in"
-                                >
-                                    Sale
+                                    {tag}
                                 </span>
                             );
                         }
