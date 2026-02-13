@@ -478,6 +478,7 @@ const Checkout = () => {
 
             if (paymentMethod === 'COD') {
                 if (isGuest) localStorage.removeItem('cart');
+                localStorage.removeItem('appliedCoupon');
                 // Success navigation handled by mutation onSuccess
             } else {
                 // Step 2: Online Payment Flow (Razorpay)
@@ -524,6 +525,7 @@ const Checkout = () => {
                             });
 
                             if (isGuest) localStorage.removeItem('cart');
+                            localStorage.removeItem('appliedCoupon');
                             toast.success('Payment successful! Order confirmed. 🎊');
                             navigate(`/orders/${orderRes.id}`);
                         } catch (err) {

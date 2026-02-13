@@ -153,6 +153,13 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                 }
             });
 
+            // Clear User Cart (Atomic)
+            if (req.user) {
+                await tx.cartItem.deleteMany({
+                    where: { userId: req.user.id }
+                });
+            }
+
             // Update product stock (Per-size inventory)
             for (const item of data.items) {
                 const product = await tx.product.findUnique({ where: { id: item.productId } });
