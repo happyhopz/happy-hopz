@@ -132,6 +132,45 @@ const registerRoutes = (prefix: string) => {
 registerRoutes('/api');
 registerRoutes(''); // Fallback for direct calls
 
+// 404 handler with detailed logging
+app.use((req: Request, res: Response, next: NextFunction) => {
+    // Skip for diagnostic route
+    if (req.url === '/api/debug-routes' || req.url === '/api/debug-env') return next();
+    next();
+});
+
+// Diagnostic endpoint to see all registered routes (Admin or Development only)
+app.get('/api/debug-routes', (req: Request, res: Response) => {
+    const routes: any[] = [];
+
+    // Help identify the router and prefixes
+    const printRoutes = (prefix: string, stack: any[]) => {
+        stack.forEach((layer: any) => {
+            if (layer.route) {
+                const methods = Object.keys(layer.route.methods).join(',').toUpperCase();
+                routes.push(`[${methods}] ${prefix}${layer.route.path}`);
+            } else if (layer.name === 'router') {
+                const newPrefix = prefix + layer.regexp.source
+                    .replace('\\/?(?=\\/|$)', '')
+                    .replace('^\\/', '')
+                    .replace(/\\\//g, '/')
+                    .replace('\\', '');
+                printRoutes(newPrefix, layer.handle.stack);
+            }
+        });
+    };
+
+    printRoutes('', app._router.stack);
+
+    res.json({
+        message: 'Happy Hopz API Route Diagnostic',
+        env: process.env.NODE_ENV,
+        port: PORT,
+        count: routes.length,
+        routes: routes.sort()
+    });
+});
+
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(`🔴 SERVER ERROR [${req.method}] ${req.url}:`, err.stack);

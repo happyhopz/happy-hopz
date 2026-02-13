@@ -19,7 +19,8 @@ router.get('/health', (req, res) => res.json({ status: 'ok', message: 'Orders ro
 
 // ❌ Cancel Order (User or Admin)
 // Supported as BOTH PATCH and PUT for maximum compatibility
-router.all('/:id/cancel', authenticate, async (req: AuthRequest, res: Response) => {
+// Redundant patterns for routing robustness
+router.all(['/:id/cancel', '/cancel/:id'], authenticate, async (req: AuthRequest, res: Response) => {
     if (req.method !== 'PATCH' && req.method !== 'PUT') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -129,6 +130,16 @@ router.all('/:id/cancel', authenticate, async (req: AuthRequest, res: Response) 
         console.error(`🔴 [Cancel Order Error] ${error.message}`);
         res.status(400).json({ error: error.message || 'Failed to cancel order' });
     }
+});
+
+// 🔄 Return Order Request (Stub to fix 404)
+// Frontend hits /api/orders/:id/return, but logic is in returns.ts
+router.all('/:id/return', authenticate, async (req: AuthRequest, res: Response) => {
+    res.status(400).json({
+        error: 'Please use the Returns page to create a request',
+        info: 'The API has moved to /api/returns/create',
+        path: '/api/returns/create'
+    });
 });
 
 // Get all orders (Admin only)
