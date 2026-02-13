@@ -80,3 +80,5 @@ export const INDIAN_STATES = [
     'Lakshadweep',
     'Puducherry'
 ];
+
+export const ALL_EU_SIZES = Array.from({ length: 21 }, (_, i) => (i + 13).toString());

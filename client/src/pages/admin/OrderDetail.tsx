@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Navigate } from 'react-router-dom';
 import { productsAPI, cartAPI, adminAPI, contentAPI, settingsAPI, API_URL } from '@/lib/api';

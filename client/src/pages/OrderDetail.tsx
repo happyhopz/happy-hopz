@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersAPI } from '@/lib/api';
@@ -586,8 +586,7 @@ const OrderDetail = () => {
                                     <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-200" />
                                     {order.statusHistory.slice().reverse().map((history: any, idx: number) => (
                                         <div key={idx} className="flex gap-4 relative z-10">
-                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0 mt-1 ${idx === 0 ? 'bg-blue-600 animate-pulse' : 'bg-slate-400'
-                                                }`}>
+                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0 mt-1 ${idx === 0 ? 'bg-blue-600 animate-pulse' : 'bg-slate-400'}`}>
                                                 <div className="w-1 h-1 rounded-full bg-white" />
                                             </div>
                                             <div>
