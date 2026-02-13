@@ -208,6 +208,19 @@ const OrderDetail = () => {
                     </div>
                 </div>
 
+                {/* Pro-tip: Spam Folder Notification */}
+                <div className="mb-10 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-[32px] flex items-center gap-5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-1000">
+                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-blue-50 flex-shrink-0">
+                        <span className="text-2xl">💡</span>
+                    </div>
+                    <div>
+                        <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Important Info</h4>
+                        <p className="text-slate-700 font-bold leading-tight text-sm">
+                            Can't see our email updates? Check your <span className="text-indigo-600 underline underline-offset-4 decoration-2 decoration-indigo-200">Spam folder</span> to make sure you don't miss any magic!
+                        </p>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
                     {/* Main Tracker & Items */}
                     <div className="lg:col-span-2 space-y-8">
