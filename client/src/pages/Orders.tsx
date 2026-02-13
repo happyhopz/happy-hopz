@@ -112,7 +112,27 @@ const Orders = () => {
                         {orders.map((order: any) => {
                             const styles = getStatusStyles(order.status);
                             const firstItem = order.items?.[0];
-                            const firstImage = firstItem?.product?.images?.[0] || firstItem?.product?.images; // Handle string or array
+
+                            // Parse images safely
+                            let images: string[] = [];
+                            try {
+                                if (firstItem?.product?.images) {
+                                    images = typeof firstItem.product.images === 'string'
+                                        ? JSON.parse(firstItem.product.images)
+                                        : firstItem.product.images;
+                                }
+                            } catch (e) {
+                                console.error('Failed to parse images', e);
+                            }
+                            const firstImage = Array.isArray(images) ? images[0] : null;
+
+                            // Calculate Total Savings
+                            const itemsSavings = order.items?.reduce((acc: number, item: any) => {
+                                const mrp = item.product?.price || item.price;
+                                const paid = item.price;
+                                return acc + (mrp - paid) * item.quantity;
+                            }, 0) || 0;
+                            const totalSavings = itemsSavings + (order.couponDiscount || 0);
 
                             return (
                                 <Link key={order.id} to={`/orders/${order.id}`}>
@@ -178,8 +198,9 @@ const Orders = () => {
                                                     </div>
                                                     <div className="hidden md:block">
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Savings</p>
-                                                        <div className="text-green-600 font-bold">
-                                                            Enjoyed Happy Prices!
+                                                        <div className="text-green-600 font-bold flex items-center gap-1">
+                                                            <IndianRupee className="w-3 h-3" />
+                                                            {totalSavings > 0 ? totalSavings.toFixed(2) : 'Enjoyed Happy Prices!'}
                                                         </div>
                                                     </div>
                                                 </div>
