@@ -329,8 +329,13 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
     }
 });
 
-// Update order status (Admin only)
-router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+// ⚙️ Update order status (Admin only)
+// Supported as BOTH PATCH and PUT, and both /:id/status and /update-status/:orderId
+router.all(['/:id/status', '/update-status/:id'], authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+    if (req.method !== 'PATCH' && req.method !== 'PUT') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     try {
         const { status, trackingNumber, courierPartner, estimatedDelivery } = z.object({
             status: z.enum(['CONFIRMED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED']),
@@ -339,7 +344,8 @@ router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: 
             estimatedDelivery: z.string().datetime().optional()
         }).parse(req.body);
 
-        const orderIdParam = req.params.orderId;
+        const orderIdParam = req.params.id;
+        console.log(`📡 [${req.method}] /orders/${orderIdParam}/status - Update to ${status} by Admin ${req.user?.id}`);
 
         const result = await prisma.$transaction(async (tx) => {
             const order = await (tx.order as any).findFirst({
@@ -402,6 +408,7 @@ router.patch('/update-status/:orderId', authenticate, requireAdmin, async (req: 
 
         res.json(result);
     } catch (error: any) {
+        console.error(`🔴 [Status Update Error] ${error.message}`);
         res.status(500).json({ error: error.message || 'Failed to update order status' });
     }
 });
