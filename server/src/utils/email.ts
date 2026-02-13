@@ -508,15 +508,79 @@ export const sendAdminOrderNotification = async (order: any) => {
     const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
 
-    const mailOptions = {
+    const customerName = order.user?.name || order.address?.name || 'Customer';
+    const orderId = order.orderId || order.id;
+    order._inlineAttachments = [];
+
+    const bodyHtml = `
+        ${getCommonStyles()}
+        <div style="font-family: 'Outfit', sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; color: #1e293b;">
+            <div style="border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); background: #ffffff;">
+                <div style="text-align: center; padding: 40px 20px; background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                    <h2 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; font-family: 'Outfit', sans-serif;">New Order Received! 🛍️</h2>
+                    <div style="display: inline-block; background: #e2e8f0; color: #475569; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-top: 10px; text-transform: uppercase;">${orderId}</div>
+                </div>
+                
+                <div style="padding: 40px 30px;">
+                    <p style="margin-top: 0; font-size: 16px; line-height: 1.6; font-family: 'Outfit', sans-serif;">Hello Admin,</p>
+                    <p style="color: #475569; line-height: 1.6; font-family: 'Outfit', sans-serif;">A new order has been placed by <strong style="color: #0f172a;">${customerName}</strong> (${order.user?.email || order.guestEmail || 'Guest'}).</p>
+                    
+                    <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 30px 0 15px 0; text-transform: uppercase; letter-spacing: 2px; font-family: 'Outfit', sans-serif;">📦 Order Details</div>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; margin: 15px 0; table-layout: fixed;">
+                        <thead>
+                            <tr>
+                                <th style="background: #f8fafc; text-align: left; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif;">Item Details</th>
+                                <th style="background: #f8fafc; text-align: center; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-family: 'Outfit', sans-serif; width: 50px;">Qty</th>
+                                <th style="background: #f8fafc; text-align: right; padding: 12px 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; font-family: 'Outfit', sans-serif; width: 80px;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${getOrderItemsHtml(order.items || [], order._inlineAttachments)}
+                        </tbody>
+                    </table>
+
+                    <div style="border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; background: #ffffff; margin-top: 20px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; font-family: 'Outfit', sans-serif;">
+                            <tr>
+                                <td style="padding: 6px 0; font-size: 14px; color: #475569;">Subtotal</td>
+                                <td style="text-align: right; padding: 6px 0; font-size: 14px; color: #475569;">₹${(order.subtotal || 0).toFixed(0)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; font-size: 14px; color: #475569;">Tax/GST</td>
+                                <td style="text-align: right; padding: 6px 0; font-size: 14px; color: #475569;">₹${(order.tax || 0).toFixed(0)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; font-size: 14px; color: #475569;">Shipping</td>
+                                <td style="text-align: right; padding: 6px 0; font-size: 14px; color: #475569;">₹${(order.shipping || 0).toFixed(0)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding-top: 15px; font-weight: 800; color: #0f172a; border-top: 1px solid #f1f5f9;">Grand Total</td>
+                                <td style="text-align: right; padding-top: 15px; font-weight: 800; color: #e11d48; font-size: 24px; border-top: 1px solid #f1f5f9;">₹${(order.total || 0).toFixed(0)}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    ${getAddressHtml(order.address)}
+
+                    <div style="text-align: center; margin-top: 40px;">
+                        <a href="${SITE_URL}/admin/orders/${order.id}" style="display: inline-block; background: #0f172a; color: #ffffff !important; padding: 18px 35px; text-decoration: none; border-radius: 40px; font-weight: 800; text-align: center; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; font-family: 'Outfit', sans-serif;">View in Dashboard</a>
+                    </div>
+                </div>
+            </div>
+            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-family: 'Outfit', sans-serif;">HAPPY HOPZ ADMIN NOTIFICATION</p>
+        </div>
+    `;
+
+    const mailOptions: any = {
         from: `"Happy Hopz Admin" <${VERIFIED_SENDER}>`,
         to: adminEmail,
-        subject: `🛍️ NEW ORDER: ${order.orderId || order.id} - ₹${order.total}`,
+        subject: `🛍️ NEW ORDER: ${orderId} - ₹${order.total} from ${customerName}`,
+        html: bodyHtml,
         headers: {
             'X-Priority': '1 (Highest)',
             'Importance': 'high'
         },
-        html: `<h2>New Order Alert!</h2><p>Order #${order.orderId || order.id} received from ${order.address?.name || 'Guest'}.</p><a href="https://happy-hopz.vercel.app/admin/orders/${order.id}">Admin View</a>`
+        attachments: order._inlineAttachments || []
     };
 
     if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
