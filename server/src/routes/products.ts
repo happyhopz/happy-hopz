@@ -61,7 +61,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id/image/:index', async (req: Request, res: Response) => {
     try {
         const { id, index } = req.params;
-        const imageIndex = parseInt(index, 10);
+        const imageIndex = parseInt(index as string, 10);
 
         const product = await prisma.product.findUnique({
             where: { id: id as string },
