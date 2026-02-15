@@ -57,6 +57,61 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
+// Serve product image as HTTP resource (for SEO / Google crawling)
+router.get('/:id/image/:index', async (req: Request, res: Response) => {
+    try {
+        const { id, index } = req.params;
+        const imageIndex = parseInt(index, 10);
+
+        const product = await prisma.product.findUnique({
+            where: { id: id as string },
+            select: { images: true }
+        });
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        const images: string[] = JSON.parse(product.images);
+
+        if (isNaN(imageIndex) || imageIndex < 0 || imageIndex >= images.length) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        const imageData = images[imageIndex];
+
+        // Handle base64 data URLs (data:image/jpeg;base64,...)
+        if (imageData.startsWith('data:image')) {
+            const matches = imageData.match(/^data:image\/(\w+);base64,(.+)$/);
+            if (!matches) {
+                return res.status(400).json({ error: 'Invalid image format' });
+            }
+
+            const mimeType = matches[1] === 'jpg' ? 'jpeg' : matches[1];
+            const base64Data = matches[2];
+            const buffer = Buffer.from(base64Data, 'base64');
+
+            res.set({
+                'Content-Type': `image/${mimeType}`,
+                'Content-Length': buffer.length.toString(),
+                'Cache-Control': 'public, max-age=2592000', // 30 days
+                'Vary': 'Accept'
+            });
+            return res.send(buffer);
+        }
+
+        // Handle regular URLs - redirect
+        if (imageData.startsWith('http')) {
+            return res.redirect(imageData);
+        }
+
+        return res.status(400).json({ error: 'Unsupported image format' });
+    } catch (error) {
+        console.error('Error serving product image:', error);
+        res.status(500).json({ error: 'Failed to serve image' });
+    }
+});
+
 // Get single product
 router.get('/:id', async (req: Request, res: Response) => {
     try {

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { format } from 'date-fns';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { productsAPI, cartAPI } from '@/lib/api';
+import { productsAPI, cartAPI, API_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -277,14 +277,18 @@ const ProductDetail = () => {
                 <meta name="description" content={product.description?.substring(0, 160) || `Buy ${product.name} at Happy Hopz. Premium quality kids footwear for every occasion.`} />
                 <meta property="og:title" content={`${product.name} | Happy Hopz`} />
                 <meta property="og:description" content={product.description?.substring(0, 160)} />
-                <meta property="og:image" content={product.images?.[0]} />
+                <meta property="og:image" content={`${API_URL}/products/${product.id}/image/0`} />
                 <meta property="og:type" content="product" />
+                <meta property="og:url" content={`https://www.happyhopz.com/product/${product.id}`} />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:image" content={`${API_URL}/products/${product.id}/image/0`} />
+                <link rel="canonical" href={`https://www.happyhopz.com/product/${product.id}`} />
                 <script type="application/ld+json">
                     {JSON.stringify({
                         "@context": "https://schema.org/",
                         "@type": "Product",
                         "name": product.name,
-                        "image": product.images,
+                        "image": product.images?.map((_: string, i: number) => `${API_URL}/products/${product.id}/image/${i}`) || [],
                         "description": product.description,
                         "brand": {
                             "@type": "Brand",
@@ -292,17 +296,21 @@ const ProductDetail = () => {
                         },
                         "offers": {
                             "@type": "Offer",
-                            "url": window.location.href,
+                            "url": `https://www.happyhopz.com/product/${product.id}`,
                             "priceCurrency": "INR",
                             "price": product.discountPrice || product.price,
                             "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                            "itemCondition": "https://schema.org/NewCondition"
+                            "itemCondition": "https://schema.org/NewCondition",
+                            "seller": {
+                                "@type": "Organization",
+                                "name": "Happy Hopz"
+                            }
                         },
-                        "aggregateRating": {
+                        "aggregateRating": product.ratingCount > 0 ? {
                             "@type": "AggregateRating",
                             "ratingValue": product.avgRating?.toString() || "4.5",
-                            "reviewCount": product.ratingCount?.toString() || "0"
-                        }
+                            "reviewCount": product.ratingCount?.toString() || "1"
+                        } : undefined
                     })}
                 </script>
             </Helmet>
