@@ -22,8 +22,8 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMATION' | 'STATUS_UPDATE', attachment?: { content: Buffer, filename: string }) => {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log(`📠 ORDER EMAIL LOGGED FOR ${email} (Order #${order.orderId || order.id})`);
+    if (!process.env.SENDGRID_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
+        console.log(`📠 ORDER EMAIL LOGGED FOR ${email} (Order #${order.orderId || order.id}) - No email provider configured`);
         return;
     }
 
@@ -506,7 +506,7 @@ const getStatusUpdateHtml = (order: any, name: string) => {
 
 export const sendAdminOrderNotification = async (order: any) => {
     const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+    if (!process.env.SENDGRID_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) return;
 
     const customerName = order.user?.name || order.address?.name || 'Customer';
     const orderId = order.orderId || order.id;
@@ -589,7 +589,7 @@ export const sendAdminOrderNotification = async (order: any) => {
 
 export const sendAdminAlertEmail = async (title: string, message: string) => {
     const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+    if (!process.env.SENDGRID_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) return;
 
     const mailOptions = {
         from: `"Happy Hopz Alerts" <${VERIFIED_SENDER}>`,
