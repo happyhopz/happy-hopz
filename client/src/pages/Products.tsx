@@ -390,8 +390,8 @@ const ProductCard = ({
                             Add to Bag
                         </Button>
                         <Button
-                            variant="default"
-                            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs md:text-sm shadow-soft hover:shadow-card py-1.5 md:py-2 h-8 md:h-10 transition-all duration-300 hover:scale-105 rounded-full border-none"
+                            variant="outline"
+                            className="w-full bg-white border-2 border-orange-500 text-black font-bold text-xs md:text-sm shadow-soft hover:shadow-card py-1.5 md:py-2 h-8 md:h-10 transition-all duration-300 hover:scale-105 rounded-full hover:bg-white"
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
