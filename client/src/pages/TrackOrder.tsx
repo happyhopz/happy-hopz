@@ -274,13 +274,22 @@ const TrackOrder = () => {
                                     <div className="space-y-4">
                                         {order.items?.map((item: any) => (
                                             <div key={item.id} className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-transform hover:scale-[1.01]">
-                                                {item.product?.image && (
-                                                    <img src={item.product.image} className="w-20 h-20 rounded-xl object-cover bg-slate-50" alt={item.name} />
-                                                ) || (
+                                                {(() => {
+                                                    let imageUrl = '';
+                                                    try {
+                                                        const images = typeof item.product?.images === 'string'
+                                                            ? JSON.parse(item.product.images)
+                                                            : item.product?.images;
+                                                        imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : '';
+                                                    } catch (e) { /* ignore parse errors */ }
+                                                    return imageUrl ? (
+                                                        <img src={imageUrl} className="w-20 h-20 rounded-xl object-cover bg-slate-50" alt={item.name} />
+                                                    ) : (
                                                         <div className="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center">
                                                             <Package className="w-8 h-8 text-slate-300" />
                                                         </div>
-                                                    )}
+                                                    );
+                                                })()}
                                                 <div className="flex-1 space-y-1">
                                                     <p className="font-black text-slate-900 text-base line-clamp-1">{item.name}</p>
                                                     <div className="flex items-center gap-3">
