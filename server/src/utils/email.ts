@@ -726,3 +726,171 @@ export const sendAdminAlertEmail = async (title: string, message: string) => {
         throw error;
     }
 };
+
+export const sendAdminStatusUpdateEmail = async (order: any) => {
+    const adminEmail = process.env.ADMIN_EMAIL || 'happyhopz308@gmail.com';
+    if (!process.env.SENDGRID_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) return;
+
+    const customerName = order.user?.name || order.address?.name || order.guestName || 'Guest';
+    const customerEmail = order.user?.email || order.guestEmail || 'N/A';
+    const customerPhone = order.user?.phone || order.guestPhone || order.address?.phone || 'N/A';
+    const orderId = order.orderId || order.id;
+
+    let statusLabel = order.status;
+    let statusColor = '#3b82f6';
+    let statusIcon = '🔔';
+    let statusBg = '#eff6ff';
+
+    switch (order.status) {
+        case 'CONFIRMED': statusLabel = 'CONFIRMED'; statusColor = '#10b981'; statusIcon = '✅'; statusBg = '#ecfdf5'; break;
+        case 'SHIPPED': statusLabel = 'SHIPPED'; statusColor = '#6366f1'; statusIcon = '🚚'; statusBg = '#eef2ff'; break;
+        case 'OUT_FOR_DELIVERY': statusLabel = 'OUT FOR DELIVERY'; statusColor = '#f59e0b'; statusIcon = '🛵'; statusBg = '#fffbeb'; break;
+        case 'DELIVERED': statusLabel = 'DELIVERED'; statusColor = '#10b981'; statusIcon = '🎉'; statusBg = '#ecfdf5'; break;
+        case 'CANCELLED': statusLabel = 'CANCELLED'; statusColor = '#ef4444'; statusIcon = '❌'; statusBg = '#fef2f2'; break;
+        case 'REFUNDED': statusLabel = 'REFUNDED'; statusColor = '#8b5cf6'; statusIcon = '💰'; statusBg = '#f5f3ff'; break;
+    }
+
+    // Get last status history entry
+    const history = Array.isArray(order.statusHistory) ? order.statusHistory : [];
+    const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+    const updatedBy = lastEntry?.updatedBy || 'System';
+    const updatedAt = lastEntry?.updatedAt ? new Date(lastEntry.updatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : new Date().toLocaleString('en-IN');
+    const reason = lastEntry?.notes || '';
+
+    // Items summary
+    const itemsHtml = (order.items || []).map((item: any) => `
+        <tr>
+            <td style="padding: 10px 15px; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #1e293b; font-size: 13px;">${item.name}</td>
+            <td style="padding: 10px 15px; border-bottom: 1px solid #f1f5f9; text-align: center; color: #64748b; font-size: 13px;">Size ${item.size}</td>
+            <td style="padding: 10px 15px; border-bottom: 1px solid #f1f5f9; text-align: center; color: #64748b; font-size: 13px;">x${item.quantity}</td>
+            <td style="padding: 10px 15px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 800; color: #0f172a; font-size: 13px;">₹${(item.price * item.quantity).toFixed(0)}</td>
+        </tr>
+    `).join('');
+
+    const bodyHtml = `
+        ${getCommonStyles()}
+        <div style="font-family: 'Outfit', sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #f8fafc; color: #1e293b;">
+            <div style="border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); background: #ffffff;">
+                
+                <!-- Admin Header -->
+                <div style="text-align: center; padding: 30px 20px; background: #0f172a; border-bottom: 3px solid ${statusColor};">
+                    <p style="margin: 0 0 5px 0; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 2px;">ADMIN DASHBOARD</p>
+                    <h2 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">${statusIcon} Order Status Changed</h2>
+                    <div style="display: inline-block; background: ${statusColor}; color: #ffffff; font-size: 12px; font-weight: 800; padding: 6px 16px; border-radius: 20px; margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;">${statusLabel}</div>
+                </div>
+                
+                <div style="padding: 30px;">
+                    <!-- Quick Info Grid -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 25px;">
+                        <tr>
+                            <td style="padding: 12px; background: #f8fafc; border-radius: 12px; width: 50%;">
+                                <p style="margin: 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Order ID</p>
+                                <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: 800; color: #0f172a;">${orderId}</p>
+                            </td>
+                            <td style="width: 10px;"></td>
+                            <td style="padding: 12px; background: ${statusBg}; border-radius: 12px; width: 50%;">
+                                <p style="margin: 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Amount</p>
+                                <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: 800; color: ${statusColor};">₹${(order.total || 0).toFixed(0)}</p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Customer Details -->
+                    <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+                        <p style="margin: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">👤 Customer Details</p>
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 4px 0; font-size: 13px; color: #64748b; width: 80px;">Name</td>
+                                <td style="padding: 4px 0; font-size: 13px; font-weight: 700; color: #0f172a;">${customerName}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 0; font-size: 13px; color: #64748b;">Email</td>
+                                <td style="padding: 4px 0; font-size: 13px; font-weight: 700; color: #0f172a;">${customerEmail}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 0; font-size: 13px; color: #64748b;">Phone</td>
+                                <td style="padding: 4px 0; font-size: 13px; font-weight: 700; color: #0f172a;">${customerPhone}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 0; font-size: 13px; color: #64748b;">Payment</td>
+                                <td style="padding: 4px 0; font-size: 13px; font-weight: 700; color: #0f172a;">${order.paymentMethod || 'N/A'} (${order.paymentStatus || 'N/A'})</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    ${reason ? `
+                    <div style="background: #fef2f2; padding: 15px 20px; border-radius: 12px; border-left: 4px solid ${statusColor}; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Reason</p>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; color: #1e293b; font-weight: 600;">${reason}</p>
+                    </div>
+                    ` : ''}
+
+                    <!-- Items -->
+                    <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">📦 Order Items</p>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+                        <thead>
+                            <tr>
+                                <th style="background: #f1f5f9; padding: 10px 15px; text-align: left; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Item</th>
+                                <th style="background: #f1f5f9; padding: 10px 15px; text-align: center; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Size</th>
+                                <th style="background: #f1f5f9; padding: 10px 15px; text-align: center; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Qty</th>
+                                <th style="background: #f1f5f9; padding: 10px 15px; text-align: right; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+
+                    <!-- Delivery Address -->
+                    <div style="background: #f8fafc; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+                        <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">📍 Delivery Address</p>
+                        <p style="margin: 0; font-size: 13px; font-weight: 700; color: #0f172a;">${order.address?.name || 'N/A'}</p>
+                        <p style="margin: 4px 0; font-size: 12px; color: #475569;">${order.address?.line1 || ''}${order.address?.line2 ? ', ' + order.address.line2 : ''}</p>
+                        <p style="margin: 0; font-size: 12px; color: #475569;">${order.address?.city || ''}, ${order.address?.state || ''} - ${order.address?.pincode || ''}</p>
+                    </div>
+
+                    <!-- Activity Log -->
+                    <div style="background: #f8fafc; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px;">
+                        <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">⏰ Status Changed</p>
+                        <p style="margin: 0; font-size: 13px; color: #0f172a;"><strong>Updated by:</strong> ${updatedBy}</p>
+                        <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">${updatedAt}</p>
+                    </div>
+
+                    <!-- CTA -->
+                    <div style="text-align: center;">
+                        <a href="${SITE_URL}/admin/orders/${order.id}" style="display: inline-block; background: #0f172a; color: #ffffff !important; padding: 16px 32px; text-decoration: none; border-radius: 40px; font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">View in Dashboard</a>
+                    </div>
+                </div>
+            </div>
+            <p style="text-align: center; color: #94a3b8; font-size: 10px; margin-top: 25px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">HAPPY HOPZ • ADMIN STATUS NOTIFICATION</p>
+        </div>
+    `;
+
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            console.log(`📧 [SendGrid] Sending admin status update for order ${orderId} (${statusLabel})`);
+            await sgMail.send({
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz Admin' },
+                to: adminEmail,
+                subject: `${statusIcon} ORDER ${statusLabel}: ${orderId} - ₹${(order.total || 0).toFixed(0)} (${customerName})`,
+                html: bodyHtml
+            });
+            console.log(`✅ [SendGrid] Admin status update email sent`);
+            return;
+        }
+
+        console.log(`📧 [Nodemailer] Sending admin status update for order ${orderId}`);
+        await transporter.sendMail({
+            from: `"Happy Hopz Admin" <${VERIFIED_SENDER}>`,
+            to: adminEmail,
+            subject: `${statusIcon} ORDER ${statusLabel}: ${orderId} - ₹${(order.total || 0).toFixed(0)} (${customerName})`,
+            html: bodyHtml,
+            headers: { 'X-Priority': '1 (Highest)', 'Importance': 'high' }
+        });
+        console.log(`✅ [Nodemailer] Admin status update email sent`);
+    } catch (error: any) {
+        console.error(`🔴 [Admin Status Email Error] Failed for order ${orderId}:`, error.message);
+        if (error.response?.body) console.error('SendGrid response:', JSON.stringify(error.response.body));
+        throw error;
+    }
+};

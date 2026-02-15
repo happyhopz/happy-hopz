@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { sendOrderEmail, sendAdminOrderNotification, sendAdminAlertEmail } from '../utils/email';
+import { sendOrderEmail, sendAdminOrderNotification, sendAdminAlertEmail, sendAdminStatusUpdateEmail } from '../utils/email';
 import { sendOrderWhatsApp } from '../utils/whatsapp';
 import { generateOrderPDF } from '../utils/pdfUtils';
 
@@ -102,7 +102,7 @@ export class NotificationService {
         const email = fullOrder.user?.email || fullOrder.guestEmail;
         const phone = fullOrder.user?.phone || fullOrder.guestPhone || fullOrder.address?.phone;
 
-        // 1. Send Email
+        // 1. Send Customer Email
         if (email) {
             try {
                 await sendOrderEmail(email, fullOrder, 'STATUS_UPDATE');
@@ -110,6 +110,14 @@ export class NotificationService {
             } catch (error: any) {
                 await this.logNotification(fullOrder.id, 'email', 'status_updated', 'failed', error.message);
             }
+        }
+
+        // 1b. Send Admin Status Update Email (separate admin-specific format)
+        try {
+            await sendAdminStatusUpdateEmail(fullOrder);
+            console.log(`✅ Admin status update email sent for order ${orderId}`);
+        } catch (error: any) {
+            console.error(`⚠️ Failed to send admin status update email for ${orderId}:`, error.message);
         }
 
         // 2. Send WhatsApp
