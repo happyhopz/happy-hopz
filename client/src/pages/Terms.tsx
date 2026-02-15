@@ -1,51 +1,78 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BackButton from '@/components/BackButton';
+import { Helmet } from 'react-helmet-async';
 
 const Terms = () => {
     return (
         <div className="min-h-screen bg-background">
+            <Helmet>
+                <title>Terms & Conditions | Happy Hopz</title>
+                <meta name="description" content="Happy Hopz Terms of Service - Review our agreements, policies, and legal guidelines." />
+            </Helmet>
             <Navbar />
-            <main className="container mx-auto px-4 py-4">
+            <main className="container mx-auto px-4 py-8 lg:py-12">
                 <BackButton />
-                <h1 className="text-4xl font-fredoka font-bold mb-8">Terms of Service</h1>
-                <div className="prose prose-lg font-nunito text-muted-foreground max-w-none">
-                    <p className="mb-6">Last Updated: February 2026</p>
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-4xl md:text-5xl font-fredoka font-bold mb-8 text-primary">Terms & Conditions</h1>
+                    <div className="prose prose-lg font-nunito text-muted-foreground max-w-none space-y-8">
+                        <p className="text-sm italic">Last Updated: February 15, 2026</p>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">1. Agreement to Terms</h2>
-                        <p>By accessing or using the Happy Hopz website, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.</p>
-                    </section>
+                        <section>
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">1. Acceptance of Terms</h2>
+                            <p>By accessing and using www.happyhopz.com (the "Site"), you agree to comply with and be bound by these Terms and Conditions. If you do not agree to these terms, please refrain from using our Site. These terms apply to all visitors, users, and others who access the Site.</p>
+                        </section>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">2. Use License</h2>
-                        <p>Permission is granted to temporarily download one copy of the materials on Happy Hopz's website for personal, non-commercial transitory viewing only.</p>
-                        <ul className="list-disc pl-6 space-y-2 mt-2">
-                            <li>You may not modify or copy the materials.</li>
-                            <li>You may not use the materials for any commercial purpose.</li>
-                            <li>You may not attempt to decompile or reverse engineer any software contained on the website.</li>
-                        </ul>
-                    </section>
+                        <section>
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">2. Eligibility</h2>
+                            <p>You must be at least 18 years of age to make a purchase on our Site. If you are under 18, you may use the Site only with the involvement of a parent or guardian. By using the Site, you represent and warrant that you have the right, authority, and capacity to enter into this agreement.</p>
+                        </section>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">3. Products & Pricing</h2>
-                        <p>All products are subject to availability. We reserve the right to limit the quantities of any products or services that we offer. All descriptions of products or product pricing are subject to change at any time without notice, at our sole discretion.</p>
-                    </section>
+                        <section>
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">3. Accuracy of Information</h2>
+                            <p>While we strive for absolute accuracy, Happy Hopz does not warrant that product descriptions, pricing, or other content on this Site is 100% accurate, complete, or error-free. In the event of a pricing error, we reserve the right to cancel any orders placed for that product at the incorrect price, even after an order confirmation has been sent.</p>
+                        </section>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">4. Shipping & Delivery</h2>
-                        <p>Standard delivery timelines are between 3-7 business days. While we strive to deliver within the estimated timelines, Happy Hopz shall not be liable for any delays caused by third-party logistics partners or unforeseen circumstances.</p>
-                    </section>
+                        <section>
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">4. Shipping & Delivery</h2>
+                            <ul className="list-disc pl-6 space-y-2">
+                                <li>**Processing Time:** Most orders are processed within 24-48 business hours.</li>
+                                <li>**Delivery Estimates:** Standard delivery typically takes **3-5 business days** across India.</li>
+                                <li>**Liability:** Happy Hopz is not responsible for delays caused by third-party logistics partners, weather conditions, or local restrictions. Our liability for non-delivery is limited to a full refund of the amount paid for the order.</li>
+                            </ul>
+                        </section>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">5. Returns & Refunds</h2>
-                        <p>Please refer to our <a href="/returns" className="text-primary font-bold">Returns Policy</a> for detailed information about our 14-day easy return and exchange process.</p>
-                    </section>
+                        <section>
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">5. Returns, Exchanges & Refunds</h2>
+                            <p>Our commitment to your satisfaction includes a professional return policy:</p>
+                            <ul className="list-disc pl-6 space-y-2">
+                                <li>**Window:** Returns and exchanges must be initiated within **7 days** of delivery.</li>
+                                <li>**Condition:** Items must be unworn, in original packaging, with all tags attached.</li>
+                                <li>**Refunds:** Online payments are refunded to the original payment source. Pay on Delivery (COD) orders are refunded via store credit or bank transfer upon verification.</li>
+                                <li>**Pickup Charge:** A nominal pickup charge of **₹50** is applicable for returns to cover logistics costs.</li>
+                            </ul>
+                        </section>
 
-                    <section className="mb-8">
-                        <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">6. Governing Law</h2>
-                        <p>These terms and conditions are governed by and construed in accordance with the laws of India and you irrevocably submit to the exclusive jurisdiction of the courts in that State or location.</p>
-                    </section>
+                        <section>
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">6. Payment Terms</h2>
+                            <p>We accept payments via Razorpay (Credit/Debit Cards, UPI, Net Banking) and Pay on Delivery (for eligible pin codes). Payment must be received by us before our acceptance of an order. For COD orders, all payments must be made in cash/digital transfer to the delivery agent at the time of delivery.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">7. Intellectual Property</h2>
+                            <p>All content included on this Site, such as text, graphics, logos (including the Happy Hopz panda), images, and software, is the property of Happy Hopz and protected by Indian and international copyright laws. Any unauthorized use or reproduction is strictly prohibited.</p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">8. Limitation of Liability</h2>
+                            <p>Happy Hopz shall not be liable for any indirect, incidental, special, or consequential damages resulting from the use or the inability to use the Site or for the cost of procurement of substitute goods.</p>
+                        </section>
+
+                        <section className="bg-muted p-6 rounded-2xl border border-border">
+                            <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">9. Governing Law</h2>
+                            <p className="text-foreground">These Terms and Conditions and your use of the Site are governed by and construed in accordance with the laws of **India**. Any disputes arising under or in connection with these terms shall be subject to the exclusive jurisdiction of the courts in **[Insert City/State, e.g., Delhi/NCR]**.</p>
+                        </section>
+                    </div>
                 </div>
             </main>
             <Footer />
