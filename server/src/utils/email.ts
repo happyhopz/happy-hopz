@@ -56,10 +56,14 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
                 });
             }
             // Convert inline attachments (CID images) to SendGrid format
+            // SendGrid uses 'content_id' instead of nodemailer's 'cid'
             for (const att of (order._inlineAttachments || [])) {
                 sgAttachments.push({
-                    ...att,
-                    content: typeof att.content === 'string' ? att.content : att.content?.toString?.('base64') || att.content
+                    filename: att.filename,
+                    content: typeof att.content === 'string' ? att.content : att.content?.toString?.('base64') || att.content,
+                    type: att.type || 'image/jpeg',
+                    disposition: att.disposition || 'inline',
+                    content_id: att.cid || att.content_id
                 });
             }
 
@@ -647,8 +651,11 @@ export const sendAdminOrderNotification = async (order: any) => {
         if (process.env.SENDGRID_API_KEY) {
             // Convert inline attachments to base64 for SendGrid
             const sgAttachments = (order._inlineAttachments || []).map((att: any) => ({
-                ...att,
-                content: typeof att.content === 'string' ? att.content : att.content?.toString?.('base64') || att.content
+                filename: att.filename,
+                content: typeof att.content === 'string' ? att.content : att.content?.toString?.('base64') || att.content,
+                type: att.type || 'image/jpeg',
+                disposition: att.disposition || 'inline',
+                content_id: att.cid || att.content_id
             }));
 
             const sgMsg = {
