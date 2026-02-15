@@ -477,58 +477,6 @@ router.delete('/addresses/:id', authenticate, async (req: AuthRequest, res: Resp
     }
 });
 
-// Kids' Profile Endpoints
-router.get('/kids', authenticate, async (req: AuthRequest, res: Response) => {
-    try {
-        const profiles = await prisma.childProfile.findMany({
-            where: { userId: req.user!.id }
-        });
-        res.json(profiles);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch kids profiles' });
-    }
-});
-
-router.post('/kids', authenticate, async (req: AuthRequest, res: Response) => {
-    try {
-        const kidSchema = z.object({
-            name: z.string(),
-            size: z.string(),
-            gender: z.string().optional(),
-            birthday: z.string().optional()
-        });
-
-        const { name, size, gender, birthday } = kidSchema.parse(req.body);
-        const profile = await prisma.childProfile.create({
-            data: {
-                name,
-                size,
-                gender,
-                birthday: birthday ? new Date(birthday) : null,
-                userId: req.user!.id
-            }
-        });
-
-        res.status(201).json(profile);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create kids profile' });
-    }
-});
-
-router.delete('/kids/:id', authenticate, async (req: AuthRequest, res: Response) => {
-    try {
-        await prisma.childProfile.deleteMany({
-            where: {
-                id: req.params.id as string,
-                userId: req.user!.id
-            }
-        });
-        res.json({ message: 'Profile deleted' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to delete profile' });
-    }
-});
-
 // Permanent Account Deletion
 router.delete('/account', authenticate, async (req: AuthRequest, res: Response) => {
     try {

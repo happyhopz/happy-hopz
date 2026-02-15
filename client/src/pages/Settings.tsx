@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { User, Phone, Mail, Shield, Save, Loader2, Lock, Bell, MapPin, Baby, Trash2, Home, MessageSquare, Plus, ChevronRight } from 'lucide-react';
+import { User, Phone, Mail, Shield, Save, Loader2, Lock, Bell, MapPin, Trash2, Home, MessageSquare, Plus, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { addressAPI, kidsAPI, ordersAPI } from '@/lib/api';
+import { addressAPI, ordersAPI } from '@/lib/api';
 import { format } from 'date-fns';
 import {
     AlertDialog,
@@ -25,7 +25,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type SettingsTab = 'home' | 'profile' | 'security' | 'addresses' | 'kids' | 'notifications';
+type SettingsTab = 'home' | 'profile' | 'security' | 'addresses' | 'notifications';
 
 const Settings = () => {
     const { user, setUser, logout, loading: authLoading } = useAuth();
@@ -53,12 +53,6 @@ const Settings = () => {
         name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: ''
     });
 
-    // Kids Profile State
-    const [kids, setKids] = useState<any[]>([]);
-    const [isAddingKid, setIsAddingKid] = useState(false);
-    const [newKid, setNewKid] = useState({
-        name: '', size: '', gender: 'Boy', birthday: ''
-    });
 
     // Orders Summary State
     const [recentOrders, setRecentOrders] = useState<any[]>([]);
@@ -81,13 +75,11 @@ const Settings = () => {
     const fetchSettingsData = async () => {
         setLoadingData(true);
         try {
-            const [addrRes, kidsRes, ordersRes] = await Promise.all([
+            const [addrRes, ordersRes] = await Promise.all([
                 addressAPI.getAll(),
-                kidsAPI.getAll(),
                 ordersAPI.getMyOrders()
             ]);
             setAddresses(addrRes.data);
-            setKids(kidsRes.data);
             setRecentOrders(ordersRes.data.slice(0, 3));
         } catch (error) {
             console.error('Failed to fetch settings data', error);
@@ -174,31 +166,6 @@ const Settings = () => {
         }
     };
 
-    const handleAddKid = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSaving(true);
-        try {
-            await kidsAPI.create(newKid);
-            toast.success('Child profile added!');
-            setIsAddingKid(false);
-            setNewKid({ name: '', size: '', gender: 'Boy', birthday: '' });
-            fetchSettingsData();
-        } catch (error) {
-            toast.error('Failed to add profile');
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const handleDeleteKid = async (id: string) => {
-        try {
-            await kidsAPI.delete(id);
-            toast.success('Profile removed');
-            fetchSettingsData();
-        } catch (error) {
-            toast.error('Failed to remove profile');
-        }
-    };
 
     const handleDeleteAccount = async () => {
         try {
@@ -262,7 +229,6 @@ const Settings = () => {
                                 { id: 'home', label: 'Overview', icon: Home },
                                 { id: 'profile', label: 'Profile', icon: User },
                                 { id: 'addresses', label: 'Address Book', icon: MapPin },
-                                { id: 'kids', label: 'My Sizes / Kids', icon: Baby },
                                 { id: 'security', label: 'Security', icon: Shield },
                                 { id: 'notifications', label: 'Notifications', icon: Bell },
                             ].map((tab) => (
@@ -294,21 +260,12 @@ const Settings = () => {
                             {activeTab === 'home' && (
                                 <div className="space-y-6 animate-fade-up">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Card className="p-6 border-2 border-primary/20 bg-primary/5 rounded-2xl flex items-center justify-between">
+                                        <Card className="p-6 border-2 border-primary/20 bg-primary/5 rounded-2xl flex items-center justify-between col-span-1 md:col-span-2">
                                             <div>
                                                 <p className="text-sm font-bold text-primary flex items-center gap-1"><MapPin className="w-4 h-4" /> Saved Addresses</p>
                                                 <h4 className="text-2xl font-black">{addresses.length}</h4>
                                             </div>
                                             <Button variant="ghost" className="rounded-full h-10 w-10 p-0" onClick={() => setActiveTab('addresses')}>
-                                                <ChevronRight className="w-6 h-6" />
-                                            </Button>
-                                        </Card>
-                                        <Card className="p-6 border-2 border-cyan-200 bg-cyan-50 rounded-2xl flex items-center justify-between">
-                                            <div>
-                                                <p className="text-sm font-bold text-cyan-600 flex items-center gap-1"><Baby className="w-4 h-4" /> Kids Profiles</p>
-                                                <h4 className="text-2xl font-black">{kids.length}</h4>
-                                            </div>
-                                            <Button variant="ghost" className="rounded-full h-10 w-10 p-0" onClick={() => setActiveTab('kids')}>
                                                 <ChevronRight className="w-6 h-6" />
                                             </Button>
                                         </Card>
@@ -470,101 +427,6 @@ const Settings = () => {
                                 </div>
                             )}
 
-                            {activeTab === 'kids' && (
-                                <div className="space-y-6 animate-fade-up">
-                                    <Card className="p-6 bg-cyan-600 text-white rounded-2xl border-none shadow-lg">
-                                        <div className="flex items-center gap-4">
-                                            <div className="bg-white/20 p-4 rounded-full">
-                                                <Baby className="w-8 h-8" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xl font-black">My Sizes / Kids Profiles</h3>
-                                                <p className="text-cyan-50 opacity-90 text-sm">Save your child's age and shoe size for a personalized shopping experience!</p>
-                                            </div>
-                                        </div>
-                                    </Card>
-
-                                    <div className="flex justify-end">
-                                        <Button
-                                            variant="secondary"
-                                            className="rounded-full font-bold border-2 border-cyan-100 bg-cyan-50 text-cyan-700 hover:bg-cyan-100"
-                                            onClick={() => setIsAddingKid(!isAddingKid)}
-                                        >
-                                            {isAddingKid ? 'Cancel' : <><Plus className="w-4 h-4 mr-1" /> Add Profile</>}
-                                        </Button>
-                                    </div>
-
-                                    {isAddingKid && (
-                                        <Card className="p-6 border-2 border-cyan-300 animate-in slide-in-from-top duration-300 rounded-2xl bg-cyan-50/50">
-                                            <form onSubmit={handleAddKid} className="space-y-4">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs font-bold uppercase text-slate-500">Child's Name</Label>
-                                                        <Input placeholder="Enter name" value={newKid.name} onChange={e => setNewKid({ ...newKid, name: e.target.value })} className="rounded-xl" required />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs font-bold uppercase text-slate-500">Shoe Size (EU)</Label>
-                                                        <Input placeholder="e.g., 24" value={newKid.size} onChange={e => setNewKid({ ...newKid, size: e.target.value })} className="rounded-xl" required />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs font-bold uppercase text-slate-500">Gender</Label>
-                                                        <select
-                                                            className="flex h-11 w-full rounded-xl border-2 border-input bg-white px-3 py-2 text-sm focus:outline-none"
-                                                            value={newKid.gender}
-                                                            onChange={e => setNewKid({ ...newKid, gender: e.target.value })}
-                                                        >
-                                                            <option>Boy</option>
-                                                            <option>Girl</option>
-                                                        </select>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs font-bold uppercase text-slate-500">Birthday (Optional)</Label>
-                                                        <Input type="date" value={newKid.birthday} onChange={e => setNewKid({ ...newKid, birthday: e.target.value })} className="rounded-xl" />
-                                                    </div>
-                                                </div>
-                                                <Button type="submit" className="w-full rounded-full font-black mt-2 bg-cyan-600 hover:bg-cyan-700 text-white py-6 h-auto" disabled={isSaving}>
-                                                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Baby className="w-5 h-5 mr-2" />}
-                                                    CREATE PROFILE
-                                                </Button>
-                                            </form>
-                                        </Card>
-                                    )}
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {kids.length === 0 ? (
-                                            <div className="md:col-span-2 p-12 text-center border-2 border-dashed rounded-2xl opacity-60">
-                                                <p className="font-bold text-slate-400">Add profiles for magic size recommendations!</p>
-                                            </div>
-                                        ) : (
-                                            kids.map((kid) => (
-                                                <Card key={kid.id} className="p-6 border-2 border-cyan-100 bg-white rounded-2xl relative group hover:border-cyan-300 transition-all">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute top-2 right-2 text-slate-300 group-hover:text-red-400"
-                                                        onClick={() => handleDeleteKid(kid.id)}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-black ${kid.gender === 'Girl' ? 'bg-pink-100 text-pink-600' : 'bg-blue-100 text-blue-600'
-                                                            }`}>
-                                                            {kid.name.charAt(0)}
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="text-lg font-black text-slate-800">{kid.name}</h4>
-                                                            <div className="flex flex-wrap gap-2 mt-1">
-                                                                <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full font-black text-slate-500 uppercase">SIZE EU {kid.size}</span>
-                                                                <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full font-black text-slate-500 uppercase">{kid.gender}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </Card>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            )}
 
                             {activeTab === 'security' && (
                                 <div className="space-y-6 animate-fade-up">
@@ -636,9 +498,7 @@ const Settings = () => {
                                             <AlertDialogContent className="rounded-3xl border-2 border-red-200">
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle className="text-2xl font-black text-slate-800">Are you absolutely sure?</AlertDialogTitle>
-                                                    <AlertDialogDescription className="text-slate-600 font-bold">
-                                                        This will permanently delete your account, address book, and child profiles. Your order history will be anonymized for our records. This cannot be undone.
-                                                    </AlertDialogDescription>
+                                                    This will permanently delete your account and saved addresses. Your order history will be anonymized for our records. This cannot be undone.
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter className="mt-4">
                                                     <AlertDialogCancel className="rounded-full font-bold">Cancel</AlertDialogCancel>

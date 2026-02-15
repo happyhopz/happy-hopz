@@ -181,12 +181,6 @@ export const contactsAPI = {
     updateStatus: (id: string, status: string) => api.put(`/contacts/${id}`, { status })
 };
 
-export const kidsAPI = {
-    getAll: () => api.get('/auth/kids'),
-    create: (data: { name: string; size: string; gender?: string; birthday?: string }) => api.post('/auth/kids', data),
-    delete: (id: string) => api.delete(`/auth/kids/${id}`)
-};
-
 export const searchAPI = {
     query: (q: string) => api.get('/search', { params: { q } })
 };
