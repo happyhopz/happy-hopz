@@ -297,7 +297,7 @@ const ShoeCard = ({
             </Button>
             <Button
               variant="outline"
-              className="w-full border-2 border-cyan-700 bg-cyan-400 text-black hover:bg-cyan-500 hover:border-cyan-800 font-bold text-xs md:text-sm shadow-sm py-1.5 md:py-2 h-8 md:h-10"
+              className="w-full border-2 border-cyan-500 bg-white text-cyan-700 hover:bg-cyan-600 hover:text-white hover:border-cyan-700 font-bold text-xs md:text-sm shadow-sm py-1.5 md:py-2 h-8 md:h-10 transition-all duration-300 hover:scale-[1.02]"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
