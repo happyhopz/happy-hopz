@@ -62,7 +62,21 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
         }
         setIsGeneratingSEO(true);
         try {
-            const response = await adminAPI.generateSEO(product?.id || 'temp');
+            // Local fallback for new products
+            if (!product?.id) {
+                const seoTitle = `${formData.name} - Premium Kids Footwear | Happy Hopz`;
+                const seoDescription = `Shop the latest ${formData.name} from Happy Hopz. Specialized ${formData.category} for ${formData.ageGroup} with 18% GST benefits and free shipping above ₹999.`;
+
+                setFormData({
+                    ...formData,
+                    seoTitle,
+                    seoDescription
+                });
+                toast.success('Local SEO metadata generated! ✨');
+                return;
+            }
+
+            const response = await adminAPI.generateSEO(product.id);
             setFormData({
                 ...formData,
                 seoTitle: response.data.seoTitle,
