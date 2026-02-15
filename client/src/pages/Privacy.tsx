@@ -48,7 +48,7 @@ const Privacy = () => {
 
                         <section>
                             <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">3. Payment Processing & Security</h2>
-                            <p>We use **Razorpay** as our third-party payment gateway. Happy Hopz does not store your credit card, debit card, or UPI credentials on our servers. Your financial information is collected and processed directly by Razorpay, which is compliant with the Payment Card Industry Data Security Standard (PCI-DSS). Their use of your personal information is governed by their own Privacy Policy.</p>
+                            <p>We use <strong>Razorpay</strong> as our third-party payment gateway. Happy Hopz does not store your credit card, debit card, or UPI credentials on our servers. Your financial information is collected and processed directly by Razorpay, which is compliant with the Payment Card Industry Data Security Standard (PCI-DSS). Their use of your personal information is governed by their own Privacy Policy.</p>
                         </section>
 
                         <section>

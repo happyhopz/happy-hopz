@@ -36,9 +36,9 @@ const Terms = () => {
                         <section>
                             <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">4. Shipping & Delivery</h2>
                             <ul className="list-disc pl-6 space-y-2">
-                                <li>**Processing Time:** Most orders are processed within 24-48 business hours.</li>
-                                <li>**Delivery Estimates:** Standard delivery typically takes **3-5 business days** across India.</li>
-                                <li>**Liability:** Happy Hopz is not responsible for delays caused by third-party logistics partners, weather conditions, or local restrictions. Our liability for non-delivery is limited to a full refund of the amount paid for the order.</li>
+                                <li><strong>Processing Time:</strong> Most orders are processed within 24-48 business hours.</li>
+                                <li><strong>Delivery Estimates:</strong> Standard delivery typically takes <strong>3-5 business days</strong> across India.</li>
+                                <li><strong>Liability:</strong> Happy Hopz is not responsible for delays caused by third-party logistics partners, weather conditions, or local restrictions. Our liability for non-delivery is limited to a full refund of the amount paid for the order.</li>
                             </ul>
                         </section>
 
@@ -46,10 +46,10 @@ const Terms = () => {
                             <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">5. Returns, Exchanges & Refunds</h2>
                             <p>Our commitment to your satisfaction includes a professional return policy:</p>
                             <ul className="list-disc pl-6 space-y-2">
-                                <li>**Window:** Returns and exchanges must be initiated within **7 days** of delivery.</li>
-                                <li>**Condition:** Items must be unworn, in original packaging, with all tags attached.</li>
-                                <li>**Refunds:** Online payments are refunded to the original payment source. Pay on Delivery (COD) orders are refunded via store credit or bank transfer upon verification.</li>
-                                <li>**Pickup Charge:** A nominal pickup charge of **₹50** is applicable for returns to cover logistics costs.</li>
+                                <li><strong>Window:</strong> Returns and exchanges must be initiated within <strong>7 days</strong> of delivery.</li>
+                                <li><strong>Condition:</strong> Items must be unworn, in original packaging, with all tags attached.</li>
+                                <li><strong>Refunds:</strong> Online payments are refunded to the original payment source. Pay on Delivery (COD) orders are refunded via store credit or bank transfer upon verification.</li>
+                                <li><strong>Pickup Charge:</strong> A nominal pickup charge of <strong>₹50</strong> is applicable for returns to cover logistics costs.</li>
                             </ul>
                         </section>
 
@@ -70,7 +70,7 @@ const Terms = () => {
 
                         <section className="bg-muted p-6 rounded-2xl border border-border">
                             <h2 className="text-2xl font-fredoka font-bold text-foreground mb-4">9. Governing Law</h2>
-                            <p className="text-foreground">These Terms and Conditions and your use of the Site are governed by and construed in accordance with the laws of **India**. Any disputes arising under or in connection with these terms shall be subject to the exclusive jurisdiction of the courts in **[Insert City/State, e.g., Delhi/NCR]**.</p>
+                            <p className="text-foreground">These Terms and Conditions and your use of the Site are governed by and construed in accordance with the laws of <strong>India</strong>. Any disputes arising under or in connection with these terms shall be subject to the exclusive jurisdiction of the courts in <strong>[Insert City/State, e.g., Delhi/NCR]</strong>.</p>
                         </section>
                     </div>
                 </div>
