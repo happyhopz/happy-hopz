@@ -465,9 +465,9 @@ router.post('/addresses', authenticate, async (req: AuthRequest, res: Response) 
 
 router.delete('/addresses/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        await prisma.address.delete({
+        await prisma.address.deleteMany({
             where: {
-                id: req.params.id,
+                id: req.params.id as string,
                 userId: req.user!.id // Security check
             }
         });
@@ -517,9 +517,9 @@ router.post('/kids', authenticate, async (req: AuthRequest, res: Response) => {
 
 router.delete('/kids/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        await prisma.childProfile.delete({
+        await prisma.childProfile.deleteMany({
             where: {
-                id: req.params.id,
+                id: req.params.id as string,
                 userId: req.user!.id
             }
         });
