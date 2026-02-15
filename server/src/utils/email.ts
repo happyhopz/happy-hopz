@@ -325,31 +325,7 @@ const getCommonStyles = () => `
     </style>
 `;
 
-const getOrderItemsHtml = (items: any[], attachments: any[] = []) => items.map((item, index) => {
-    let imageUrl = '';
-    const cid = `product_image_${index}`;
-
-    try {
-        if (item.product && item.product.images) {
-            const imgs = typeof item.product.images === 'string'
-                ? JSON.parse(item.product.images)
-                : item.product.images;
-            imageUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
-
-            // Skip base64 data URLs - they cause attachment downloads in Gmail/SendGrid
-            // Only use proper HTTP URLs for email images
-            if (imageUrl && imageUrl.startsWith('data:image')) {
-                imageUrl = ''; // Don't use base64 images in emails
-            } else if (imageUrl && !imageUrl.startsWith('http')) {
-                // Resolve relative URLs to absolute
-                const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-                imageUrl = `${SITE_URL}${cleanPath}`;
-            }
-        }
-    } catch (e) {
-        console.error('Error parsing item images for email:', e);
-    }
-
+const getOrderItemsHtml = (items: any[], _attachments: any[] = []) => items.map((item) => {
     const itemName = item.name || item.product?.name || 'Product';
 
     return `
@@ -357,14 +333,10 @@ const getOrderItemsHtml = (items: any[], attachments: any[] = []) => items.map((
         <td style="padding: 15px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; vertical-align: middle;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
                 <tr>
-                    ${imageUrl ? `
-                    <td style="width: 60px; padding-right: 15px; vertical-align: middle;">
-                        <div style="width: 60px; height: 75px; overflow: hidden; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
-                            <img src="${imageUrl}" width="60" border="0" style="display: block; width: 60px; object-fit: cover;" alt="${itemName}">
-                        </div>
+                    <td style="width: 45px; vertical-align: middle;">
+                        <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; line-height: 40px; font-size: 18px;">👟</div>
                     </td>
-                    ` : ''}
-                    <td style="vertical-align: middle;">
+                    <td style="vertical-align: middle; padding-left: 10px;">
                         <p style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; color: #1e293b; text-transform: uppercase;">${itemName}</p>
                         <p style="margin: 4px 0 0 0; font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">SIZE ${item.size} • ${String(item.color).toUpperCase()}</p>
                     </td>
