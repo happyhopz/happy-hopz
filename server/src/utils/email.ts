@@ -336,23 +336,12 @@ const getOrderItemsHtml = (items: any[], attachments: any[] = []) => items.map((
                 : item.product.images;
             imageUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
 
-            // Handle Base64 images with CID for reliable email rendering
+            // Skip base64 data URLs - they cause attachment downloads in Gmail/SendGrid
+            // Only use proper HTTP URLs for email images
             if (imageUrl && imageUrl.startsWith('data:image')) {
-                const parts = imageUrl.split(';base64,');
-                const contentType = parts[0].split(':')[1];
-                const base64Data = parts[1];
-
-                attachments.push({
-                    cid: cid,
-                    content: base64Data,
-                    encoding: 'base64',
-                    filename: `item-${index}.jpg`,
-                    type: contentType,
-                    disposition: 'inline'
-                });
-                imageUrl = `cid:${cid}`;
+                imageUrl = ''; // Don't use base64 images in emails
             } else if (imageUrl && !imageUrl.startsWith('http')) {
-                // Resolve relative URLs (Avoid prepending to absolute URLs)
+                // Resolve relative URLs to absolute
                 const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
                 imageUrl = `${SITE_URL}${cleanPath}`;
             }
