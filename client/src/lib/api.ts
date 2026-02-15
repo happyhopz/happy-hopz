@@ -40,9 +40,11 @@ export const authAPI = {
     googleLogin: (credential: string) => api.post('/auth/google', { credential }),
     updateProfile: (data: { name?: string; phone?: string }) => api.put('/auth/profile', data),
     changePassword: (data: any) => api.post('/auth/change-password', data),
-    updateEmailPrefs: (data: any) => api.put('/auth/email-preferences', data),
+    updateEmailPrefs: (data: any) => api.put('/auth/notification-preferences', data),
+    updateNotificationPrefs: (data: any) => api.put('/auth/notification-preferences', data),
     forgotPassword: (email: string) => api.post('/forgot-password', { email }),
     resetPassword: (data: any) => api.post('/reset-password', data),
+    deleteAccount: () => api.delete('/auth/account')
 };
 
 // Products API
@@ -177,6 +179,12 @@ export const contactsAPI = {
         api.post('/contacts', data),
     getAll: (params?: { status?: string }) => api.get('/contacts', { params }),
     updateStatus: (id: string, status: string) => api.put(`/contacts/${id}`, { status })
+};
+
+export const kidsAPI = {
+    getAll: () => api.get('/auth/kids'),
+    create: (data: { name: string; size: string; gender?: string; birthday?: string }) => api.post('/auth/kids', data),
+    delete: (id: string) => api.delete(`/auth/kids/${id}`)
 };
 
 export const searchAPI = {

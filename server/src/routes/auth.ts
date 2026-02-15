@@ -129,7 +129,11 @@ router.post('/login', async (req: Request, res: Response) => {
                 name: user.name,
                 phone: user.phone,
                 role: user.role,
-                isVerified: user.isVerified
+                isVerified: user.isVerified,
+                emailNotifications: user.emailNotifications,
+                promoNotifications: user.promoNotifications,
+                whatsappOrderNotifications: (user as any).whatsappOrderNotifications,
+                whatsappPromoNotifications: (user as any).whatsappPromoNotifications
             },
             token
         });
@@ -152,7 +156,11 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
                 name: true,
                 phone: true,
                 role: true,
-                isVerified: true
+                isVerified: true,
+                emailNotifications: true,
+                promoNotifications: true,
+                whatsappOrderNotifications: true,
+                whatsappPromoNotifications: true
             } as any
         });
 
@@ -321,7 +329,11 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => 
                 name: true,
                 phone: true,
                 role: true,
-                isVerified: true
+                isVerified: true,
+                whatsappOrderNotifications: true,
+                whatsappPromoNotifications: true,
+                emailNotifications: true,
+                promoNotifications: true
             }
         });
 
@@ -375,22 +387,21 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
     }
 });
 
-// Update email preferences
-router.put('/email-preferences', authenticate, async (req: AuthRequest, res: Response) => {
+// Update notification preferences (Email & WhatsApp)
+router.put('/notification-preferences', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const prefsSchema = z.object({
-            emailNotifications: z.boolean(),
-            promoNotifications: z.boolean()
+            emailNotifications: z.boolean().optional(),
+            promoNotifications: z.boolean().optional(),
+            whatsappOrderNotifications: z.boolean().optional(),
+            whatsappPromoNotifications: z.boolean().optional()
         });
 
-        const { emailNotifications, promoNotifications } = prefsSchema.parse(req.body);
+        const data = prefsSchema.parse(req.body);
 
         const updatedUser = await prisma.user.update({
             where: { id: req.user!.id },
-            data: {
-                emailNotifications,
-                promoNotifications
-            } as any,
+            data: data as any,
             select: {
                 id: true,
                 email: true,
@@ -399,7 +410,9 @@ router.put('/email-preferences', authenticate, async (req: AuthRequest, res: Res
                 role: true,
                 isVerified: true,
                 emailNotifications: true,
-                promoNotifications: true
+                promoNotifications: true,
+                whatsappOrderNotifications: true,
+                whatsappPromoNotifications: true
             }
         });
 
@@ -409,6 +422,126 @@ router.put('/email-preferences', authenticate, async (req: AuthRequest, res: Res
             return res.status(400).json({ error: 'Validation failed', details: error.errors });
         }
         res.status(500).json({ error: 'Failed to update preferences' });
+    }
+});
+
+// Address Book Endpoints
+router.get('/addresses', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const addresses = await prisma.address.findMany({
+            where: { userId: req.user!.id }
+        });
+        res.json(addresses);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch addresses' });
+    }
+});
+
+router.post('/addresses', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const addressSchema = z.object({
+            name: z.string(),
+            phone: z.string(),
+            line1: z.string(),
+            line2: z.string().optional(),
+            city: z.string(),
+            state: z.string(),
+            pincode: z.string()
+        });
+
+        const data = addressSchema.parse(req.body);
+        const address = await prisma.address.create({
+            data: {
+                ...data,
+                userId: req.user!.id
+            }
+        });
+
+        res.status(201).json(address);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to add address' });
+    }
+});
+
+router.delete('/addresses/:id', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        await prisma.address.delete({
+            where: {
+                id: req.params.id,
+                userId: req.user!.id // Security check
+            }
+        });
+        res.json({ message: 'Address deleted' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete address' });
+    }
+});
+
+// Kids' Profile Endpoints
+router.get('/kids', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const profiles = await prisma.childProfile.findMany({
+            where: { userId: req.user!.id }
+        });
+        res.json(profiles);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch kids profiles' });
+    }
+});
+
+router.post('/kids', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const kidSchema = z.object({
+            name: z.string(),
+            size: z.string(),
+            gender: z.string().optional(),
+            birthday: z.string().optional()
+        });
+
+        const { name, size, gender, birthday } = kidSchema.parse(req.body);
+        const profile = await prisma.childProfile.create({
+            data: {
+                name,
+                size,
+                gender,
+                birthday: birthday ? new Date(birthday) : null,
+                userId: req.user!.id
+            }
+        });
+
+        res.status(201).json(profile);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create kids profile' });
+    }
+});
+
+router.delete('/kids/:id', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        await prisma.childProfile.delete({
+            where: {
+                id: req.params.id,
+                userId: req.user!.id
+            }
+        });
+        res.json({ message: 'Profile deleted' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete profile' });
+    }
+});
+
+// Permanent Account Deletion
+router.delete('/account', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        // In a real app, we might want to anonymize order data instead of deleting it
+        // and keep it for tax/legal compliance. 
+        // For now, we perform a cascaded delete as defined in schema.
+        await prisma.user.delete({
+            where: { id: req.user!.id }
+        });
+
+        res.json({ message: 'Account permanently deleted' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete account' });
     }
 });
 

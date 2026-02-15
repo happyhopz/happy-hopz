@@ -56,12 +56,9 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Deploy via Vercel (frontend) and Render (backend).
 
-## Can I connect a custom domain to my Lovable project?
+## Can I connect a custom domain?
 
-Yes, you can!
+Absolutely! The custom domain www.happyhopz.com is managed via Vercel.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
