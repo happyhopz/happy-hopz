@@ -43,33 +43,71 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
         bodyHtml = getStatusUpdateHtml(order, customerName);
     }
 
-    const allAttachments = attachment ? [
-        {
-            filename: attachment.filename,
-            content: attachment.content,
-            type: 'application/pdf',
-            disposition: 'attachment'
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            // SendGrid format: attachments need base64 content
+            const sgAttachments: any[] = [];
+            if (attachment) {
+                sgAttachments.push({
+                    filename: attachment.filename,
+                    content: attachment.content.toString('base64'),
+                    type: 'application/pdf',
+                    disposition: 'attachment'
+                });
+            }
+            // Convert inline attachments (CID images) to SendGrid format
+            for (const att of (order._inlineAttachments || [])) {
+                sgAttachments.push({
+                    ...att,
+                    content: typeof att.content === 'string' ? att.content : att.content?.toString?.('base64') || att.content
+                });
+            }
+
+            const sgMsg = {
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
+                to: email,
+                subject: subject,
+                html: bodyHtml,
+                attachments: sgAttachments.length > 0 ? sgAttachments : undefined
+            };
+            console.log(`📧 [SendGrid] Sending ${type} email to ${email} for order ${orderId}`);
+            await sgMail.send(sgMsg);
+            console.log(`✅ [SendGrid] Email sent successfully to ${email}`);
+            return;
         }
-    ] : [];
 
-    const mailOptions: any = {
-        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
-        to: email,
-        subject: subject,
-        html: bodyHtml,
-        headers: {
-            'X-Priority': '1 (Highest)',
-            'Importance': 'high',
-            'Priority': 'urgent'
-        },
-        attachments: [...allAttachments, ...(order._inlineAttachments || [])]
-    };
+        // Nodemailer fallback
+        const allAttachments = attachment ? [
+            {
+                filename: attachment.filename,
+                content: attachment.content,
+                contentType: 'application/pdf'
+            }
+        ] : [];
 
-    if (process.env.SENDGRID_API_KEY) {
-        return sgMail.send(mailOptions);
+        const mailOptions: any = {
+            from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
+            to: email,
+            subject: subject,
+            html: bodyHtml,
+            headers: {
+                'X-Priority': '1 (Highest)',
+                'Importance': 'high',
+                'Priority': 'urgent'
+            },
+            attachments: [...allAttachments, ...(order._inlineAttachments || [])]
+        };
+
+        console.log(`📧 [Nodemailer] Sending ${type} email to ${email} for order ${orderId}`);
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ [Nodemailer] Email sent successfully to ${email}`);
+    } catch (error: any) {
+        console.error(`🔴 [Email Error] Failed to send ${type} email to ${email} for order ${orderId}:`, error.message);
+        if (error.response?.body) {
+            console.error(`🔴 [Email Error] SendGrid response:`, JSON.stringify(error.response.body));
+        }
+        throw error; // Re-throw so callers can handle it
     }
-
-    return transporter.sendMail(mailOptions);
 };
 
 export const sendOrderConfirmationEmail = async (email: string, order: any) => {
@@ -77,26 +115,60 @@ export const sendOrderConfirmationEmail = async (email: string, order: any) => {
 };
 
 export const sendVerificationEmail = async (email: string, code: string) => {
-    const mailOptions = {
-        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
-        to: email,
-        subject: 'Verify your Happy Hopz Account',
-        html: `<h2>Welcome to Happy Hopz!</h2><p>Your verification code is: <strong>${code}</strong></p>`
-    };
-    if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
-    return transporter.sendMail(mailOptions);
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            console.log(`📧 [SendGrid] Sending verification email to ${email}`);
+            await sgMail.send({
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
+                to: email,
+                subject: 'Verify your Happy Hopz Account',
+                html: `<h2>Welcome to Happy Hopz!</h2><p>Your verification code is: <strong>${code}</strong></p>`
+            });
+            console.log(`✅ [SendGrid] Verification email sent to ${email}`);
+            return;
+        }
+        console.log(`📧 [Nodemailer] Sending verification email to ${email}`);
+        await transporter.sendMail({
+            from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
+            to: email,
+            subject: 'Verify your Happy Hopz Account',
+            html: `<h2>Welcome to Happy Hopz!</h2><p>Your verification code is: <strong>${code}</strong></p>`
+        });
+        console.log(`✅ [Nodemailer] Verification email sent to ${email}`);
+    } catch (error: any) {
+        console.error(`🔴 [Verification Email Error] Failed to send to ${email}:`, error.message);
+        if (error.response?.body) console.error('SendGrid response:', JSON.stringify(error.response.body));
+        throw error;
+    }
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
     const resetUrl = `https://happy-hopz.vercel.app/reset-password?token=${token}`;
-    const mailOptions = {
-        from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
-        to: email,
-        subject: 'Reset your Happy Hopz Password',
-        html: `<p>You requested a password reset. Click below to proceed:</p><a href="${resetUrl}">Reset Password</a>`
-    };
-    if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
-    return transporter.sendMail(mailOptions);
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            console.log(`📧 [SendGrid] Sending password reset email to ${email}`);
+            await sgMail.send({
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
+                to: email,
+                subject: 'Reset your Happy Hopz Password',
+                html: `<p>You requested a password reset. Click below to proceed:</p><a href="${resetUrl}">Reset Password</a>`
+            });
+            console.log(`✅ [SendGrid] Password reset email sent to ${email}`);
+            return;
+        }
+        console.log(`📧 [Nodemailer] Sending password reset email to ${email}`);
+        await transporter.sendMail({
+            from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
+            to: email,
+            subject: 'Reset your Happy Hopz Password',
+            html: `<p>You requested a password reset. Click below to proceed:</p><a href="${resetUrl}">Reset Password</a>`
+        });
+        console.log(`✅ [Nodemailer] Password reset email sent to ${email}`);
+    } catch (error: any) {
+        console.error(`🔴 [Password Reset Email Error] Failed to send to ${email}:`, error.message);
+        if (error.response?.body) console.error('SendGrid response:', JSON.stringify(error.response.body));
+        throw error;
+    }
 };
 
 const getStatusSubject = (status: string, orderId: string) => {
@@ -571,20 +643,49 @@ export const sendAdminOrderNotification = async (order: any) => {
         </div>
     `;
 
-    const mailOptions: any = {
-        from: `"Happy Hopz Admin" <${VERIFIED_SENDER}>`,
-        to: adminEmail,
-        subject: `🛍️ NEW ORDER: ${orderId} - ₹${order.total} from ${customerName}`,
-        html: bodyHtml,
-        headers: {
-            'X-Priority': '1 (Highest)',
-            'Importance': 'high'
-        },
-        attachments: order._inlineAttachments || []
-    };
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            // Convert inline attachments to base64 for SendGrid
+            const sgAttachments = (order._inlineAttachments || []).map((att: any) => ({
+                ...att,
+                content: typeof att.content === 'string' ? att.content : att.content?.toString?.('base64') || att.content
+            }));
 
-    if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
-    return transporter.sendMail(mailOptions);
+            const sgMsg = {
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz Admin' },
+                to: adminEmail,
+                subject: `🛍️ NEW ORDER: ${orderId} - ₹${order.total} from ${customerName}`,
+                html: bodyHtml,
+                attachments: sgAttachments.length > 0 ? sgAttachments : undefined
+            };
+            console.log(`📧 [SendGrid] Sending admin notification for order ${orderId}`);
+            await sgMail.send(sgMsg);
+            console.log(`✅ [SendGrid] Admin notification sent successfully`);
+            return;
+        }
+
+        const mailOptions: any = {
+            from: `"Happy Hopz Admin" <${VERIFIED_SENDER}>`,
+            to: adminEmail,
+            subject: `🛍️ NEW ORDER: ${orderId} - ₹${order.total} from ${customerName}`,
+            html: bodyHtml,
+            headers: {
+                'X-Priority': '1 (Highest)',
+                'Importance': 'high'
+            },
+            attachments: order._inlineAttachments || []
+        };
+
+        console.log(`📧 [Nodemailer] Sending admin notification for order ${orderId}`);
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ [Nodemailer] Admin notification sent successfully`);
+    } catch (error: any) {
+        console.error(`🔴 [Admin Email Error] Failed to send admin notification for order ${orderId}:`, error.message);
+        if (error.response?.body) {
+            console.error(`🔴 [Admin Email Error] SendGrid response:`, JSON.stringify(error.response.body));
+        }
+        throw error;
+    }
 };
 
 export const sendAdminAlertEmail = async (title: string, message: string) => {
@@ -602,6 +703,19 @@ export const sendAdminAlertEmail = async (title: string, message: string) => {
         html: `<p>${message}</p>`
     };
 
-    if (process.env.SENDGRID_API_KEY) return sgMail.send(mailOptions);
-    return transporter.sendMail(mailOptions);
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            await sgMail.send({
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz Alerts' },
+                to: adminEmail,
+                subject: `🔔 ALERT: ${title}`,
+                html: `<p>${message}</p>`
+            });
+            return;
+        }
+        await transporter.sendMail(mailOptions);
+    } catch (error: any) {
+        console.error(`🔴 [Alert Email Error] Failed to send alert "${title}":`, error.message);
+        throw error;
+    }
 };
