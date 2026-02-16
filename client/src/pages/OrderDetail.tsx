@@ -364,7 +364,7 @@ const OrderDetail = () => {
                                     </div>
                                     <div className="absolute top-[42px] left-10 right-10 h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                                         <div
-                                            className="h-full bg-slate-900 transition-all duration-[2000ms] shadow-sm ease-out rounded-full"
+                                            className="h-full bg-slate-900 transition-all [transition-duration:2000ms] shadow-sm ease-out rounded-full"
                                             style={{ width: `${(currentStep / (statusSteps.length - 1)) * 100}%` }}
                                         />
                                     </div>

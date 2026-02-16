@@ -43,6 +43,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import MyReturns from './pages/MyReturns';
 import AdminReturns from './pages/admin/AdminReturns';
+import ReturnDetail from './pages/admin/ReturnDetail';
 import AdminNotifications from './pages/admin/Notifications';
 import TrackOrder from "./pages/TrackOrder";
 import NotFound from "./pages/NotFound";
@@ -95,6 +96,7 @@ const App = () => (
                   <Route path="/admin/contacts" element={<AdminContacts />} />
                   <Route path="/admin/marketing" element={<AdminMarketing />} />
                   <Route path="/admin/returns" element={<AdminReturns />} />
+                  <Route path="/admin/returns/:id" element={<ReturnDetail />} />
                   <Route path="/admin/notifications" element={<AdminNotifications />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                 </Route>

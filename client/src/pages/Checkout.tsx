@@ -200,12 +200,19 @@ const Checkout = () => {
     });
 
     // Fetch dynamic site settings (GST, Delivery)
-    const { data: dynamicSettings } = useQuery({
+    const { data: dynamicSettings, isLoading: isSettingsLoading } = useQuery({
         queryKey: ['site-settings-public'],
         queryFn: async () => {
-            const response = await settingsAPI.get();
-            return response.data;
-        }
+            try {
+                const response = await settingsAPI.get();
+                console.log('✅ [Settings Fetch Success]:', response.data);
+                return response.data;
+            } catch (err) {
+                console.error('❌ [Settings Fetch Error]:', err);
+                throw err;
+            }
+        },
+        staleTime: 30000, // Cache for 30s
     });
 
     const updateCartMutation = useMutation({
@@ -285,10 +292,12 @@ const Checkout = () => {
         return sum + (price * item.quantity);
     }, 0) || 0;
 
-    // Use dynamic settings with fallbacks
-    const gstRate = (dynamicSettings?.gst_percentage || 18) / 100;
-    const deliveryCharge = dynamicSettings?.delivery_charge || 99;
-    const freeThreshold = dynamicSettings?.free_delivery_threshold || 999;
+    // Use dynamic settings with fallbacks (respects 0 values)
+    // While loading or if fetch fails, we use safe defaults.
+    // Explicit nullish coalescing ensures '0' is treated as a valid value.
+    const gstRate = ((dynamicSettings?.gst_percentage ?? 18) as number) / 100;
+    const deliveryCharge = (dynamicSettings?.delivery_charge ?? 99) as number;
+    const freeThreshold = (dynamicSettings?.free_delivery_threshold ?? 999) as number;
 
     const tax = Math.round(subtotal * gstRate);
     const shipping = subtotal >= freeThreshold ? 0 : deliveryCharge;

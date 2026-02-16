@@ -92,8 +92,15 @@ const adminLimiter = rateLimit({
 // Apply to admin login route specifically
 app.use('/api/auth/login', adminLimiter);
 
-// Body parser (Increased to 50MB for large base64 product image arrays)
-app.use(express.json({ limit: '50mb' }));
+// Body parser with raw body capture for webhooks (Razorpay/Stripe)
+app.use(express.json({
+    limit: '50mb',
+    verify: (req: any, res, buf) => {
+        if (req.originalUrl.includes('/webhook')) {
+            req.rawBody = buf;
+        }
+    }
+}));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Maintenance Check (Allows Admin/Auth only)

@@ -63,6 +63,7 @@ const AdminSettings = () => {
         mutationFn: (data: any) => settingsAPI.updateAsAdmin(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+            queryClient.invalidateQueries({ queryKey: ['site-settings-public'] });
             toast.success('Business settings updated');
         },
         onError: () => toast.error('Failed to update settings')
@@ -195,7 +196,7 @@ const AdminSettings = () => {
                                                     type="number"
                                                     step="0.1"
                                                     className="border-none focus-visible:ring-0 rounded-none h-11"
-                                                    defaultValue={dynamicSettings?.gst_percentage || 18}
+                                                    defaultValue={dynamicSettings?.gst_percentage ?? 18}
                                                 />
                                                 <div className="bg-muted px-4 flex items-center justify-center border-l-2 text-muted-foreground font-black">
                                                     %
@@ -226,7 +227,7 @@ const AdminSettings = () => {
                                                     name="delivery_charge"
                                                     type="number"
                                                     className="border-none focus-visible:ring-0 rounded-none h-11"
-                                                    defaultValue={dynamicSettings?.delivery_charge || 99}
+                                                    defaultValue={dynamicSettings?.delivery_charge ?? 99}
                                                 />
                                             </div>
                                         </div>
@@ -241,7 +242,7 @@ const AdminSettings = () => {
                                                     name="free_delivery_threshold"
                                                     type="number"
                                                     className="border-none focus-visible:ring-0 rounded-none h-11"
-                                                    defaultValue={dynamicSettings?.free_delivery_threshold || 999}
+                                                    defaultValue={dynamicSettings?.free_delivery_threshold ?? 999}
                                                 />
                                             </div>
                                             <p className="text-[10px] text-muted-foreground italic">Orders above this amount get free shipping.</p>

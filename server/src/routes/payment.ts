@@ -159,9 +159,14 @@ router.post('/webhook', async (req: Request, res: Response) => {
         const signature = req.headers['x-razorpay-signature'] as string;
 
         if (secret && signature) {
+            // Use rawBody if available (captured in index.ts) or stringify as fallback
+            const payload = (req as any).rawBody
+                ? (req as any).rawBody.toString()
+                : JSON.stringify(req.body);
+
             const expectedSignature = crypto
                 .createHmac('sha256', secret)
-                .update(JSON.stringify(req.body))
+                .update(payload)
                 .digest('hex');
 
             if (expectedSignature !== signature) {

@@ -244,14 +244,26 @@ router.patch('/:id/complete', requireAdmin, async (req: AuthRequest, res: Respon
         // Restore stock if requested
         if (restockItems) {
             for (const item of (returnRequest as any).items) {
-                await prisma.product.update({
-                    where: { id: item.productId },
-                    data: {
-                        stock: {
-                            increment: item.quantity
+                const product = await prisma.product.findUnique({ where: { id: item.productId } });
+                if (product) {
+                    const inventory = (product as any).inventory ? JSON.parse((product as any).inventory) : [];
+                    const updatedInventory = inventory.map((inv: any) => {
+                        if (inv.size === item.size) {
+                            return { ...inv, stock: inv.stock + item.quantity };
                         }
-                    }
-                });
+                        return inv;
+                    });
+
+                    const totalStock = updatedInventory.reduce((sum: number, inv: any) => sum + inv.stock, 0);
+
+                    await prisma.product.update({
+                        where: { id: item.productId },
+                        data: {
+                            inventory: JSON.stringify(updatedInventory),
+                            stock: totalStock
+                        }
+                    });
+                }
             }
         }
 
