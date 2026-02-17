@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate, AuthRequest, isTestUser } from '../middleware/auth';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
@@ -35,6 +35,14 @@ router.post('/signup', async (req: Request, res: Response) => {
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ error: 'User already exists' });
+        }
+
+        // Block test users from signing up on live site
+        if (isTestUser(email)) {
+            return res.status(403).json({
+                error: 'Registration Forbidden',
+                message: 'Registration from test domains is not allowed on the live site.'
+            });
         }
 
         // Hash password
@@ -105,6 +113,14 @@ router.post('/login', async (req: Request, res: Response) => {
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
             return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // Block test users login unless ADMIN
+        if (isTestUser(user.email) && user.role !== 'ADMIN') {
+            return res.status(403).json({
+                error: 'Access Denied',
+                message: 'This test account is not allowed to access the live site.'
+            });
         }
 
         // Generate token

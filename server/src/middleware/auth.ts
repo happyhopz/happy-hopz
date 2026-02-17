@@ -1,6 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
+const TEST_DOMAINS = ['test.com', 'example.com', 'lovable.dev', 'dummy.com'];
+const TEST_EMAILS = ['user@test.com', 'test@test.com', 'test2@example.com', 'unverified@test.com'];
+
+export const isTestUser = (email: string): boolean => {
+    if (!email) return false;
+    const lowerEmail = email.toLowerCase();
+    const domain = lowerEmail.split('@')[1];
+
+    return TEST_DOMAINS.includes(domain) ||
+        TEST_EMAILS.includes(lowerEmail) ||
+        lowerEmail.includes('testuser') ||
+        lowerEmail.startsWith('test.');
+};
+
 export interface AuthRequest extends Request {
     user?: {
         id: string;
@@ -23,6 +37,15 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+        // Block test users from live site access
+        if (isTestUser(decoded.email) && decoded.role !== 'ADMIN') {
+            return res.status(403).json({
+                error: 'Access Denied',
+                message: 'This account is a test account and is not allowed to access the live site.'
+            });
+        }
+
         req.user = decoded;
         next();
     } catch (error) {
@@ -36,7 +59,11 @@ export const optionalAuthenticate = (req: AuthRequest, res: Response, next: Next
         if (!token) return next();
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-        req.user = decoded;
+
+        // Optional auth: just don't set req.user if it's a test user
+        if (!isTestUser(decoded.email) || decoded.role === 'ADMIN') {
+            req.user = decoded;
+        }
         next();
     } catch (error) {
         // Continue as guest
