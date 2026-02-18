@@ -68,13 +68,31 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
         // Calculate Average Order Value
         const totalRevenue = totalRevenueAgg._sum.total || 0;
 
-        // Calculate Total Profit (Revenue - Cost of Sold Items)
-        const completedOrders = await (prisma as any).order.findMany({
+        // Calculate Total Profit & Costs efficiently
+        // We only fetch DELIVERED/COMPLETED orders and only the necessary fields
+        const completedOrders = await prisma.order.findMany({
             where: {
                 status: 'DELIVERED',
                 paymentStatus: 'COMPLETED'
             },
-            include: { items: { include: { product: true } } }
+            select: {
+                items: {
+                    select: {
+                        price: true,
+                        quantity: true,
+                        product: {
+                            select: {
+                                name: true,
+                                costPrice: true,
+                                boxPrice: true,
+                                tagPrice: true,
+                                shippingCost: true,
+                                otherCosts: true
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         let totalProfit = 0;
@@ -85,26 +103,25 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
         let totalOtherCosts = 0;
 
         completedOrders.forEach((order: any) => {
-            if (!order.items || !Array.isArray(order.items)) return;
+            if (!order.items) return;
 
             order.items.forEach((item: any) => {
                 const product = item.product;
-                if (!product || !item.price || !item.quantity) return;
+                if (!product) return;
 
-                // Calculate total cost per unit (all components) with safe defaults
-                const productCost = parseFloat(product.costPrice) || (item.price * 0.6);
-                const boxCost = parseFloat(product.boxPrice) || 0;
-                const tagCost = parseFloat(product.tagPrice) || 0;
-                const shipCost = parseFloat(product.shippingCost) || 0;
-                const otherCost = parseFloat(product.otherCosts) || 0;
+                const price = parseFloat(String(item.price)) || 0;
+                const quantity = parseInt(String(item.quantity)) || 0;
+
+                // Calculate costs with safe defaults
+                const productCost = parseFloat(String(product.costPrice)) || (price * 0.6);
+                const boxCost = parseFloat(String(product.boxPrice)) || 0;
+                const tagCost = parseFloat(String(product.tagPrice)) || 0;
+                const shipCost = parseFloat(String(product.shippingCost)) || 0;
+                const otherCost = parseFloat(String(product.otherCosts)) || 0;
 
                 const totalUnitCost = productCost + boxCost + tagCost + shipCost + otherCost;
-                const quantity = parseInt(item.quantity) || 0;
 
-                // Debug logging
-                console.log(`[Profit Calc] Product: ${product?.name || 'Unknown'}, Price: ₹${item.price}, Cost: ₹${productCost}, Box: ₹${boxCost}, Tag: ₹${tagCost}, Ship: ₹${shipCost}, Other: ₹${otherCost}, Total Cost: ₹${totalUnitCost}, Qty: ${quantity}, Profit: ₹${((item.price - totalUnitCost) * quantity).toFixed(2)}`);
-
-                // Accumulate costs by category
+                // Accumulate costs
                 totalProductCost += productCost * quantity;
                 totalPackagingCost += boxCost * quantity;
                 totalLabelingCost += tagCost * quantity;
@@ -112,7 +129,7 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
                 totalOtherCosts += otherCost * quantity;
 
                 // Calculate profit
-                totalProfit += (item.price - totalUnitCost) * quantity;
+                totalProfit += (price - totalUnitCost) * quantity;
             });
         });
 

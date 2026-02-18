@@ -52,8 +52,8 @@ const FeaturedShoes = () => {
   const { data: products, isLoading } = useQuery({
     queryKey: ['featured-products'],
     queryFn: async () => {
-      const response = await productsAPI.getAll();
-      return response.data.slice(0, 6);
+      const response = await productsAPI.getAll({ limit: 6 });
+      return response.data;
     }
   });
 
@@ -223,6 +223,7 @@ const ShoeCard = ({
           <img
             src={product.images[0]}
             alt={product.name}
+            loading="lazy"
             className="relative w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         </div>

@@ -36,9 +36,15 @@ router.get('/', async (req: Request, res: Response) => {
             if (maxPrice) where.price.lte = parseFloat(maxPrice as string);
         }
 
+        const limit = parseInt(req.query.limit as string) || 50;
+        const page = parseInt(req.query.page as string) || 1;
+        const skip = (page - 1) * limit;
+
         const products = await prisma.product.findMany({
             where,
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            skip: skip
         });
 
         // Parse JSON strings
