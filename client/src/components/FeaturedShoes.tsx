@@ -55,7 +55,7 @@ const FeaturedShoes = () => {
   const { data: products, isLoading } = useQuery({
     queryKey: ['featured-products'],
     queryFn: async () => {
-      const response = await productsAPI.getAll({ limit: 6 });
+      const response = await productsAPI.getAll({ limit: 8 });
       return response.data;
     }
   });
