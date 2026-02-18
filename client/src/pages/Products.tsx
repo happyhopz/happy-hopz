@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import ShareProduct from '@/components/ShareProduct';
 import { ALL_EU_SIZES } from '@/lib/constants';
 import { Checkbox } from '@/components/ui/checkbox';
+import QuickBuyModal from '@/components/QuickBuyModal';
 
 const Products = () => {
     const { user } = useAuth();
@@ -27,6 +28,7 @@ const Products = () => {
     const [priceRange, setPriceRange] = useState([0, 10000]);
     const queryClient = useQueryClient();
     const navigate = useNavigate();
+    const [quickBuyProduct, setQuickBuyProduct] = useState<any>(null);
 
     const addToCartMutation = useMutation({
         mutationFn: (data: { productId: string; quantity: number; size: string; color: string }) =>
@@ -40,38 +42,12 @@ const Products = () => {
         }
     });
 
-    const handleAddToCart = async (product: any) => {
-        if (!user) {
-            toast.info('Please login to add items to cart');
-            navigate('/login');
-            return;
-        }
-        addToCartMutation.mutate({
-            productId: product.id,
-            quantity: 1,
-            size: product.sizes[0] || '13',
-            color: product.colors[0] || 'Default'
-        });
+    const handleAddToCart = (product: any) => {
+        setQuickBuyProduct(product);
     };
 
-    const handleBuyNow = async (product: any) => {
-        if (!user) {
-            toast.info('Please login to continue');
-            navigate('/login');
-            return;
-        }
-        try {
-            await cartAPI.add({
-                productId: product.id,
-                quantity: 1,
-                size: product.sizes[0] || '13',
-                color: product.colors[0] || 'Default'
-            });
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
-            navigate('/checkout');
-        } catch (error) {
-            toast.error('Failed to proceed to checkout');
-        }
+    const handleBuyNow = (product: any) => {
+        setQuickBuyProduct(product);
     };
 
     const [showFilters, setShowFilters] = useState(false);
@@ -298,6 +274,13 @@ const Products = () => {
                         )}
                     </>
                 )}
+
+                <QuickBuyModal
+                    product={quickBuyProduct}
+                    isOpen={!!quickBuyProduct}
+                    onClose={() => setQuickBuyProduct(null)}
+                    user={user}
+                />
             </main>
 
             <Footer />
@@ -340,6 +323,7 @@ const ProductCard = ({
                     <img
                         src={product.images[0]}
                         alt={product.name}
+                        loading="lazy"
                         className="relative w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                 </div>

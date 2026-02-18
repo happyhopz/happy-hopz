@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ShoppingCart, Edit, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import ShareProduct from '@/components/ShareProduct';
+import QuickBuyModal from '@/components/QuickBuyModal';
 
 const FeaturedShoes = () => {
   const { user } = useAuth();
@@ -30,6 +32,7 @@ const FeaturedShoes = () => {
 
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [quickBuyProduct, setQuickBuyProduct] = useState<any>(null);
 
   const addToCartMutation = useMutation({
     mutationFn: (data: { productId: string; quantity: number; size: string; color: string }) =>
@@ -57,38 +60,12 @@ const FeaturedShoes = () => {
     }
   });
 
-  const handleAddToCart = async (product: any) => {
-    if (!user) {
-      toast.info('Please login to add items to cart');
-      navigate('/login');
-      return;
-    }
-    addToCartMutation.mutate({
-      productId: product.id,
-      quantity: 1,
-      size: product.sizes[0] || 'M',
-      color: product.colors[0] || 'Default'
-    });
+  const handleAddToCart = (product: any) => {
+    setQuickBuyProduct(product);
   };
 
-  const handleBuyNow = async (product: any) => {
-    if (!user) {
-      toast.info('Please login to continue');
-      navigate('/login');
-      return;
-    }
-    try {
-      await cartAPI.add({
-        productId: product.id,
-        quantity: 1,
-        size: product.sizes[0] || 'M',
-        color: product.colors[0] || 'Default'
-      });
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      navigate('/checkout');
-    } catch (error) {
-      toast.error('Failed to proceed to checkout');
-    }
+  const handleBuyNow = (product: any) => {
+    setQuickBuyProduct(product);
   };
 
   if (isLoading) {
@@ -155,14 +132,23 @@ const FeaturedShoes = () => {
           ))}
         </div>
 
-        {/* View All Button */}
-        <div className="text-center mt-12">
-          <Link to="/products">
-            <Button variant="outline" size="lg" className="rounded-full border-2 hover:bg-secondary">
-              View All Shoes
-            </Button>
-          </Link>
-        </div>
+      </div>
+
+      {/* Quick Buy Modal */}
+      <QuickBuyModal
+        product={quickBuyProduct}
+        isOpen={!!quickBuyProduct}
+        onClose={() => setQuickBuyProduct(null)}
+        user={user}
+      />
+
+      {/* View All Button */}
+      <div className="text-center mt-12">
+        <Link to="/products">
+          <Button variant="outline" size="lg" className="rounded-full border-2 hover:bg-secondary">
+            View All Shoes
+          </Button>
+        </Link>
       </div>
     </section>
   );
