@@ -27,13 +27,20 @@ const safeJsonParse = (str: string | null | undefined, fallback: any = []) => {
 router.get('/stats', async (req: AuthRequest, res: Response) => {
     try {
         console.log('[Dashboard Stats] === STATS REQUEST STARTED ===');
+        const authHeader = req.headers.authorization;
+        console.log(`[Dashboard Stats] Auth Header: ${authHeader ? 'PRESENT (' + authHeader.split(' ')[0] + '...)' : 'MISSING'}`);
         console.log(`[Dashboard Stats] Auth: User=${req.user?.email || 'NONE'}, Role=${req.user?.role || 'NONE'}`);
 
-        // MANUALLY CHECK AUTH (Prevents hard 401 middleware crash)
+        // MANUALLY CHECK AUTH (Detailed 401 for diagnostics)
         if (!req.user) {
             return res.status(401).json({
                 error: 'Authentication Required',
-                details: 'Your session has expired or is invalid. Please sign out and sign in again.'
+                details: 'Your session has expired or is invalid. Please sign out and sign in again.',
+                diagnostic: {
+                    hasHeader: !!authHeader,
+                    headerType: authHeader?.split(' ')[0],
+                    timestamp: new Date().toISOString()
+                }
             });
         }
 

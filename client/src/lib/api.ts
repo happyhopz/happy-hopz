@@ -5,6 +5,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'https://api.happyhopz.co
 // Create axios instance
 const api = axios.create({
     baseURL: API_URL,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json'
     }
@@ -15,6 +16,10 @@ api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Debug for dashboard issues
+    if (config.url?.includes('admin/stats')) {
+        console.log(`📡 [API Debug] Calling ${config.url} with token: ${token ? 'PRESENT' : 'MISSING'}`);
     }
     return config;
 });
