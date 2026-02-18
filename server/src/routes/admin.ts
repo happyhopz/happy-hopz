@@ -13,6 +13,17 @@ const router = Router();
 router.use(authenticate);
 router.use(requireAdmin);
 
+// Helper for safe JSON parsing
+const safeJsonParse = (str: string | null | undefined, fallback: any = []) => {
+    if (!str) return fallback;
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        console.warn(`⚠️ [JSON Parse Warning] Failed to parse: "${str}". Falling back to:`, fallback);
+        return fallback;
+    }
+};
+
 // Dashboard stats
 router.get('/stats', async (req: AuthRequest, res: Response) => {
     try {
@@ -58,7 +69,7 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
                 by: ['status'],
                 _count: true
             }),
-            (prisma as any).orderItem.findMany({
+            ((prisma as any).orderItem || (prisma as any).order_item || { findMany: () => Promise.resolve([]) }).findMany({
                 orderBy: { quantity: 'desc' },
                 take: 5,
                 include: { product: true }
@@ -176,38 +187,23 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             recentOrders,
             lowStockProducts: lowStockProducts.map(p => ({
                 ...p,
-                sizes: JSON.parse(p.sizes || '[]'),
-                colors: JSON.parse(p.colors || '[]'),
-                images: JSON.parse(p.images || '[]')
+                sizes: safeJsonParse(p.sizes, []),
+                colors: safeJsonParse(p.colors, []),
+                images: safeJsonParse(p.images, [])
             })),
             dailyRevenue: dailyRevenueArray,
             ordersByStatus,
             topSellingProducts: topSellingItems
         });
     } catch (error: any) {
-        console.error('[Dashboard Stats] Error:', error.message);
-        console.error('[Dashboard Stats] Stack:', error.stack);
+        console.error('❌ [Dashboard Stats recovery] Error:', error.message);
+        console.error('❌ [Dashboard Stats recovery] Stack:', error.stack);
 
-        // Return safe defaults to prevent dashboard from breaking
-        res.status(200).json({
-            totalUsers: 0,
-            totalOrders: 0,
-            totalRevenue: 0,
-            totalProfit: 0,
-            totalProductCost: 0,
-            totalPackagingCost: 0,
-            totalLabelingCost: 0,
-            totalShippingCost: 0,
-            totalOtherCosts: 0,
-            totalCosts: 0,
-            profitMargin: 0,
-            averageOrderValue: 0,
-            recentOrders: [],
-            lowStockProducts: [],
-            dailyRevenue: [],
-            ordersByStatus: [],
-            topSellingProducts: [],
-            error: 'Failed to load statistics'
+        // Return 500 so frontend diagnostic UI triggers
+        res.status(500).json({
+            error: 'Failed to load statistics',
+            details: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
