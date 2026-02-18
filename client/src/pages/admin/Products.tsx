@@ -394,6 +394,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                             <SelectItem value="3-6 years">3-6 years</SelectItem>
                             <SelectItem value="6-9 years">6-9 years</SelectItem>
                             <SelectItem value="9-12 years">9-12 years</SelectItem>
+                            <SelectItem value="12+ years">12+ years</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

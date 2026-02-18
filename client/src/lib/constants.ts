@@ -40,6 +40,13 @@ export const SIZE_GUIDE_DATA = [
     // XXL Group
     { ourSize: 'XXL', age: '7 Years', eu: '32', inch: '7.75"', cm: '19.7' },
     { ourSize: 'XXL', age: '8 Years', eu: '33', inch: '8.125"', cm: '20.6' },
+
+    // Teen / Large Group
+    { ourSize: 'XXL', age: '8-9 Years', eu: '34', inch: '8.375"', cm: '21.3' },
+    { ourSize: 'XXL', age: '9-10 Years', eu: '35', inch: '8.625"', cm: '22.0' },
+    { ourSize: 'XXL', age: '10-11 Years', eu: '36', inch: '8.875"', cm: '22.7' },
+    { ourSize: 'XXL', age: '11-12 Years', eu: '37', inch: '9.125"', cm: '23.3' },
+    { ourSize: 'XXL', age: '12+ Years', eu: '38', inch: '9.45"', cm: '24.0' },
 ];
 
 export const INDIAN_STATES = [
@@ -81,4 +88,4 @@ export const INDIAN_STATES = [
     'Puducherry'
 ];
 
-export const ALL_EU_SIZES = Array.from({ length: 21 }, (_, i) => (i + 13).toString());
+export const ALL_EU_SIZES = Array.from({ length: 26 }, (_, i) => (i + 13).toString());

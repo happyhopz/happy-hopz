@@ -171,6 +171,8 @@ const Products = () => {
                                         <SelectItem value="Toddler (1-3y)">Toddler (1-3y)</SelectItem>
                                         <SelectItem value="Junior (3-6y)">Junior (3-6y)</SelectItem>
                                         <SelectItem value="Senior (6-9y)">Senior (6-9y)</SelectItem>
+                                        <SelectItem value="9-12 years">Pre-Teen (9-12y)</SelectItem>
+                                        <SelectItem value="12+ years">Teen (12+y)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
