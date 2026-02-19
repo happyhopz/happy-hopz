@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Package, Calendar, MapPin, Phone, ArrowLeft, Truck, CheckCircle2, Clock, XCircle, IndianRupee, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { trackPurchase } from '@/lib/analytics';
 
 const OrderDetail = () => {
     const { id } = useParams();
@@ -27,6 +28,16 @@ const OrderDetail = () => {
         },
         enabled: !!id && !!user
     });
+
+    const isTracked = React.useRef(false);
+
+    React.useEffect(() => {
+        if (order && !isTracked.current) {
+            // Track conversion for new orders
+            trackPurchase(order.orderId || order.id, order.total);
+            isTracked.current = true;
+        }
+    }, [order]);
 
     const [showReasonInput, setShowReasonInput] = useState<'CANCEL' | 'RETURN' | null>(null);
     const [reason, setReason] = useState('');
