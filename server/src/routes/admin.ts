@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma';
-import { authenticate, optionalAuthenticate, requireAdmin, AuthRequest, requireStaff } from '../middleware/auth';
+import { authenticate, requireAdmin, AuthRequest, requireStaff } from '../middleware/auth';
 import { z } from 'zod';
 import { sendOrderConfirmationEmail } from '../utils/email';
 import { logActivity } from '../lib/logger';
@@ -9,8 +9,8 @@ import { generateShippingLabelPDF } from '../utils/pdfUtils';
 
 const router = Router();
 
-// All routes require session check
-router.use(optionalAuthenticate);
+// All admin routes require authentication
+router.use(authenticate);
 
 // Helper for safe JSON parsing
 const safeJsonParse = (str: string | null | undefined, fallback: any = []) => {

@@ -18,7 +18,7 @@ const AdminDashboard = () => {
             const response = await adminAPI.getStats();
             return response.data;
         },
-        enabled: isAdmin,
+        enabled: isAdmin && !loading,
         retry: 1
     });
 
@@ -28,7 +28,7 @@ const AdminDashboard = () => {
             const response = await adminAPI.getAuditLogs();
             return response.data;
         },
-        enabled: isAdmin,
+        enabled: isAdmin && !loading,
         refetchInterval: 10000 // Refresh every 10s for "real-time" feel
     });
     // Debug logging
