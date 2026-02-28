@@ -26,7 +26,8 @@ const OrderDetail = () => {
             const response = await ordersAPI.getById(id!);
             return response.data;
         },
-        enabled: !!id && !!user
+        enabled: !!id && !!user,
+        refetchInterval: 15000 // Poll every 15s — customers see status changes near-instantly
     });
 
     const isTracked = React.useRef(false);

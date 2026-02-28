@@ -49,7 +49,16 @@ import TrackOrder from "./pages/TrackOrder";
 import NotFound from "./pages/NotFound";
 import usePageTracking from "./hooks/usePageTracking";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0,                  // always treat data as stale — refetch in background immediately
+      refetchOnWindowFocus: true,    // refetch the moment user switches back to the tab
+      refetchOnReconnect: true,      // refetch after losing internet
+      retry: 1,
+    },
+  },
+});
 
 // Inner component so usePageTracking has access to BrowserRouter context
 const AppInner = () => {

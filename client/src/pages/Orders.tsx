@@ -21,7 +21,8 @@ const Orders = () => {
             const response = await ordersAPI.getMyOrders();
             return Array.isArray(response.data) ? response.data : [];
         },
-        enabled: !!user
+        enabled: !!user,
+        refetchInterval: 30000 // Poll every 30s so order status updates appear automatically
     });
 
     const getStatusStyles = (status: string) => {
