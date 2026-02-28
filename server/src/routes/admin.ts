@@ -724,6 +724,65 @@ router.get('/audit-logs', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// Get visitor stats (custom page-view tracker)
+router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
+    try {
+        const now = new Date();
+
+        const startOfToday = new Date(now);
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - 7);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const startOfMonth = new Date(now);
+        startOfMonth.setDate(now.getDate() - 30);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        const [todayViews, weekViews, monthViews, totalViews, last7DaysViews] = await Promise.all([
+            (prisma as any).pageView.count({ where: { createdAt: { gte: startOfToday } } }),
+            (prisma as any).pageView.count({ where: { createdAt: { gte: startOfWeek } } }),
+            (prisma as any).pageView.count({ where: { createdAt: { gte: startOfMonth } } }),
+            (prisma as any).pageView.count(),
+            (prisma as any).pageView.findMany({
+                where: { createdAt: { gte: sevenDaysAgo } },
+                select: { createdAt: true }
+            })
+        ]);
+
+        // Group last 7 days by date
+        const dailyMap: Record<string, number> = {};
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(now.getDate() - i);
+            dailyMap[d.toISOString().split('T')[0]] = 0;
+        }
+        (last7DaysViews as any[]).forEach((v: any) => {
+            const date = new Date(v.createdAt).toISOString().split('T')[0];
+            if (date in dailyMap) dailyMap[date]++;
+        });
+
+        const dailyVisitors = Object.entries(dailyMap).map(([date, views]) => ({ date, views }));
+
+        res.json({
+            todayVisitors: todayViews,
+            weekVisitors: weekViews,
+            monthVisitors: monthViews,
+            totalVisitors: totalViews,
+            dailyVisitors
+        });
+    } catch (error: any) {
+        console.error('❌ [Visitor Stats] Error:', error.message);
+        res.status(500).json({ error: 'Failed to load visitor stats' });
+    }
+});
+
+
 // Update user role (Admin only)
 router.put('/users/:id/role', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {

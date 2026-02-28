@@ -338,3 +338,14 @@ model ReturnItem {
   createdAt       DateTime      @default(now())
   returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
 }
+
+model PageView {
+  id        String   @id @default(uuid())
+  path      String
+  sessionId String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([sessionId])
+}
+

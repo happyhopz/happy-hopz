@@ -47,8 +47,63 @@ import ReturnDetail from './pages/admin/ReturnDetail';
 import AdminNotifications from './pages/admin/Notifications';
 import TrackOrder from "./pages/TrackOrder";
 import NotFound from "./pages/NotFound";
+import usePageTracking from "./hooks/usePageTracking";
 
 const queryClient = new QueryClient();
+
+// Inner component so usePageTracking has access to BrowserRouter context
+const AppInner = () => {
+  usePageTracking();
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/orders/:id" element={<OrderDetail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/shipping" element={<Shipping />} />
+        <Route path="/returns" element={<Returns />} />
+        <Route path="/size-guide" element={<SizeGuide />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/my-returns" element={<MyReturns />} />
+        <Route path="/track-order" element={<TrackOrder />} />
+        <Route element={<AdminLayout><Outlet /></AdminLayout>}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
+          <Route path="/admin/coupons" element={<AdminCoupons />} />
+          <Route path="/admin/reviews" element={<AdminReviews />} />
+          <Route path="/admin/cms" element={<AdminCMS />} />
+          <Route path="/admin/contacts" element={<AdminContacts />} />
+          <Route path="/admin/marketing" element={<AdminMarketing />} />
+          <Route path="/admin/returns" element={<AdminReturns />} />
+          <Route path="/admin/returns/:id" element={<ReturnDetail />} />
+          <Route path="/admin/notifications" element={<AdminNotifications />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+        </Route>
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <WhatsAppButton />
+    </>
+  );
+};
 
 const App = () => (
   <HelmetProvider>
@@ -59,51 +114,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <ScrollToTop />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/products/:id" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/orders/:id" element={<OrderDetail />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/shipping" element={<Shipping />} />
-                <Route path="/returns" element={<Returns />} />
-                <Route path="/size-guide" element={<SizeGuide />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/my-returns" element={<MyReturns />} />
-                <Route path="/track-order" element={<TrackOrder />} />
-                <Route element={<AdminLayout><Outlet /></AdminLayout>}>
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/products" element={<AdminProducts />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/orders" element={<AdminOrders />} />
-                  <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
-                  <Route path="/admin/coupons" element={<AdminCoupons />} />
-                  <Route path="/admin/reviews" element={<AdminReviews />} />
-                  <Route path="/admin/cms" element={<AdminCMS />} />
-                  <Route path="/admin/contacts" element={<AdminContacts />} />
-                  <Route path="/admin/marketing" element={<AdminMarketing />} />
-                  <Route path="/admin/returns" element={<AdminReturns />} />
-                  <Route path="/admin/returns/:id" element={<ReturnDetail />} />
-                  <Route path="/admin/notifications" element={<AdminNotifications />} />
-                  <Route path="/admin/settings" element={<AdminSettings />} />
-                </Route>
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <WhatsAppButton />
+              <AppInner />
             </BrowserRouter>
           </TooltipProvider>
         </NotificationProvider>
@@ -113,4 +124,3 @@ const App = () => (
 );
 
 export default App;
-

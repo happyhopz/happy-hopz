@@ -149,6 +149,14 @@ export const adminAPI = {
 
     // Advanced Logistics (Draft Orders)
     createDraftOrder: (data: any) => api.post('/orders', { ...data, source: 'MANUAL' }),
+
+    // Visitor analytics
+    getVisitorStats: () => api.get('/admin/visitor-stats'),
+};
+
+export const analyticsAPI = {
+    trackPageView: (path: string, sessionId: string) =>
+        api.post('/analytics/pageview', { path, sessionId }).catch(() => { })
 };
 
 export const marketingAPI = {

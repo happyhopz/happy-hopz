@@ -5,7 +5,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, ShoppingBag, IndianRupee, TrendingUp, Package, Ticket, MessageSquare, Settings, Activity, Clock } from 'lucide-react';
+import { Users, ShoppingBag, IndianRupee, TrendingUp, Package, Ticket, MessageSquare, Settings, Activity, Clock, Eye, ExternalLink } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 
@@ -30,6 +30,16 @@ const AdminDashboard = () => {
         },
         enabled: isAdmin && !loading,
         refetchInterval: 10000 // Refresh every 10s for "real-time" feel
+    });
+
+    const { data: visitorStats } = useQuery({
+        queryKey: ['admin-visitor-stats'],
+        queryFn: async () => {
+            const response = await adminAPI.getVisitorStats();
+            return response.data;
+        },
+        enabled: isAdmin && !loading,
+        refetchInterval: 30000 // Refresh every 30s
     });
     // Debug logging
     console.log('[Dashboard] Auth State:', { user, isAdmin, loading });
@@ -177,6 +187,86 @@ const AdminDashboard = () => {
                             </CardContent>
                         </Card>
                     </div>
+
+                    {/* Visitor Analytics */}
+                    <Card className="mb-8 border-2 border-blue-100">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="font-fredoka flex items-center gap-2">
+                                <Eye className="w-5 h-5 text-blue-500" />
+                                Visitor Analytics
+                                <Badge variant="secondary" className="text-xs animate-pulse ml-1">Live</Badge>
+                            </CardTitle>
+                            <a
+                                href="https://analytics.google.com/analytics/web/#/p458399513/reports/intelligenthome"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Button variant="outline" size="sm" className="text-xs gap-1 border-blue-200 text-blue-600 hover:bg-blue-50">
+                                    <ExternalLink className="w-3 h-3" />
+                                    Full GA4 Analytics
+                                </Button>
+                            </a>
+                        </CardHeader>
+                        <CardContent>
+                            {/* Visitor Count Cards */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                <div className="p-4 bg-blue-50/60 border border-blue-100 rounded-xl text-center">
+                                    <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Today</p>
+                                    <p className="text-3xl font-fredoka font-bold text-blue-800">{visitorStats?.todayVisitors ?? '—'}</p>
+                                    <p className="text-[10px] text-blue-500 mt-0.5">page views</p>
+                                </div>
+                                <div className="p-4 bg-indigo-50/60 border border-indigo-100 rounded-xl text-center">
+                                    <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">7 Days</p>
+                                    <p className="text-3xl font-fredoka font-bold text-indigo-800">{visitorStats?.weekVisitors ?? '—'}</p>
+                                    <p className="text-[10px] text-indigo-500 mt-0.5">page views</p>
+                                </div>
+                                <div className="p-4 bg-violet-50/60 border border-violet-100 rounded-xl text-center">
+                                    <p className="text-xs font-semibold text-violet-600 uppercase tracking-wider mb-1">30 Days</p>
+                                    <p className="text-3xl font-fredoka font-bold text-violet-800">{visitorStats?.monthVisitors ?? '—'}</p>
+                                    <p className="text-[10px] text-violet-500 mt-0.5">page views</p>
+                                </div>
+                                <div className="p-4 bg-purple-50/60 border border-purple-100 rounded-xl text-center">
+                                    <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider mb-1">All Time</p>
+                                    <p className="text-3xl font-fredoka font-bold text-purple-800">{visitorStats?.totalVisitors ?? '—'}</p>
+                                    <p className="text-[10px] text-purple-500 mt-0.5">page views</p>
+                                </div>
+                            </div>
+
+                            {/* Daily Visitors Bar Chart */}
+                            <div className="h-[220px] w-full">
+                                {Array.isArray(visitorStats?.dailyVisitors) && visitorStats.dailyVisitors.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={visitorStats.dailyVisitors}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis
+                                                dataKey="date"
+                                                tickFormatter={(str) => {
+                                                    try {
+                                                        return new Date(str).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                                                    } catch { return 'N/A'; }
+                                                }}
+                                                tick={{ fontSize: 11 }}
+                                            />
+                                            <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                                            <Tooltip
+                                                formatter={(value) => [`${value} views`, 'Visitors']}
+                                                labelFormatter={(label) => {
+                                                    try {
+                                                        return new Date(label).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+                                                    } catch { return label; }
+                                                }}
+                                            />
+                                            <Bar dataKey="views" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                                        No visitor data yet — data will appear as visitors browse the site
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Cost Breakdown Section */}
                     {stats?.totalRevenue > 0 && (
