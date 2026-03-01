@@ -124,6 +124,32 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
     }
 });
 
+// Get active coupons (Public - for checkout list)
+router.get('/active', async (req, res) => {
+    try {
+        const coupons = await prisma.coupon.findMany({
+            where: {
+                isActive: true,
+                OR: [
+                    { expiryDate: null },
+                    { expiryDate: { gt: new Date() } }
+                ]
+            },
+            select: {
+                id: true,
+                code: true,
+                discountType: true,
+                discountValue: true,
+                minOrderValue: true,
+                firstTimeOnly: true
+            }
+        });
+        res.json(coupons);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch active coupons' });
+    }
+});
+
 // Validate coupon (Public - for checkout)
 router.post('/validate', authenticate, async (req: AuthRequest, res: Response) => {
     try {

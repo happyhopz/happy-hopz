@@ -69,6 +69,7 @@ export const cartAPI = {
     update: (id: string, quantity: number) => api.put(`/cart/${id}`, { quantity }),
     remove: (id: string) => api.delete(`/cart/${id}`),
     clear: () => api.delete('/cart'),
+    getActiveCoupons: () => api.get('/coupons/active'),
     validateCoupon: (data: { code: string; cartTotal: number }) => api.post('/coupons/validate', data),
     getReviews: (productId: string) => api.get(`/reviews/${productId}`),
     postReview: (data: any) => api.post('/reviews', data)

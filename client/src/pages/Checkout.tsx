@@ -40,7 +40,9 @@ import {
     Tag,
     X,
     Trash2,
-    Clock
+    Clock,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -87,6 +89,7 @@ const Checkout = () => {
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponExpiry, setCouponExpiry] = useState<Date | null>(null);
     const [timeRemaining, setTimeRemaining] = useState<number>(0);
+    const [showAvailableCoupons, setShowAvailableCoupons] = useState(false);
 
     // Fetch payment settings
     useEffect(() => {
@@ -197,6 +200,14 @@ const Checkout = () => {
             return response.data;
         },
         enabled: !loading
+    });
+
+    const { data: availableCoupons = [] } = useQuery({
+        queryKey: ['active-coupons'],
+        queryFn: async () => {
+            const response = await cartAPI.getActiveCoupons();
+            return response.data;
+        }
     });
 
     // Fetch dynamic site settings (GST, Delivery)
@@ -1022,10 +1033,8 @@ const Checkout = () => {
                                 {appliedCoupon ? (
                                     <div className="bg-pink-50 border border-pink-100 rounded-xl p-4 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                                <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
-                                                    <Check className="w-3.5 h-3.5 text-white" />
-                                                </div>
+                                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border-2 border-pink-500">
+                                                <span className="text-[10px] font-black text-pink-600">H10</span>
                                             </div>
                                             <div>
                                                 <p className="text-xs font-black text-gray-900 uppercase">{appliedCoupon.code}</p>
@@ -1040,7 +1049,7 @@ const Checkout = () => {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         <div className="relative">
                                             <Input
                                                 placeholder="Enter Coupon Code"
@@ -1057,9 +1066,53 @@ const Checkout = () => {
                                                 {couponLoading ? '...' : 'APPLY'}
                                             </Button>
                                         </div>
-                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight px-1">
-                                            Try <span className="text-pink-500 underline cursor-pointer" onClick={() => { setCouponCode('HOLI10'); }}>HOLI10</span> for 10% Extra Off!
-                                        </p>
+
+                                        {availableCoupons.length > 0 && (
+                                            <div className="border rounded-xl bg-slate-50 overflow-hidden">
+                                                <button
+                                                    onClick={() => setShowAvailableCoupons(!showAvailableCoupons)}
+                                                    className="w-full flex items-center justify-between p-3 text-xs font-black text-gray-600 uppercase tracking-tight hover:bg-slate-100 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <Tag className="w-3.5 h-3.5 text-pink-500" />
+                                                        View Available Coupons
+                                                        <span className="bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-full text-[9px]">{availableCoupons.length}</span>
+                                                    </div>
+                                                    {showAvailableCoupons ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                                </button>
+
+                                                {showAvailableCoupons && (
+                                                    <div className="p-2 space-y-2 border-t bg-white">
+                                                        {availableCoupons.map((coupon: any) => (
+                                                            <div key={coupon.id} className="p-3 border rounded-lg hover:border-pink-200 transition-all group">
+                                                                <div className="flex items-center justify-between mb-1">
+                                                                    <span className="text-xs font-black text-pink-600 tracking-widest">{coupon.code}</span>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => {
+                                                                            setCouponCode(coupon.code);
+                                                                            setTimeout(() => {
+                                                                                const btn = document.querySelector('button[onClick*="handleApplyCoupon"]');
+                                                                                if (btn) (btn as HTMLButtonElement).click();
+                                                                                else handleApplyCoupon();
+                                                                            }, 100);
+                                                                        }}
+                                                                        className="h-7 text-[10px] font-black text-blue-600 hover:bg-blue-50"
+                                                                    >
+                                                                        APPLY
+                                                                    </Button>
+                                                                </div>
+                                                                <p className="text-[10px] text-gray-500 font-medium">
+                                                                    {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
+                                                                    {coupon.minOrderValue > 0 && ` on orders above ₹${coupon.minOrderValue}`}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
