@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, ShoppingBag, IndianRupee, TrendingUp, Package, Ticket, MessageSquare, Settings, Activity, Clock, Eye, ExternalLink } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { format } from 'date-fns';
 
 const AdminDashboard = () => {
@@ -281,7 +281,7 @@ const AdminDashboard = () => {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                                     {/* Gross Revenue */}
                                     <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-lg">
                                         <p className="text-sm text-blue-700 font-semibold mb-1">Gross Revenue</p>
@@ -298,28 +298,6 @@ const AdminDashboard = () => {
                                             <IndianRupee className="w-5 h-5" />
                                             {(stats?.totalCosts || 0).toFixed(2)}
                                         </p>
-                                        <div className="mt-2 space-y-1 text-xs text-red-700">
-                                            <div className="flex justify-between">
-                                                <span>Product:</span>
-                                                <span className="font-semibold">₹{(stats?.totalProductCost || 0).toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Packaging:</span>
-                                                <span className="font-semibold">₹{(stats?.totalPackagingCost || 0).toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Labels/Tags:</span>
-                                                <span className="font-semibold">₹{(stats?.totalLabelingCost || 0).toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Shipping:</span>
-                                                <span className="font-semibold">₹{(stats?.totalShippingCost || 0).toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Other:</span>
-                                                <span className="font-semibold">₹{(stats?.totalOtherCosts || 0).toFixed(2)}</span>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     {/* Net Profit */}
@@ -342,6 +320,74 @@ const AdminDashboard = () => {
                                         </p>
                                     </div>
                                 </div>
+
+                                {/* Cost Breakdown Donut Chart */}
+                                {stats?.totalCosts > 0 && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <p className="text-sm font-semibold text-muted-foreground mb-3">Cost Breakdown</p>
+                                            <div className="h-[200px]">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <PieChart>
+                                                        <Pie
+                                                            data={[
+                                                                { name: 'Product', value: stats?.totalProductCost || 0 },
+                                                                { name: 'Packaging', value: stats?.totalPackagingCost || 0 },
+                                                                { name: 'Labels', value: stats?.totalLabelingCost || 0 },
+                                                                { name: 'Shipping', value: stats?.totalShippingCost || 0 },
+                                                                { name: 'Other', value: stats?.totalOtherCosts || 0 },
+                                                            ].filter(d => d.value > 0)}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            innerRadius={50}
+                                                            outerRadius={80}
+                                                            paddingAngle={3}
+                                                            dataKey="value"
+                                                        >
+                                                            {[
+                                                                { name: 'Product', value: stats?.totalProductCost || 0 },
+                                                                { name: 'Packaging', value: stats?.totalPackagingCost || 0 },
+                                                                { name: 'Labels', value: stats?.totalLabelingCost || 0 },
+                                                                { name: 'Shipping', value: stats?.totalShippingCost || 0 },
+                                                                { name: 'Other', value: stats?.totalOtherCosts || 0 },
+                                                            ].filter(d => d.value > 0).map((_, index) => (
+                                                                <Cell key={`cost-${index}`} fill={['#ef4444', '#f97316', '#eab308', '#3b82f6', '#8b5cf6'][index % 5]} />
+                                                            ))}
+                                                        </Pie>
+                                                        <Tooltip formatter={(value: any) => [`₹${Number(value).toFixed(2)}`, '']} />
+                                                        <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-muted-foreground mb-3">Revenue vs Profit</p>
+                                            <div className="h-[200px]">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <PieChart>
+                                                        <Pie
+                                                            data={[
+                                                                { name: 'Profit', value: Math.max(0, stats?.totalProfit || 0) },
+                                                                { name: 'Costs', value: stats?.totalCosts || 0 },
+                                                            ]}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            innerRadius={50}
+                                                            outerRadius={80}
+                                                            paddingAngle={3}
+                                                            dataKey="value"
+                                                        >
+                                                            <Cell fill="#22c55e" />
+                                                            <Cell fill="#ef4444" />
+                                                        </Pie>
+                                                        <Tooltip formatter={(value: any) => [`₹${Number(value).toFixed(2)}`, '']} />
+                                                        <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -493,30 +539,45 @@ const AdminDashboard = () => {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                        {/* Order Status Distribution */}
+                        {/* Order Status Distribution - Donut Chart */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="font-fredoka">Order Status</CardTitle>
+                                <CardTitle className="font-fredoka">Order Status Distribution</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-4">
-                                    {Array.isArray(stats?.ordersByStatus) && stats.ordersByStatus.map((status: any) => (
-                                        <div key={status.status} className="flex items-center justify-between">
-                                            <Badge variant="outline">{status.status}</Badge>
-                                            <div className="flex-1 mx-4 h-2 bg-secondary rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-primary"
-                                                    style={{ width: `${stats.totalOrders > 0 ? (status._count / stats.totalOrders) * 100 : 0}%` }}
-                                                />
-                                            </div>
-                                            <span className="font-bold">{status._count}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                {Array.isArray(stats?.ordersByStatus) && stats.ordersByStatus.length > 0 ? (
+                                    <div className="h-[280px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={stats.ordersByStatus.map((s: any) => ({ name: s.status, value: s._count }))}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={100}
+                                                    paddingAngle={3}
+                                                    dataKey="value"
+                                                    label={({ name, value }) => `${name} (${value})`}
+                                                >
+                                                    {stats.ordersByStatus.map((_: any, index: number) => {
+                                                        const colors = ['#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e', '#ef4444', '#06b6d4', '#ec4899'];
+                                                        return <Cell key={`status-${index}`} fill={colors[index % colors.length]} />;
+                                                    })}
+                                                </Pie>
+                                                <Tooltip formatter={(value: any) => [`${value} orders`, '']} />
+                                                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
+                                        No order data available yet.
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
-                        {/* Top Selling Products */}
+                        {/* Top Selling Products - Horizontal Bar Chart */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="font-fredoka flex items-center gap-2">
@@ -525,34 +586,30 @@ const AdminDashboard = () => {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-4">
-                                    {Array.isArray(stats?.topSellingProducts) && stats.topSellingProducts.map((item: any) => (
-                                        <div key={item.productId || item.id} className="flex items-center justify-between">
-                                            <div className="flex-1">
-                                                <p className="font-nunito font-bold text-sm truncate">{item.name || item.product?.name || 'Unknown Product'}</p>
-                                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                                                    {item._sum?.quantity || item.quantity || 0} Sold
-                                                </p>
-                                            </div>
-                                            <div className="flex gap-1 h-1.5 w-24 bg-secondary rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-green-500"
-                                                    style={{
-                                                        width: `${stats.topSellingProducts[0]?._sum?.quantity > 0
-                                                            ? ((item._sum?.quantity || 0) / stats.topSellingProducts[0]._sum.quantity) * 100
-                                                            : 0
-                                                            }%`
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {(!stats?.topSellingProducts || stats.topSellingProducts.length === 0) && (
-                                        <div className="text-center py-6 text-muted-foreground text-sm">
-                                            No sales data available yet.
-                                        </div>
-                                    )}
-                                </div>
+                                {Array.isArray(stats?.topSellingProducts) && stats.topSellingProducts.length > 0 ? (
+                                    <div className="h-[280px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart
+                                                layout="vertical"
+                                                data={stats.topSellingProducts.map((item: any) => ({
+                                                    name: (item.name || item.product?.name || 'Unknown').slice(0, 20),
+                                                    sold: item._sum?.quantity || item.quantity || 0
+                                                }))}
+                                                margin={{ left: 10, right: 30 }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                                <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                                                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={100} />
+                                                <Tooltip formatter={(value: any) => [`${value} sold`, 'Quantity']} />
+                                                <Bar dataKey="sold" fill="#22c55e" radius={[0, 6, 6, 0]} barSize={20} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
+                                        No sales data available yet.
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
