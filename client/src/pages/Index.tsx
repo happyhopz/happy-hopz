@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import IntroScreen from '@/components/IntroScreen';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
+import HoliBanner from '@/components/HoliBanner';
 import FeaturedShoes from '@/components/FeaturedShoes';
 import WhyParentsLove from '@/components/WhyParentsLove';
 import Footer from '@/components/Footer';
@@ -27,6 +28,7 @@ const Index = () => {
       {/* Main Content - visible after intro */}
       <div className={`transition-opacity duration-500 ${showIntro ? 'opacity-0' : 'opacity-100'}`}>
         <Navbar />
+        <HoliBanner />
         <main>
           <HeroSection />
           <FeaturedShoes />
