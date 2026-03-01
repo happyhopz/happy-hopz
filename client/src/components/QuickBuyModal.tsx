@@ -90,8 +90,8 @@ const QuickBuyModal = ({ product, isOpen, onClose, user }: QuickBuyModalProps) =
                                     key={size}
                                     onClick={() => setSelectedSize(size)}
                                     className={`h-9 sm:h-10 rounded-xl border-2 font-bold transition-all text-xs sm:text-sm ${selectedSize === size
-                                        ? 'border-cyan-500 bg-cyan-50 text-cyan-700 shadow-sm scale-105'
-                                        : 'border-muted hover:border-cyan-200'
+                                        ? 'border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105 ring-2 ring-orange-300'
+                                        : 'border-gray-200 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50'
                                         }`}
                                 >
                                     {size}
