@@ -990,6 +990,15 @@ const Checkout = () => {
                                     <div className="space-y-4 text-sm font-medium">
                                         <div className="flex justify-between text-gray-600"><span>Bag Total ({itemCount} items)</span><span>₹{subtotal.toFixed(0)}</span></div>
                                         {savings > 0 && <div className="flex justify-between text-green-600"><span>Bag Discount</span><span>-₹{savings.toFixed(0)}</span></div>}
+                                        {appliedCoupon && (
+                                            <div className="flex justify-between text-green-600 font-bold bg-green-50 p-2 rounded-lg border border-green-100">
+                                                <div className="flex items-center gap-2">
+                                                    <Tag className="w-3.5 h-3.5" />
+                                                    <span>Coupon ({appliedCoupon.code})</span>
+                                                </div>
+                                                <span>-₹{appliedCoupon.discountAmount.toFixed(0)}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between text-gray-600"><span>GST ({dynamicSettings?.gst_percentage || 18}%)</span><span>₹{tax.toFixed(0)}</span></div>
                                         <div className="flex justify-between text-gray-600"><span>Delivery Charges</span>{shipping === 0 ? <span className="text-green-600 font-bold">FREE</span> : <span>₹{shipping}</span>}</div>
                                         <Separator />
@@ -1001,6 +1010,67 @@ const Checkout = () => {
                                     <div className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</div>
                                     <div className="flex items-center gap-1"><Truck className="w-3 h-3" /> Fast Delivery</div>
                                 </div>
+                            </Card>
+
+                            {/* COUPON SECTION */}
+                            <Card className="border-none shadow-sm overflow-hidden bg-white p-5">
+                                <h3 className="text-xs font-black text-gray-400 uppercase mb-4 tracking-widest flex items-center gap-2">
+                                    <Tag className="w-3.5 h-3.5 text-pink-500" />
+                                    Have a Coupon?
+                                </h3>
+
+                                {appliedCoupon ? (
+                                    <div className="bg-pink-50 border border-pink-100 rounded-xl p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                                <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+                                                    <Check className="w-3.5 h-3.5 text-white" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black text-gray-900 uppercase">{appliedCoupon.code}</p>
+                                                <p className="text-[10px] text-green-600 font-bold">SAVED ₹{appliedCoupon.discountAmount.toFixed(0)}</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleRemoveCoupon}
+                                            className="text-[10px] font-black text-pink-600 hover:text-pink-700 uppercase tracking-wider"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="relative">
+                                            <Input
+                                                placeholder="Enter Coupon Code"
+                                                value={couponCode}
+                                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                                className="uppercase font-bold tracking-widest h-12 pr-24 border-gray-100 focus-visible:ring-pink-500"
+                                            />
+                                            <Button
+                                                variant="ghost"
+                                                disabled={couponLoading || !couponCode.trim()}
+                                                onClick={handleApplyCoupon}
+                                                className="absolute right-1 top-1 h-10 font-black text-pink-600 hover:bg-pink-50 hover:text-pink-700"
+                                            >
+                                                {couponLoading ? '...' : 'APPLY'}
+                                            </Button>
+                                        </div>
+                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight px-1">
+                                            Try <span className="text-pink-500 underline cursor-pointer" onClick={() => { setCouponCode('HOLI10'); }}>HOLI10</span> for 10% Extra Off!
+                                        </p>
+                                    </div>
+                                )}
+
+                                {appliedCoupon && timeRemaining > 0 && (
+                                    <div className="mt-3 flex items-center justify-center gap-1.5 py-1.5 bg-slate-50 rounded-lg">
+                                        <Clock className="w-3 h-3 text-slate-400" />
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                            Offer reserved for {Math.floor(timeRemaining / 60000)}:{((timeRemaining % 60000) / 1000).toFixed(0).padStart(2, '0')}
+                                        </span>
+                                    </div>
+                                )}
                             </Card>
 
                         </div>
