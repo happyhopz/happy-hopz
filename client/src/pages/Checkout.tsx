@@ -393,12 +393,14 @@ const Checkout = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const handleApplyCoupon = async () => {
-        if (!couponCode.trim()) {
+    const handleApplyCoupon = async (directCode?: string) => {
+        const codeToApply = directCode || couponCode.trim();
+        if (!codeToApply) {
             toast.error('Please enter a coupon code');
             return;
         }
 
+        setCouponCode(codeToApply);
         setCouponLoading(true);
         try {
             const userEmail = user?.email || (isGuest ? guestInfo.email : null);
@@ -409,7 +411,7 @@ const Checkout = () => {
                     ...(user ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
                 },
                 body: JSON.stringify({
-                    code: couponCode,
+                    code: codeToApply,
                     cartTotal: subtotal,
                     guestEmail: userEmail
                 })
@@ -1060,7 +1062,7 @@ const Checkout = () => {
                                             <Button
                                                 variant="ghost"
                                                 disabled={couponLoading || !couponCode.trim()}
-                                                onClick={handleApplyCoupon}
+                                                onClick={() => handleApplyCoupon()}
                                                 className="absolute right-1 top-1 h-10 font-black text-pink-600 hover:bg-pink-50 hover:text-pink-700"
                                             >
                                                 {couponLoading ? '...' : 'APPLY'}
@@ -1090,14 +1092,7 @@ const Checkout = () => {
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="sm"
-                                                                        onClick={() => {
-                                                                            setCouponCode(coupon.code);
-                                                                            setTimeout(() => {
-                                                                                const btn = document.querySelector('button[onClick*="handleApplyCoupon"]');
-                                                                                if (btn) (btn as HTMLButtonElement).click();
-                                                                                else handleApplyCoupon();
-                                                                            }, 100);
-                                                                        }}
+                                                                        onClick={() => handleApplyCoupon(coupon.code)}
                                                                         className="h-7 text-[10px] font-black text-blue-600 hover:bg-blue-50"
                                                                     >
                                                                         APPLY
