@@ -42,7 +42,8 @@ import {
     Trash2,
     Clock,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -90,6 +91,7 @@ const Checkout = () => {
     const [couponExpiry, setCouponExpiry] = useState<Date | null>(null);
     const [timeRemaining, setTimeRemaining] = useState<number>(0);
     const [showAvailableCoupons, setShowAvailableCoupons] = useState(false);
+    const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
 
     // Fetch payment settings
     useEffect(() => {
@@ -251,6 +253,20 @@ const Checkout = () => {
         const newQty = item.quantity + delta;
         if (newQty < 1) return;
 
+        const itemKey = item.id || `${item.productId}-${item.size}-${item.color}`;
+        setLoadingItemId(itemKey);
+
+        // Optimistic update: change quantity instantly in UI
+        queryClient.setQueryData(['cart', user?.id, isGuest], (old: any) => {
+            if (!old) return old;
+            return old.map((i: any) => {
+                const iKey = i.id || `${i.productId}-${i.size}-${i.color}`;
+                return iKey === itemKey ? { ...i, quantity: newQty } : i;
+            });
+        });
+
+        toast.success(`Qty updated to ${newQty}`, { duration: 1500 });
+
         if (isGuest) {
             const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
             const updatedCart = localCart.map((i: any) =>
@@ -259,9 +275,11 @@ const Checkout = () => {
                     : i
             );
             localStorage.setItem('cart', JSON.stringify(updatedCart));
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            setLoadingItemId(null);
         } else {
-            updateCartMutation.mutate({ id: item.id, quantity: newQty });
+            updateCartMutation.mutate({ id: item.id, quantity: newQty }, {
+                onSettled: () => setLoadingItemId(null)
+            });
         }
     };
 
@@ -967,17 +985,18 @@ const Checkout = () => {
                                                         <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-100 p-1 shadow-sm">
                                                             <button
                                                                 onClick={() => handleUpdateQuantity(item, -1)}
-                                                                disabled={item.quantity <= 1}
+                                                                disabled={item.quantity <= 1 || loadingItemId === (item.id || `${item.productId}-${item.size}-${item.color}`)}
                                                                 className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-pink-50 text-gray-400 hover:text-pink-600 transition-colors disabled:opacity-30 disabled:pointer-events-none"
                                                             >
-                                                                <Minus className="w-3 h-3" strokeWidth={3} />
+                                                                {loadingItemId === (item.id || `${item.productId}-${item.size}-${item.color}`) ? <Loader2 className="w-3 h-3 animate-spin" /> : <Minus className="w-3 h-3" strokeWidth={3} />}
                                                             </button>
                                                             <span className="text-[11px] font-black text-gray-800 min-w-[20px] text-center">{item.quantity}</span>
                                                             <button
                                                                 onClick={() => handleUpdateQuantity(item, 1)}
-                                                                className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-pink-50 text-gray-400 hover:text-pink-600 transition-colors"
+                                                                disabled={loadingItemId === (item.id || `${item.productId}-${item.size}-${item.color}`)}
+                                                                className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-pink-50 text-gray-400 hover:text-pink-600 transition-colors disabled:opacity-30 disabled:pointer-events-none"
                                                             >
-                                                                <Plus className="w-3 h-3" strokeWidth={3} />
+                                                                {loadingItemId === (item.id || `${item.productId}-${item.size}-${item.color}`) ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" strokeWidth={3} />}
                                                             </button>
                                                         </div>
                                                         <div className="flex items-center gap-3">
