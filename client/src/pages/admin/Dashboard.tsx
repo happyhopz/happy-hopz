@@ -214,22 +214,26 @@ const AdminDashboard = () => {
                                 <div className="p-4 bg-blue-50/60 border border-blue-100 rounded-xl text-center">
                                     <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Today</p>
                                     <p className="text-3xl font-fredoka font-bold text-blue-800">{visitorStats?.todayVisitors ?? '—'}</p>
-                                    <p className="text-[10px] text-blue-500 mt-0.5">page views</p>
+                                    <p className="text-[10px] text-blue-500 mt-0.5">unique visitors</p>
+                                    <p className="text-[10px] text-blue-400 font-semibold">{visitorStats?.todayViews ?? '—'} page views</p>
                                 </div>
                                 <div className="p-4 bg-indigo-50/60 border border-indigo-100 rounded-xl text-center">
                                     <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">7 Days</p>
                                     <p className="text-3xl font-fredoka font-bold text-indigo-800">{visitorStats?.weekVisitors ?? '—'}</p>
-                                    <p className="text-[10px] text-indigo-500 mt-0.5">page views</p>
+                                    <p className="text-[10px] text-indigo-500 mt-0.5">unique visitors</p>
+                                    <p className="text-[10px] text-indigo-400 font-semibold">{visitorStats?.weekViews ?? '—'} page views</p>
                                 </div>
                                 <div className="p-4 bg-violet-50/60 border border-violet-100 rounded-xl text-center">
                                     <p className="text-xs font-semibold text-violet-600 uppercase tracking-wider mb-1">30 Days</p>
                                     <p className="text-3xl font-fredoka font-bold text-violet-800">{visitorStats?.monthVisitors ?? '—'}</p>
-                                    <p className="text-[10px] text-violet-500 mt-0.5">page views</p>
+                                    <p className="text-[10px] text-violet-500 mt-0.5">unique visitors</p>
+                                    <p className="text-[10px] text-violet-400 font-semibold">{visitorStats?.monthViews ?? '—'} page views</p>
                                 </div>
                                 <div className="p-4 bg-purple-50/60 border border-purple-100 rounded-xl text-center">
                                     <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider mb-1">All Time</p>
                                     <p className="text-3xl font-fredoka font-bold text-purple-800">{visitorStats?.totalVisitors ?? '—'}</p>
-                                    <p className="text-[10px] text-purple-500 mt-0.5">page views</p>
+                                    <p className="text-[10px] text-purple-500 mt-0.5">unique visitors</p>
+                                    <p className="text-[10px] text-purple-400 font-semibold">{visitorStats?.totalViews ?? '—'} page views</p>
                                 </div>
                             </div>
                             <div className="h-[220px] w-full">
@@ -247,13 +251,14 @@ const AdminDashboard = () => {
                                             />
                                             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                                             <Tooltip
-                                                formatter={(value) => [`${value} views`, 'Visitors']}
+                                                formatter={(value, name) => [`${value}`, name === 'visitors' ? 'Unique Visitors' : 'Page Views']}
                                                 labelFormatter={(label) => {
                                                     try { return new Date(label).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }); }
                                                     catch { return label; }
                                                 }}
                                             />
-                                            <Bar dataKey="views" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                                            <Bar dataKey="visitors" fill="#6366f1" radius={[4, 4, 0, 0]} name="visitors" />
+                                            <Bar dataKey="views" fill="#c7d2fe" radius={[4, 4, 0, 0]} name="views" />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : (
@@ -262,6 +267,7 @@ const AdminDashboard = () => {
                                     </div>
                                 )}
                             </div>
+
                         </CardContent>
                     </Card>
 

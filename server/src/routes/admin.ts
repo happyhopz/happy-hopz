@@ -744,6 +744,7 @@ router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
         sevenDaysAgo.setDate(now.getDate() - 7);
         sevenDaysAgo.setHours(0, 0, 0, 0);
 
+        // Count page views (total)
         const [todayViews, weekViews, monthViews, totalViews, last7DaysViews] = await Promise.all([
             (prisma as any).pageView.count({ where: { createdAt: { gte: startOfToday } } }),
             (prisma as any).pageView.count({ where: { createdAt: { gte: startOfWeek } } }),
@@ -751,29 +752,54 @@ router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
             (prisma as any).pageView.count(),
             (prisma as any).pageView.findMany({
                 where: { createdAt: { gte: sevenDaysAgo } },
-                select: { createdAt: true }
+                select: { createdAt: true, sessionId: true }
             })
         ]);
 
-        // Group last 7 days by date
-        const dailyMap: Record<string, number> = {};
+        // Count unique visitors (distinct sessionIds)
+        const [todayUnique, weekUnique, monthUnique, totalUnique] = await Promise.all([
+            (prisma as any).pageView.groupBy({ by: ['sessionId'], where: { createdAt: { gte: startOfToday } } }).then((r: any[]) => r.length),
+            (prisma as any).pageView.groupBy({ by: ['sessionId'], where: { createdAt: { gte: startOfWeek } } }).then((r: any[]) => r.length),
+            (prisma as any).pageView.groupBy({ by: ['sessionId'], where: { createdAt: { gte: startOfMonth } } }).then((r: any[]) => r.length),
+            (prisma as any).pageView.groupBy({ by: ['sessionId'] }).then((r: any[]) => r.length),
+        ]);
+
+        // Group last 7 days by date — both views and unique visitors
+        const dailyViewsMap: Record<string, number> = {};
+        const dailySessionsMap: Record<string, Set<string>> = {};
         for (let i = 6; i >= 0; i--) {
             const d = new Date(now);
             d.setDate(now.getDate() - i);
-            dailyMap[d.toISOString().split('T')[0]] = 0;
+            const key = d.toISOString().split('T')[0];
+            dailyViewsMap[key] = 0;
+            dailySessionsMap[key] = new Set();
         }
         (last7DaysViews as any[]).forEach((v: any) => {
             const date = new Date(v.createdAt).toISOString().split('T')[0];
-            if (date in dailyMap) dailyMap[date]++;
+            if (date in dailyViewsMap) {
+                dailyViewsMap[date]++;
+                dailySessionsMap[date].add(v.sessionId);
+            }
         });
 
-        const dailyVisitors = Object.entries(dailyMap).map(([date, views]) => ({ date, views }));
+        const dailyVisitors = Object.entries(dailyViewsMap).map(([date, views]) => ({
+            date,
+            views,
+            visitors: dailySessionsMap[date]?.size || 0
+        }));
 
         res.json({
-            todayVisitors: todayViews,
-            weekVisitors: weekViews,
-            monthVisitors: monthViews,
-            totalVisitors: totalViews,
+            // Page views (total)
+            todayViews,
+            weekViews,
+            monthViews,
+            totalViews,
+            // Unique visitors (distinct sessions)
+            todayVisitors: todayUnique,
+            weekVisitors: weekUnique,
+            monthVisitors: monthUnique,
+            totalVisitors: totalUnique,
+            // Chart data
             dailyVisitors
         });
     } catch (error: any) {
@@ -781,6 +807,7 @@ router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to load visitor stats' });
     }
 });
+
 
 
 // Update user role (Admin only)
