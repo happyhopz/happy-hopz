@@ -1,6 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { sendOrderEmail, sendAdminOrderNotification, sendAdminAlertEmail, sendAdminStatusUpdateEmail } from '../utils/email';
-import { sendOrderWhatsApp } from '../utils/whatsapp';
+import { sendWhatsAppNotification } from '../utils/whatsapp';
 import { generateOrderPDF } from '../utils/pdfUtils';
 
 export class NotificationService {
@@ -60,27 +60,18 @@ export class NotificationService {
         // 3. Send WhatsApp
         if (phone) {
             try {
-                const components = [
-                    {
-                        type: 'body',
-                        parameters: [
-                            { type: 'text', text: fullOrder.address?.name || 'Customer' },
-                            { type: 'text', text: orderId },
-                            { type: 'text', text: `₹${fullOrder.total}` },
-                            { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
-                        ]
-                    }
+                const params = [
+                    fullOrder.address?.name || 'Customer',
+                    orderId,
+                    `₹${fullOrder.total}`,
+                    `https://www.happyhopz.com/orders/${fullOrder.id}`
                 ];
-                const res = await sendOrderWhatsApp(phone, 'hhz_order_confirmation', components);
-                if (res.success) {
-                    await this.logNotification(fullOrder.id, 'whatsapp', 'order_created', 'success');
-                    await prisma.order.update({
-                        where: { id: fullOrder.id },
-                        data: { whatsappSent: true }
-                    });
-                } else {
-                    await this.logNotification(fullOrder.id, 'whatsapp', 'order_created', 'failed', res.error);
-                }
+                await sendWhatsAppNotification(phone, 'hhz_order_confirmation', params);
+                await this.logNotification(fullOrder.id, 'whatsapp', 'order_created', 'success');
+                await prisma.order.update({
+                    where: { id: fullOrder.id },
+                    data: { whatsappSent: true }
+                });
             } catch (error: any) {
                 await this.logNotification(fullOrder.id, 'whatsapp', 'order_created', 'failed', error.message);
             }
@@ -123,60 +114,50 @@ export class NotificationService {
         // 2. Send WhatsApp
         if (phone) {
             try {
-                let template = 'hhz_status_update';
-                let params: any[] = [
-                    { type: 'text', text: orderId },
-                    { type: 'text', text: fullOrder.status }
+                let template = 'hhz_order_confirmation';
+                let params: string[] = [
+                    fullOrder.address?.name || 'Customer',
+                    orderId,
+                    `₹${fullOrder.total}`,
+                    `https://www.happyhopz.com/orders/${fullOrder.id}`
                 ];
 
-                if (fullOrder.status === 'CONFIRMED') {
-                    template = 'hhz_order_confirmation'; // Reuse confirmation or specific hhz_order_confirmed
-                    params = [
-                        { type: 'text', text: fullOrder.address?.name || 'Customer' },
-                        { type: 'text', text: orderId },
-                        { type: 'text', text: `₹${fullOrder.total}` },
-                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
-                    ];
-                } else if (fullOrder.status === 'SHIPPED') {
+                if (fullOrder.status === 'SHIPPED') {
                     template = 'hhz_order_shipped';
                     params = [
-                        { type: 'text', text: orderId },
-                        { type: 'text', text: fullOrder.trackingNumber || 'N/A' },
-                        { type: 'text', text: fullOrder.courierPartner || 'Standard' },
-                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                        orderId,
+                        fullOrder.trackingNumber || 'N/A',
+                        fullOrder.courierPartner || 'Standard',
+                        `https://www.happyhopz.com/orders/${fullOrder.id}`
                     ];
                 } else if (fullOrder.status === 'OUT_FOR_DELIVERY') {
                     template = 'hhz_out_for_delivery';
                     params = [
-                        { type: 'text', text: orderId },
-                        { type: 'text', text: fullOrder.address?.name || 'Customer' },
-                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                        orderId,
+                        fullOrder.address?.name || 'Customer',
+                        `https://www.happyhopz.com/orders/${fullOrder.id}`
                     ];
                 } else if (fullOrder.status === 'DELIVERED') {
                     template = 'hhz_order_delivered';
                     params = [
-                        { type: 'text', text: fullOrder.address?.name || 'Customer' },
-                        { type: 'text', text: orderId },
-                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                        fullOrder.address?.name || 'Customer',
+                        orderId,
+                        `https://www.happyhopz.com/orders/${fullOrder.id}`
                     ];
                 } else if (fullOrder.status === 'CANCELLED' || fullOrder.status === 'REFUNDED') {
                     template = 'hhz_order_cancelled';
                     params = [
-                        { type: 'text', text: orderId },
-                        { type: 'text', text: fullOrder.status === 'REFUNDED' ? 'processed and refunded' : 'cancelled as per request' },
-                        { type: 'text', text: `https://happy-hopz.vercel.app/orders/${fullOrder.id}` }
+                        orderId,
+                        fullOrder.status === 'REFUNDED' ? 'processed and refunded' : 'cancelled as per request',
+                        `https://www.happyhopz.com/orders/${fullOrder.id}`
                     ];
                 }
 
-                const components = [{ type: 'body', parameters: params }];
-                const res = await sendOrderWhatsApp(phone, template, components);
-                if (res.success) {
-                    await this.logNotification(fullOrder.id, 'whatsapp', 'status_updated', 'success');
-                } else {
-                    await this.logNotification(fullOrder.id, 'whatsapp', 'status_updated', 'failed', res.error);
-                }
+                await sendWhatsAppNotification(phone, template, params);
+                await this.logNotification(fullOrder.id, 'whatsapp', 'status_updated', 'success');
             } catch (error: any) {
                 await this.logNotification(fullOrder.id, 'whatsapp', 'status_updated', 'failed', error.message);
+                console.error(`🔴 WhatsApp failed for ${orderId}:`, error.message);
             }
         }
     }

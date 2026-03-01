@@ -1,75 +1,91 @@
 import axios from 'axios';
 
 /**
- * Sends a WhatsApp message using Meta Cloud API.
- * This implementation uses Official WhatsApp Templates.
+ * WhatsApp Business API Utility
+ * Uses Meta Cloud API to send template-based messages
  */
-export const sendOrderWhatsApp = async (to: string, templateName: string, components: any[]) => {
-    const apiToken = process.env.WHATSAPP_API_TOKEN;
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-    if (!apiToken || !phoneNumberId) {
-        console.warn('⚠️ [WHATSAPP] API Token or Phone Number ID not configured.');
-        return { success: false, error: 'Configuration missing' };
-    }
+const WHATSAPP_API_URL = 'https://graph.facebook.com/v17.0';
 
-    try {
-        const url = `https://graph.facebook.com/v17.0/${phoneNumberId}/messages`;
-
-        // Efficient formatting for Indian numbers
-        let formattedTo = to.replace(/\D/g, ''); // Strip non-numeric
-        if (formattedTo.length === 10) {
-            formattedTo = '91' + formattedTo;
-        } else if (formattedTo.length === 12 && formattedTo.startsWith('0')) {
-            formattedTo = '91' + formattedTo.slice(2);
-        } else if (formattedTo.length === 11 && formattedTo.startsWith('0')) {
-            formattedTo = '91' + formattedTo.slice(1);
-        }
-
-        const data = {
-            messaging_product: 'whatsapp',
-            to: formattedTo,
-            type: 'template',
-            template: {
-                name: templateName,
-                language: { code: 'en' },
-                components: components
-            }
+export interface WhatsAppPayload {
+    messaging_product: "whatsapp";
+    to: string;
+    type: "template";
+    template: {
+        name: string;
+        language: {
+            code: string;
         };
-
-        const response = await axios.post(url, data, {
-            headers: {
-                'Authorization': `Bearer ${apiToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        console.log(`✅ [WHATSAPP] Message sent successfully to ${formattedTo}. ID: ${response.data.messages[0].id}`);
-        return { success: true, messageId: response.data.messages[0].id };
-    } catch (error: any) {
-        const errorMsg = error.response?.data?.error?.message || error.message;
-        console.error('❌ [WHATSAPP] Meta API Error:', errorMsg);
-        return { success: false, error: errorMsg };
-    }
-};
+        components: Array<{
+            type: "body" | "header" | "button";
+            parameters: Array<{
+                type: "text";
+                text: string;
+            }>;
+        }>;
+    };
+}
 
 /**
- * Legacy admin notification (keeping for internal alerts if needed, or upgrading later)
+ * Send a WhatsApp notification using a Meta template
+ * @param phone Recipient phone number (with country code, no +)
+ * @param templateName Approved Meta template name
+ * @param parameters Array of strings for template placeholders {{1}}, {{2}}, etc.
  */
-export const sendAdminWhatsApp = async (message: string) => {
-    // For now, reuse the new system with a generic text template if available
-    // OR keep CallMeBot for admin's personal simple alerts as it doesn't require templates
-    try {
-        const { prisma } = await import('../lib/prisma');
-        const setting = await prisma.siteSettings.findUnique({ where: { key: 'callmebot_apikey' } });
-        const number = await prisma.siteSettings.findUnique({ where: { key: 'whatsapp_number' } });
+export const sendWhatsAppNotification = async (
+    phone: string,
+    templateName: string,
+    parameters: string[]
+) => {
+    const token = process.env.WHATSAPP_API_TOKEN;
+    const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-        if (setting?.value && number?.value) {
-            const url = `https://api.callmebot.com/whatsapp.php?phone=${number.value}&text=${encodeURIComponent(message)}&apikey=${setting.value}`;
-            await axios.get(url);
-            console.log('✅ [WHATSAPP] Admin Alert sent via CallMeBot');
+    if (!token || !phoneId) {
+        console.warn('⚠️ WhatsApp credentials missing. Notification skipped.');
+        return;
+    }
+
+    // Format phone number: remove non-digits and ensure it starts with country code
+    // Assuming Indian numbers if no country code provided (adds 91)
+    let formattedPhone = phone.replace(/\D/g, '');
+    if (formattedPhone.length === 10) {
+        formattedPhone = '91' + formattedPhone;
+    }
+
+    const payload: WhatsAppPayload = {
+        messaging_product: "whatsapp",
+        to: formattedPhone,
+        type: "template",
+        template: {
+            name: templateName,
+            language: { code: "en" },
+            components: [
+                {
+                    type: "body",
+                    parameters: parameters.map(text => ({
+                        type: "text",
+                        text: String(text).substring(0, 1024) // Meta limit
+                    }))
+                }
+            ]
         }
+    };
+
+    try {
+        const response = await axios.post(
+            `${WHATSAPP_API_URL}/${phoneId}/messages`,
+            payload,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        console.log(`✅ WhatsApp sent to ${formattedPhone} (${templateName})`);
+        return response.data;
     } catch (error: any) {
-        console.error('❌ [WHATSAPP] Admin Alert failed:', error.message);
+        console.error('❌ WhatsApp API Error:', error.response?.data || error.message);
+        throw error;
     }
 };
