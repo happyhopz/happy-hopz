@@ -63,13 +63,13 @@ const HamperSection = () => {
                                 className="group relative bg-white rounded-3xl p-3 md:p-6 shadow-card hover:shadow-float transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center animate-fade-up"
                                 style={{ animationDelay: `${index * 100}ms` }}
                             >
-                                <div className="relative aspect-square w-full mb-4 overflow-hidden rounded-2xl bg-white flex items-center justify-center border border-gray-100 p-1 shadow-sm">
+                                <div className="relative aspect-square w-full mb-4 overflow-hidden rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100">
                                     <img
                                         src={hamper.images[0]}
                                         alt={hamper.name}
-                                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
 
                                 <h3 className="font-fredoka font-semibold text-sm md:text-lg text-foreground group-hover:text-pink-600 transition-colors line-clamp-1 mb-2">

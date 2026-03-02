@@ -205,12 +205,12 @@ const ShoeCard = ({
         style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
       >
         {/* Product Image */}
-        <div className={`relative aspect-[4/5] flex items-center justify-center mb-3 md:mb-6 overflow-hidden rounded-2xl border border-muted/30 bg-white shadow-sm ${product.category === 'Hampers' ? 'p-1' : ''}`}>
+        <div className="relative aspect-[4/5] flex items-center justify-center mb-3 md:mb-6 overflow-hidden rounded-2xl border border-muted/30 bg-white shadow-sm">
           <img
             src={product.images[0]}
             alt={product.name}
             loading="lazy"
-            className={`relative w-full h-full transition-transform duration-300 group-hover:scale-110 ${product.category === 'Hampers' ? 'object-contain' : 'object-cover'}`}
+            className="relative w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         </div>
 
