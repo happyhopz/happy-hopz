@@ -58,7 +58,7 @@ const menuItems = [
       { label: 'Top Picks', href: '/products?search=Trending' },
       { label: 'Best Sellers', href: '/products?search=Best Seller' },
       { label: 'Customer Favorites', href: '/products?search=Favourite' },
-      { label: 'Hampers', href: '/products?search=Hampers' }
+      { label: 'Hampers', href: '/products?category=Hampers' }
     ],
   },
 ];

@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import HoliBanner from '@/components/HoliBanner';
 import FeaturedShoes from '@/components/FeaturedShoes';
+import HamperSection from '@/components/HamperSection';
 import WhyParentsLove from '@/components/WhyParentsLove';
 import Footer from '@/components/Footer';
 
@@ -32,6 +33,7 @@ const Index = () => {
         <main>
           <HeroSection />
           <FeaturedShoes />
+          <HamperSection />
           <WhyParentsLove />
         </main>
         <Footer />

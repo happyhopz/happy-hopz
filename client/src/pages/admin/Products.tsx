@@ -380,6 +380,7 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                             <SelectItem value="Sports Shoes">Sports Shoes</SelectItem>
                             <SelectItem value="Ballet">Ballet</SelectItem>
                             <SelectItem value="School">School</SelectItem>
+                            <SelectItem value="Hampers">Hampers</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

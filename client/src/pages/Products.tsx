@@ -155,6 +155,7 @@ const Products = () => {
                                         <SelectItem value="Boots">Boots</SelectItem>
                                         <SelectItem value="Party Wear">Party Wear</SelectItem>
                                         <SelectItem value="Sports Shoes">Sports Shoes</SelectItem>
+                                        <SelectItem value="Hampers">Hampers</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
