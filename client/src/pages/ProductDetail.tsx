@@ -102,12 +102,16 @@ const ProductDetail = () => {
 
     // Reset selection when product changes
     useEffect(() => {
-        setSelectedSize('');
+        if (product?.sizes?.length === 1) {
+            setSelectedSize(product.sizes[0]);
+        } else {
+            setSelectedSize('');
+        }
         setSelectedColor('');
         setSelectedImageIndex(0);
         api?.scrollTo(0);
         window.scrollTo(0, 0);
-    }, [id, api]);
+    }, [id, api, product]);
 
     // Sync Carousel with selectedImageIndex
     useEffect(() => {
@@ -439,36 +443,46 @@ const ProductDetail = () => {
                         {/* Select Size */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <h3 className="font-bold text-foreground uppercase tracking-wide text-sm">Select Size (EU)</h3>
-                                <button
-                                    onClick={() => setShowSizeChart(true)}
-                                    className="text-pink-500 font-bold text-sm hover:underline flex items-center gap-1"
-                                >
-                                    <Ruler className="w-4 h-4" />
-                                    Size Chart
-                                </button>
+                                <h3 className="font-bold text-foreground uppercase tracking-wide text-sm">
+                                    {product.sizes[0] === 'One Size' ? 'Size' : 'Select Size (EU)'}
+                                </h3>
+                                {product.sizes[0] !== 'One Size' && (
+                                    <button
+                                        onClick={() => setShowSizeChart(true)}
+                                        className="text-pink-500 font-bold text-sm hover:underline flex items-center gap-1"
+                                    >
+                                        <Ruler className="w-4 h-4" />
+                                        Size Chart
+                                    </button>
+                                )}
                             </div>
-                            <div className="grid grid-cols-5 md:grid-cols-7 gap-2">
-                                {product.sizes.map((size: string) => {
-                                    const sizeStock = product.inventory?.find((i: any) => i.size === size)?.stock ?? 0;
-                                    const isOutOfStock = sizeStock <= 0;
-                                    return (
-                                        <button
-                                            key={size}
-                                            disabled={isOutOfStock}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={`relative h-11 rounded-xl border-2 font-bold transition-all flex items-center justify-center text-sm ${selectedSize === size
-                                                ? 'border-blue-600 text-black bg-blue-100 shadow-md scale-105'
-                                                : isOutOfStock
-                                                    ? 'border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed'
-                                                    : 'border-gray-200 text-foreground hover:border-blue-500 bg-white'
-                                                }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            {product.sizes[0] === 'One Size' ? (
+                                <div className="p-4 bg-cyan-50 border-2 border-cyan-200 rounded-xl text-cyan-700 font-bold text-center">
+                                    Free Size / One Size
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-5 md:grid-cols-7 gap-2">
+                                    {product.sizes.map((size: string) => {
+                                        const sizeStock = product.inventory?.find((i: any) => i.size === size)?.stock ?? 0;
+                                        const isOutOfStock = sizeStock <= 0;
+                                        return (
+                                            <button
+                                                key={size}
+                                                disabled={isOutOfStock}
+                                                onClick={() => setSelectedSize(size)}
+                                                className={`relative h-11 rounded-xl border-2 font-bold transition-all flex items-center justify-center text-sm ${selectedSize === size
+                                                    ? 'border-blue-600 text-black bg-blue-100 shadow-md scale-105'
+                                                    : isOutOfStock
+                                                        ? 'border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed'
+                                                        : 'border-gray-200 text-foreground hover:border-blue-500 bg-white'
+                                                    }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         {/* Inventory Status Message */}

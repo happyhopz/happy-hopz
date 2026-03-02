@@ -400,7 +400,32 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                     </Select>
                 </div>
             </div>
-            <div>
+            <div className="flex items-center gap-2 p-3 bg-cyan-50 border border-cyan-100 rounded-xl mb-4">
+                <Checkbox
+                    id="oneSize"
+                    checked={formData.sizes.length === 1 && formData.sizes[0] === 'One Size'}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            setFormData({
+                                ...formData,
+                                sizes: ['One Size'],
+                                inventory: [{ size: 'One Size', stock: formData.stock || 10 }]
+                            });
+                        } else {
+                            setFormData({
+                                ...formData,
+                                sizes: [],
+                                inventory: []
+                            });
+                        }
+                    }}
+                />
+                <Label htmlFor="oneSize" className="text-sm font-bold text-cyan-900 cursor-pointer">
+                    This is a Single Size product (e.g. Hampers, Newborn Sets)
+                </Label>
+            </div>
+
+            <div className={formData.sizes[0] === 'One Size' ? 'hidden' : 'block'}>
                 <Label className="mb-2 block">Available Sizes (EU) & Stock</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 border rounded-2xl bg-gray-50/30">
                     {ALL_EU_SIZES.map((size) => {
@@ -456,6 +481,29 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
                     Select active sizes and enter current stock levels for each.
                 </p>
             </div>
+
+            {formData.sizes[0] === 'One Size' && (
+                <div>
+                    <Label>Total Stock for this Hamper/Set</Label>
+                    <Input
+                        type="number"
+                        value={formData.inventory[0]?.stock || 0}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            setFormData({
+                                ...formData,
+                                stock: val,
+                                inventory: [{ size: 'One Size', stock: val }]
+                            });
+                        }}
+                        className="font-bold border-primary text-primary bg-primary/5"
+                        placeholder="Enter total stock quantity"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-2">
+                        Since this is a One Size product, just enter the total quantity available.
+                    </p>
+                </div>
+            )}
             <div>
                 <Label>Colors (comma separated)</Label>
                 <Input
