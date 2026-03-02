@@ -28,7 +28,7 @@ const HoliBanner = () => {
 
     return (
         <div
-            className="relative w-full z-50"
+            className="relative w-full z-40"
             style={{
                 background: 'linear-gradient(90deg, #ff6b35 0%, #e91e63 40%, #9c27b0 100%)',
             }}
