@@ -63,7 +63,7 @@ const HamperSection = () => {
                                 className="group relative bg-white rounded-3xl p-3 md:p-6 shadow-card hover:shadow-float transition-all duration-300 hover:-translate-y-2 flex flex-col items-center text-center animate-fade-up"
                                 style={{ animationDelay: `${index * 100}ms` }}
                             >
-                                <div className="relative aspect-square w-full mb-4 overflow-hidden rounded-2xl bg-white flex items-center justify-center border border-gray-100 p-4 shadow-sm">
+                                <div className="relative aspect-square w-full mb-4 overflow-hidden rounded-2xl bg-white flex items-center justify-center border border-gray-100 p-1 shadow-sm">
                                     <img
                                         src={hamper.images[0]}
                                         alt={hamper.name}
