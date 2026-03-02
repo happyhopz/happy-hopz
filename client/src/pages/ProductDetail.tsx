@@ -353,11 +353,11 @@ const ProductDetail = () => {
                                 <CarouselContent>
                                     {product.images.map((img: string, idx: number) => (
                                         <CarouselItem key={idx}>
-                                            <div className="relative bg-white rounded-3xl overflow-hidden aspect-[4/5] group flex items-center justify-center border border-border/50 shadow-sm">
+                                            <div className="relative bg-white rounded-3xl overflow-hidden aspect-[4/5] group flex items-center justify-center border border-border/50 shadow-sm p-4">
                                                 <img
                                                     src={img}
                                                     alt={`${product.name} - View ${idx + 1}`}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                                                 />
 
                                                 {/* Floating Badges */}
