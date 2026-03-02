@@ -594,6 +594,8 @@ const AdminProducts = () => {
         onError: () => toast.error('Failed to update inventory')
     });
 
+    const [sortBy, setSortBy] = useState('newest');
+
     const { data: products, isLoading } = useQuery({
         queryKey: ['admin-products'],
         queryFn: async () => {
@@ -602,6 +604,15 @@ const AdminProducts = () => {
         },
         enabled: isAdmin
     });
+
+    const sortedProducts = products ? [...products].sort((a: any, b: any) => {
+        if (sortBy === 'stock-low') return (a.stock || 0) - (b.stock || 0);
+        if (sortBy === 'stock-high') return (b.stock || 0) - (a.stock || 0);
+        if (sortBy === 'price-low') return (a.discountPrice || a.price || 0) - (b.discountPrice || b.price || 0);
+        if (sortBy === 'price-high') return (b.discountPrice || b.price || 0) - (a.discountPrice || a.price || 0);
+        if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return 0;
+    }) : [];
 
     const createMutation = useMutation({
         mutationFn: (data: any) => adminAPI.createProduct(data),
@@ -799,6 +810,19 @@ const AdminProducts = () => {
                         </DialogContent>
                     </Dialog>
 
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-[180px] rounded-xl font-bold border-2">
+                            <SelectValue placeholder="Sort By" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="newest">Newest First</SelectItem>
+                            <SelectItem value="stock-low">Stock: Low to High</SelectItem>
+                            <SelectItem value="stock-high">Stock: High to Low</SelectItem>
+                            <SelectItem value="price-low">Price: Low to High</SelectItem>
+                            <SelectItem value="price-high">Price: High to Low</SelectItem>
+                        </SelectContent>
+                    </Select>
+
                     {products && products.length > 0 && (
                         <Button
                             variant="outline"
@@ -858,7 +882,7 @@ const AdminProducts = () => {
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 gap-4 pb-24">
-                    {products?.filter(Boolean).map((product: any) => (
+                    {sortedProducts.filter(Boolean).map((product: any) => (
                         <Card key={product.id} className={`p-6 transition-all duration-200 border-2 ${selectedIds.includes(product.id) ? 'border-primary bg-primary/5 shadow-md' : 'border-transparent'}`}>
                             <div className="flex gap-6 items-start">
                                 <div className="pt-2">

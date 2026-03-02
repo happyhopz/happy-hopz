@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ImageUploadProps {
@@ -91,6 +91,15 @@ const ImageUpload = ({ images, onChange, maxImages = 5 }: ImageUploadProps) => {
         onChange(images.filter((_, i) => i !== index));
     };
 
+    const moveImage = (index: number, direction: 'left' | 'right') => {
+        const newImages = [...images];
+        const newIndex = direction === 'left' ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= images.length) return;
+
+        [newImages[index], newImages[newIndex]] = [newImages[newIndex], newImages[index]];
+        onChange(newImages);
+    };
+
     return (
         <div className="space-y-4">
             {/* Upload Area */}
@@ -137,18 +146,48 @@ const ImageUpload = ({ images, onChange, maxImages = 5 }: ImageUploadProps) => {
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => removeImage(index)}
-                            >
-                                <X className="w-4 h-4" />
-                            </Button>
+
+                            {/* Controls Overlay */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2">
+                                <div className="flex gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="icon"
+                                        className="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-black disabled:opacity-30"
+                                        onClick={() => moveImage(index, 'left')}
+                                        disabled={index === 0}
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="icon"
+                                        className="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-black disabled:opacity-30"
+                                        onClick={() => moveImage(index, 'right')}
+                                        disabled={index === images.length - 1}
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="w-8 h-8 rounded-full shadow-lg"
+                                        onClick={() => removeImage(index)}
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <p className="text-[10px] text-white font-bold uppercase tracking-widest bg-black/50 px-2 py-1 rounded">
+                                    {index === 0 ? 'Main Cover' : `Image ${index + 1}`}
+                                </p>
+                            </div>
+
                             {index === 0 && (
-                                <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                                    Main
+                                <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-black uppercase px-2 py-1 rounded shadow-sm z-10 pointer-events-none">
+                                    Cover
                                 </div>
                             )}
                         </div>
