@@ -27,6 +27,7 @@ const usePageTracking = () => {
         const sessionId = getSessionId();
 
         // Collect client-side metadata + user info if logged in
+        const searchParams = new URLSearchParams(window.location.search);
         const payload: any = {
             path,
             sessionId,
@@ -34,6 +35,12 @@ const usePageTracking = () => {
             screenWidth: window.screen?.width || null,
             screenHeight: window.screen?.height || null,
             language: navigator.language || null,
+            // UTM marketing attribution
+            utmSource: searchParams.get('utm_source') || null,
+            utmMedium: searchParams.get('utm_medium') || null,
+            utmCampaign: searchParams.get('utm_campaign') || null,
+            utmTerm: searchParams.get('utm_term') || null,
+            utmContent: searchParams.get('utm_content') || null,
         };
 
         // Attach user identity when logged in

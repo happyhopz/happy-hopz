@@ -360,10 +360,17 @@ model PageView {
   // Linked user (when logged in)
   userId       String?
   userEmail    String?
+  // UTM marketing attribution
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
 
   @@index([createdAt])
   @@index([sessionId])
   @@index([device])
   @@index([userId])
+  @@index([utmSource])
 }
 

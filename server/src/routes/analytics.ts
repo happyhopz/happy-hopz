@@ -32,7 +32,7 @@ async function resolveGeo(ip: string): Promise<{ city?: string; region?: string;
 // POST /analytics/pageview — public, no auth required
 router.post('/pageview', async (req: Request, res: Response) => {
     try {
-        const { path, sessionId, referrer, screenWidth, screenHeight, language, userId, userEmail } = req.body;
+        const { path, sessionId, referrer, screenWidth, screenHeight, language, userId, userEmail, utmSource, utmMedium, utmCampaign, utmTerm, utmContent } = req.body;
 
         if (!path || !sessionId) {
             return res.status(400).json({ error: 'path and sessionId are required' });
@@ -78,6 +78,11 @@ router.post('/pageview', async (req: Request, res: Response) => {
                 language: language ? String(language).slice(0, 20) : null,
                 userId: userId ? String(userId).slice(0, 100) : null,
                 userEmail: userEmail ? String(userEmail).slice(0, 200) : null,
+                utmSource: utmSource ? String(utmSource).slice(0, 100) : null,
+                utmMedium: utmMedium ? String(utmMedium).slice(0, 100) : null,
+                utmCampaign: utmCampaign ? String(utmCampaign).slice(0, 200) : null,
+                utmTerm: utmTerm ? String(utmTerm).slice(0, 200) : null,
+                utmContent: utmContent ? String(utmContent).slice(0, 200) : null,
             }
         });
 

@@ -853,6 +853,8 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
         const pageCount: Record<string, number> = {};
         const browserCount: Record<string, number> = {};
         const osCount: Record<string, number> = {};
+        const utmSourceCount: Record<string, number> = {};
+        const utmCampaignCount: Record<string, number> = {};
 
         for (const rec of allRecords) {
             const d = rec.device || 'unknown';
@@ -878,6 +880,12 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
             if (rec.os) {
                 osCount[rec.os] = (osCount[rec.os] || 0) + 1;
             }
+            if (rec.utmSource) {
+                utmSourceCount[rec.utmSource] = (utmSourceCount[rec.utmSource] || 0) + 1;
+            }
+            if (rec.utmCampaign) {
+                utmCampaignCount[rec.utmCampaign] = (utmCampaignCount[rec.utmCampaign] || 0) + 1;
+            }
         }
 
         const sortDesc = (obj: Record<string, number>, limit = 10) =>
@@ -896,6 +904,8 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
                 topPages: sortDesc(pageCount),
                 browsers: sortDesc(browserCount),
                 operatingSystems: sortDesc(osCount),
+                utmSources: sortDesc(utmSourceCount),
+                utmCampaigns: sortDesc(utmCampaignCount),
             }
         });
     } catch (error: any) {
@@ -994,6 +1004,11 @@ router.get('/visitors/export', async (req: AuthRequest, res: Response) => {
             { header: 'User Name', key: 'userName', width: 18 },
             { header: 'User Phone', key: 'userPhone', width: 16 },
             { header: 'Address', key: 'address', width: 40 },
+            { header: 'UTM Source', key: 'utmSource', width: 15 },
+            { header: 'UTM Medium', key: 'utmMedium', width: 15 },
+            { header: 'UTM Campaign', key: 'utmCampaign', width: 15 },
+            { header: 'UTM Term', key: 'utmTerm', width: 15 },
+            { header: 'UTM Content', key: 'utmContent', width: 15 },
         ];
 
         // Style header row
@@ -1033,6 +1048,11 @@ router.get('/visitors/export', async (req: AuthRequest, res: Response) => {
                 userName: userProfile?.name || orderData?.guestName || '',
                 userPhone: userProfile?.phone || orderData?.guestPhone || (addr?.phone || ''),
                 address: addressStr,
+                utmSource: v.utmSource || '',
+                utmMedium: v.utmMedium || '',
+                utmCampaign: v.utmCampaign || '',
+                utmTerm: v.utmTerm || '',
+                utmContent: v.utmContent || '',
             });
         }
 

@@ -173,51 +173,23 @@ const VisitorInsights = () => {
 
                     {/* Charts Row */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Device Breakdown Pie */}
+                        {/* Top Campaigns (UTM) */}
                         <Card>
-                            <CardHeader><CardTitle className="text-sm font-semibold">Device Breakdown</CardTitle></CardHeader>
+                            <CardHeader><CardTitle className="text-sm font-semibold">Top Campaigns</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="h-[200px]">
-                                    {(agg.devices || []).length > 0 ? (
+                                    {(agg.utmCampaigns || []).length > 0 ? (
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie
-                                                    data={(agg.devices || []).map((d: any) => ({ name: d.name, value: d.count }))}
-                                                    cx="50%" cy="50%" innerRadius={45} outerRadius={75}
-                                                    paddingAngle={3} dataKey="value"
-                                                >
-                                                    {(agg.devices || []).map((d: any, i: number) => (
-                                                        <Cell key={d.name} fill={DEVICE_COLORS[d.name] || CHART_COLORS[i % CHART_COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip formatter={(v: any) => [`${v} views`, '']} />
-                                                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No data</div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Top Countries Bar */}
-                        <Card>
-                            <CardHeader><CardTitle className="text-sm font-semibold">Top Countries</CardTitle></CardHeader>
-                            <CardContent>
-                                <div className="h-[200px]">
-                                    {(agg.countries || []).length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={(agg.countries || []).slice(0, 6)} layout="vertical" margin={{ left: 5, right: 20 }}>
+                                            <BarChart data={(agg.utmCampaigns || []).slice(0, 6)} layout="vertical" margin={{ left: 5, right: 20 }}>
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                                                 <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
                                                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={70} />
-                                                <Tooltip formatter={(v: any) => [`${v} views`, '']} />
-                                                <Bar dataKey="count" fill="#6366f1" radius={[0, 6, 6, 0]} barSize={18} />
+                                                <Tooltip formatter={(v: any) => [`${v} clicks`, '']} />
+                                                <Bar dataKey="count" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={18} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     ) : (
-                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No geo data yet</div>
+                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">No UTM campaign data yet</div>
                                     )}
                                 </div>
                             </CardContent>
@@ -303,6 +275,7 @@ const VisitorInsights = () => {
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">User</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">IP</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Location</th>
+                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Source</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Device</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Browser / OS</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Page</th>
@@ -340,6 +313,21 @@ const VisitorInsights = () => {
                                                         </div>
                                                     ) : (
                                                         <span className="text-xs text-muted-foreground">—</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {v.utmSource ? (
+                                                        <Badge variant="outline" className="text-[10px] border-amber-200 bg-amber-50/50 text-amber-700 font-normal">
+                                                            {v.utmSource}
+                                                        </Badge>
+                                                    ) : v.referrer ? (
+                                                        <span className="text-[10px] text-muted-foreground truncate max-w-[80px] inline-block">
+                                                            {(() => {
+                                                                try { return new URL(v.referrer).hostname; } catch { return v.referrer; }
+                                                            })()}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] text-muted-foreground">Direct</span>
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3">
