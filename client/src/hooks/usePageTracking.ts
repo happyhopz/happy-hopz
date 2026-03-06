@@ -24,8 +24,18 @@ const usePageTracking = () => {
 
         const sessionId = getSessionId();
 
+        // Collect client-side metadata
+        const payload = {
+            path,
+            sessionId,
+            referrer: document.referrer || null,
+            screenWidth: window.screen?.width || null,
+            screenHeight: window.screen?.height || null,
+            language: navigator.language || null,
+        };
+
         // Fire-and-forget — never await, never throw
-        api.post('/analytics/pageview', { path, sessionId }).catch(() => { });
+        api.post('/analytics/pageview', payload).catch(() => { });
     }, [location.pathname]);
 };
 

@@ -340,12 +340,26 @@ model ReturnItem {
 }
 
 model PageView {
-  id        String   @id @default(uuid())
-  path      String
-  sessionId String
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  path         String
+  sessionId    String
+  createdAt    DateTime @default(now())
+  // Visitor metadata
+  ip           String?
+  city         String?
+  region       String?
+  country      String?
+  userAgent    String?
+  browser      String?
+  os           String?
+  device       String?  // "mobile" | "tablet" | "desktop"
+  referrer     String?
+  screenWidth  Int?
+  screenHeight Int?
+  language     String?
 
   @@index([createdAt])
   @@index([sessionId])
+  @@index([device])
 }
 

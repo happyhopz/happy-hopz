@@ -42,6 +42,8 @@ export const authAPI = {
     getMe: () => api.get('/auth/me'),
     verifyEmail: (code: string) => api.post('/auth/verify-email', { code }),
     resendOTP: () => api.post('/auth/resend-otp'),
+    sendOtp: (phone: string) => api.post('/auth/send-otp', { phone }),
+    verifyOtp: (phone: string, otp: string) => api.post('/auth/verify-otp', { phone, otp }),
     googleLogin: (credential: string) => api.post('/auth/google', { credential }),
     updateProfile: (data: { name?: string; phone?: string }) => api.put('/auth/profile', data),
     changePassword: (data: any) => api.post('/auth/change-password', data),
@@ -153,6 +155,7 @@ export const adminAPI = {
 
     // Visitor analytics
     getVisitorStats: () => api.get('/admin/visitor-stats'),
+    getVisitors: (params?: any) => api.get('/admin/visitors', { params }),
 };
 
 export const analyticsAPI = {

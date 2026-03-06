@@ -808,6 +808,101 @@ router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// Get detailed visitor data (paginated + aggregations)
+router.get('/visitors', async (req: AuthRequest, res: Response) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+        const skip = (page - 1) * limit;
+        const { device, country, startDate, endDate } = req.query;
+
+        // Build filter
+        const where: any = {};
+        if (device && device !== 'all') where.device = device as string;
+        if (country && country !== 'all') where.country = { contains: country as string, mode: 'insensitive' };
+        if (startDate || endDate) {
+            where.createdAt = {};
+            if (startDate) where.createdAt.gte = new Date(startDate as string);
+            if (endDate) {
+                const end = new Date(endDate as string);
+                end.setHours(23, 59, 59, 999);
+                where.createdAt.lte = end;
+            }
+        }
+
+        // Fetch data + count in parallel
+        const [visitors, totalCount, allRecords] = await Promise.all([
+            (prisma as any).pageView.findMany({
+                where,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            (prisma as any).pageView.count({ where }),
+            // For aggregations, fetch lighter data from recent 30 days
+            (prisma as any).pageView.findMany({
+                where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+                select: { device: true, country: true, referrer: true, path: true, browser: true, os: true }
+            })
+        ]);
+
+        // Compute aggregations
+        const deviceCount: Record<string, number> = {};
+        const countryCount: Record<string, number> = {};
+        const referrerCount: Record<string, number> = {};
+        const pageCount: Record<string, number> = {};
+        const browserCount: Record<string, number> = {};
+        const osCount: Record<string, number> = {};
+
+        for (const rec of allRecords) {
+            const d = rec.device || 'unknown';
+            deviceCount[d] = (deviceCount[d] || 0) + 1;
+
+            if (rec.country) {
+                countryCount[rec.country] = (countryCount[rec.country] || 0) + 1;
+            }
+            if (rec.referrer) {
+                try {
+                    const host = new URL(rec.referrer).hostname || rec.referrer;
+                    referrerCount[host] = (referrerCount[host] || 0) + 1;
+                } catch {
+                    referrerCount[rec.referrer] = (referrerCount[rec.referrer] || 0) + 1;
+                }
+            }
+            if (rec.path) {
+                pageCount[rec.path] = (pageCount[rec.path] || 0) + 1;
+            }
+            if (rec.browser) {
+                browserCount[rec.browser] = (browserCount[rec.browser] || 0) + 1;
+            }
+            if (rec.os) {
+                osCount[rec.os] = (osCount[rec.os] || 0) + 1;
+            }
+        }
+
+        const sortDesc = (obj: Record<string, number>, limit = 10) =>
+            Object.entries(obj)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, limit)
+                .map(([name, count]) => ({ name, count }));
+
+        res.json({
+            visitors,
+            pagination: { page, limit, totalCount, totalPages: Math.ceil(totalCount / limit) },
+            aggregations: {
+                devices: sortDesc(deviceCount),
+                countries: sortDesc(countryCount),
+                referrers: sortDesc(referrerCount),
+                topPages: sortDesc(pageCount),
+                browsers: sortDesc(browserCount),
+                operatingSystems: sortDesc(osCount),
+            }
+        });
+    } catch (error: any) {
+        console.error('❌ [Visitors] Error:', error.message);
+        res.status(500).json({ error: 'Failed to load visitor data' });
+    }
+});
 
 
 // Update user role (Admin only)

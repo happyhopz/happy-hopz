@@ -45,6 +45,7 @@ import MyReturns from './pages/MyReturns';
 import AdminReturns from './pages/admin/AdminReturns';
 import ReturnDetail from './pages/admin/ReturnDetail';
 import AdminNotifications from './pages/admin/Notifications';
+import VisitorInsights from './pages/admin/VisitorInsights';
 import TrackOrder from "./pages/TrackOrder";
 import NotFound from "./pages/NotFound";
 import usePageTracking from "./hooks/usePageTracking";
@@ -105,6 +106,7 @@ const AppInner = () => {
           <Route path="/admin/returns/:id" element={<ReturnDetail />} />
           <Route path="/admin/notifications" element={<AdminNotifications />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/visitors" element={<VisitorInsights />} />
         </Route>
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />

@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import {
     LayoutDashboard, ShoppingBag, Users, Ticket, MessageSquare,
-    Settings, LogOut, Search, X, Loader2, Star, Layout, Package, ChevronRight, Zap, IndianRupee, Bell, RotateCcw
+    Settings, LogOut, Search, X, Loader2, Star, Layout, Package, ChevronRight, Zap, IndianRupee, Bell, RotateCcw, Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -71,6 +71,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         { icon: Ticket, label: 'Coupons', path: '/admin/coupons' },
         { icon: Star, label: 'Reviews', path: '/admin/reviews' },
         { icon: Zap, label: 'Marketing', path: '/admin/marketing' },
+        { icon: Eye, label: 'Visitor Insights', path: '/admin/visitors' },
         { icon: MessageSquare, label: 'Support Requests', path: '/admin/contacts' },
         { icon: Layout, label: 'Store Content', path: '/admin/cms' },
         { icon: IndianRupee, label: 'Pricing & Tax', path: '/admin/settings', adminOnly: true },
