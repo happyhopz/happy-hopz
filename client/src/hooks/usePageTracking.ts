@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 
 // Generate or retrieve a persistent anonymous session ID
@@ -15,6 +16,7 @@ const getSessionId = (): string => {
 
 const usePageTracking = () => {
     const location = useLocation();
+    const { user } = useAuth();
 
     useEffect(() => {
         const path = location.pathname;
@@ -24,8 +26,8 @@ const usePageTracking = () => {
 
         const sessionId = getSessionId();
 
-        // Collect client-side metadata
-        const payload = {
+        // Collect client-side metadata + user info if logged in
+        const payload: any = {
             path,
             sessionId,
             referrer: document.referrer || null,
@@ -34,9 +36,13 @@ const usePageTracking = () => {
             language: navigator.language || null,
         };
 
+        // Attach user identity when logged in
+        if (user?.id) payload.userId = user.id;
+        if (user?.email) payload.userEmail = user.email;
+
         // Fire-and-forget — never await, never throw
         api.post('/analytics/pageview', payload).catch(() => { });
-    }, [location.pathname]);
+    }, [location.pathname, user?.id]);
 };
 
 export default usePageTracking;

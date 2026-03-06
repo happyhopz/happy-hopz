@@ -357,9 +357,13 @@ model PageView {
   screenWidth  Int?
   screenHeight Int?
   language     String?
+  // Linked user (when logged in)
+  userId       String?
+  userEmail    String?
 
   @@index([createdAt])
   @@index([sessionId])
   @@index([device])
+  @@index([userId])
 }
 

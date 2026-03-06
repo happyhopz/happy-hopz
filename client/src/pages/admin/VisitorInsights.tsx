@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
     Eye, Monitor, Smartphone, Tablet, Globe, ArrowUpRight,
-    ChevronLeft, ChevronRight, Filter, MapPin, Clock
+    ChevronLeft, ChevronRight, Filter, MapPin, Clock, Download, Loader2, Mail
 } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
     BarChart, Bar, XAxis, YAxis, CartesianGrid
@@ -47,6 +48,31 @@ const VisitorInsights = () => {
     const [deviceFilter, setDeviceFilter] = useState('all');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [exporting, setExporting] = useState(false);
+
+    const handleExport = async () => {
+        try {
+            setExporting(true);
+            const params: any = {};
+            if (deviceFilter !== 'all') params.device = deviceFilter;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+            const response = await adminAPI.exportVisitors(params);
+            const blob = new Blob([response.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `happyhopz_visitors_${new Date().toISOString().split('T')[0]}.xlsx`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Export failed', err);
+        } finally {
+            setExporting(false);
+        }
+    };
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['admin-visitors', page, deviceFilter, startDate, endDate],
@@ -84,11 +110,23 @@ const VisitorInsights = () => {
 
     return (
         <>
-            <h1 className="text-4xl font-fredoka font-bold text-foreground mb-2">
-                Visitor Insights
-            </h1>
+            <div className="flex items-center justify-between mb-2">
+                <h1 className="text-4xl font-fredoka font-bold text-foreground">
+                    Visitor Insights
+                </h1>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-green-200 text-green-700 hover:bg-green-50"
+                    onClick={handleExport}
+                    disabled={exporting}
+                >
+                    {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    {exporting ? 'Exporting...' : 'Export to Excel'}
+                </Button>
+            </div>
             <p className="text-muted-foreground mb-8 text-sm">
-                Detailed analytics about every visitor who lands on your website — device, location, browser, and more.
+                Detailed analytics about every visitor — device, location, browser, and more. Excel includes user contacts & addresses.
             </p>
 
             {isLoading ? (
@@ -262,6 +300,7 @@ const VisitorInsights = () => {
                                     <thead>
                                         <tr className="border-b bg-gray-50/80">
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Time</th>
+                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">User</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">IP</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Location</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Device</th>
@@ -279,6 +318,16 @@ const VisitorInsights = () => {
                                                         <Clock className="w-3 h-3" />
                                                         {format(new Date(v.createdAt), 'dd MMM, HH:mm')}
                                                     </div>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {v.userEmail ? (
+                                                        <div className="flex items-center gap-1 text-xs">
+                                                            <Mail className="w-3 h-3 text-blue-400" />
+                                                            <span className="truncate max-w-[120px]" title={v.userEmail}>{v.userEmail}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground">Anonymous</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{maskIp(v.ip)}</span>
@@ -328,7 +377,7 @@ const VisitorInsights = () => {
                                             </tr>
                                         )) : (
                                             <tr>
-                                                <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                                                <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
                                                     No visitor data recorded yet. Data will appear as visitors browse the site.
                                                 </td>
                                             </tr>

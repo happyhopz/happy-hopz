@@ -904,6 +904,267 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// Export visitor data as Excel (with user + checkout data merged)
+router.get('/visitors/export', async (req: AuthRequest, res: Response) => {
+    try {
+        const { startDate, endDate, device } = req.query;
+        const ExcelJS = require('exceljs');
+
+        // Build filter
+        const where: any = {};
+        if (device && device !== 'all') where.device = device as string;
+        if (startDate || endDate) {
+            where.createdAt = {};
+            if (startDate) where.createdAt.gte = new Date(startDate as string);
+            if (endDate) {
+                const end = new Date(endDate as string);
+                end.setHours(23, 59, 59, 999);
+                where.createdAt.lte = end;
+            }
+        }
+
+        // Fetch all matching page views
+        const pageViews = await (prisma as any).pageView.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            take: 10000, // cap at 10k rows
+        });
+
+        // Collect all unique userIds and emails to fetch user profiles + orders
+        const userIds = [...new Set(pageViews.filter((v: any) => v.userId).map((v: any) => v.userId))];
+        const userEmails = [...new Set(pageViews.filter((v: any) => v.userEmail).map((v: any) => v.userEmail))];
+
+        // Fetch user profiles with their orders and addresses
+        const users = userIds.length > 0 ? await prisma.user.findMany({
+            where: { id: { in: userIds as string[] } },
+            select: { id: true, name: true, email: true, phone: true },
+        }) : [];
+
+        // Fetch orders with addresses (for checkout data enrichment)
+        const orders = (userIds.length > 0 || userEmails.length > 0)
+            ? await prisma.order.findMany({
+                where: {
+                    OR: [
+                        ...(userIds.length > 0 ? [{ userId: { in: userIds as string[] } }] : []),
+                        ...(userEmails.length > 0 ? [{ guestEmail: { in: userEmails as string[] } }] : []),
+                    ]
+                },
+                select: {
+                    userId: true, guestEmail: true, guestName: true, guestPhone: true,
+                    address: { select: { name: true, phone: true, line1: true, line2: true, city: true, state: true, pincode: true } }
+                },
+                orderBy: { createdAt: 'desc' },
+            })
+            : [];
+
+        // Build lookup maps
+        const userMap = new Map(users.map((u: any) => [u.id, u]));
+        const orderByUser = new Map<string, any>();
+        const orderByEmail = new Map<string, any>();
+        for (const order of orders) {
+            if (order.userId && !orderByUser.has(order.userId)) orderByUser.set(order.userId, order);
+            if (order.guestEmail && !orderByEmail.has(order.guestEmail)) orderByEmail.set(order.guestEmail, order);
+        }
+
+        // Create workbook
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Happy Hopz Admin';
+        workbook.created = new Date();
+
+        // ─── SHEET 1: Visitor Data ───
+        const ws = workbook.addWorksheet('Visitor Data', {
+            views: [{ state: 'frozen', ySplit: 1 }],
+        });
+
+        ws.columns = [
+            { header: 'Date & Time', key: 'datetime', width: 20 },
+            { header: 'Page', key: 'path', width: 25 },
+            { header: 'Session ID', key: 'sessionId', width: 18 },
+            { header: 'IP Address', key: 'ip', width: 15 },
+            { header: 'City', key: 'city', width: 15 },
+            { header: 'State', key: 'region', width: 15 },
+            { header: 'Country', key: 'country', width: 12 },
+            { header: 'Device', key: 'device', width: 10 },
+            { header: 'Browser', key: 'browser', width: 14 },
+            { header: 'OS', key: 'os', width: 12 },
+            { header: 'Screen', key: 'screen', width: 12 },
+            { header: 'Language', key: 'language', width: 8 },
+            { header: 'Referrer', key: 'referrer', width: 30 },
+            { header: 'User Email', key: 'userEmail', width: 25 },
+            { header: 'User Name', key: 'userName', width: 18 },
+            { header: 'User Phone', key: 'userPhone', width: 16 },
+            { header: 'Address', key: 'address', width: 40 },
+        ];
+
+        // Style header row
+        ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6366F1' } };
+        ws.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Add data rows with enrichment
+        for (const v of pageViews) {
+            const userProfile = v.userId ? userMap.get(v.userId) : null;
+            const orderData = v.userId
+                ? orderByUser.get(v.userId)
+                : v.userEmail
+                    ? orderByEmail.get(v.userEmail)
+                    : null;
+
+            const addr = orderData?.address;
+            const addressStr = addr
+                ? [addr.line1, addr.line2, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ')
+                : '';
+
+            ws.addRow({
+                datetime: new Date(v.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                path: v.path,
+                sessionId: v.sessionId,
+                ip: v.ip || '',
+                city: v.city || (addr?.city || ''),
+                region: v.region || (addr?.state || ''),
+                country: v.country || '',
+                device: v.device || 'desktop',
+                browser: v.browser || '',
+                os: v.os || '',
+                screen: v.screenWidth && v.screenHeight ? `${v.screenWidth}×${v.screenHeight}` : '',
+                language: v.language || '',
+                referrer: v.referrer || 'Direct',
+                userEmail: v.userEmail || userProfile?.email || orderData?.guestEmail || '',
+                userName: userProfile?.name || orderData?.guestName || '',
+                userPhone: userProfile?.phone || orderData?.guestPhone || (addr?.phone || ''),
+                address: addressStr,
+            });
+        }
+
+        // Auto-filter
+        ws.autoFilter = { from: 'A1', to: `Q${pageViews.length + 1}` };
+
+        // ─── SHEET 2: Summary ───
+        const summarySheet = workbook.addWorksheet('Summary');
+        summarySheet.columns = [
+            { header: 'Metric', key: 'metric', width: 25 },
+            { header: 'Value', key: 'value', width: 20 },
+            { header: 'Count', key: 'count', width: 10 },
+        ];
+        summarySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        summarySheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF22C55E' } };
+
+        // Aggregates
+        const deviceAgg: Record<string, number> = {};
+        const countryAgg: Record<string, number> = {};
+        const browserAgg: Record<string, number> = {};
+        const uniqueEmails = new Set<string>();
+        const uniquePhones = new Set<string>();
+
+        for (const v of pageViews) {
+            const d = v.device || 'desktop';
+            deviceAgg[d] = (deviceAgg[d] || 0) + 1;
+            if (v.country) countryAgg[v.country] = (countryAgg[v.country] || 0) + 1;
+            if (v.browser) browserAgg[v.browser] = (browserAgg[v.browser] || 0) + 1;
+            const email = v.userEmail || userMap.get(v.userId)?.email;
+            if (email) uniqueEmails.add(email.toLowerCase());
+            const phone = userMap.get(v.userId)?.phone;
+            if (phone) uniquePhones.add(phone);
+        }
+
+        summarySheet.addRow({ metric: 'Total Page Views', value: String(pageViews.length), count: pageViews.length });
+        summarySheet.addRow({ metric: 'Unique Sessions', value: String(new Set(pageViews.map((v: any) => v.sessionId)).size) });
+        summarySheet.addRow({ metric: 'Unique Emails Captured', value: String(uniqueEmails.size) });
+        summarySheet.addRow({ metric: 'Unique Phones Captured', value: String(uniquePhones.size) });
+        summarySheet.addRow({ metric: '', value: '' });
+        summarySheet.addRow({ metric: '— DEVICE BREAKDOWN —', value: '' });
+        Object.entries(deviceAgg).sort((a, b) => b[1] - a[1]).forEach(([name, count]) =>
+            summarySheet.addRow({ metric: name, value: `${Math.round((count / pageViews.length) * 100)}%`, count })
+        );
+        summarySheet.addRow({ metric: '', value: '' });
+        summarySheet.addRow({ metric: '— TOP COUNTRIES —', value: '' });
+        Object.entries(countryAgg).sort((a, b) => b[1] - a[1]).slice(0, 15).forEach(([name, count]) =>
+            summarySheet.addRow({ metric: name, value: String(count), count })
+        );
+        summarySheet.addRow({ metric: '', value: '' });
+        summarySheet.addRow({ metric: '— BROWSERS —', value: '' });
+        Object.entries(browserAgg).sort((a, b) => b[1] - a[1]).slice(0, 10).forEach(([name, count]) =>
+            summarySheet.addRow({ metric: name, value: String(count), count })
+        );
+
+        // ─── SHEET 3: User Contacts (deduplicated) ───
+        const contactsSheet = workbook.addWorksheet('User Contacts');
+        contactsSheet.columns = [
+            { header: 'Email', key: 'email', width: 30 },
+            { header: 'Name', key: 'name', width: 20 },
+            { header: 'Phone', key: 'phone', width: 18 },
+            { header: 'City', key: 'city', width: 15 },
+            { header: 'State', key: 'state', width: 15 },
+            { header: 'Pincode', key: 'pincode', width: 10 },
+            { header: 'Full Address', key: 'address', width: 45 },
+            { header: 'Source', key: 'source', width: 12 },
+        ];
+        contactsSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        contactsSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF59E0B' } };
+
+        // All registered users (with any phone/email)
+        const allUsers = await prisma.user.findMany({
+            where: { isGuest: false },
+            select: { email: true, name: true, phone: true },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        // All orders with guest info
+        const allOrders = await prisma.order.findMany({
+            where: { OR: [{ guestEmail: { not: null } }, { userId: { not: null } }] },
+            select: {
+                guestEmail: true, guestName: true, guestPhone: true,
+                user: { select: { email: true, name: true, phone: true } },
+                address: { select: { line1: true, line2: true, city: true, state: true, pincode: true, phone: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        const seenEmails = new Set<string>();
+
+        // Add registered users
+        for (const u of allUsers) {
+            if (!u.email || seenEmails.has(u.email.toLowerCase())) continue;
+            seenEmails.add(u.email.toLowerCase());
+            contactsSheet.addRow({
+                email: u.email, name: u.name || '', phone: u.phone || '',
+                city: '', state: '', pincode: '', address: '', source: 'Registered',
+            });
+        }
+
+        // Add checkout users (guests)
+        for (const o of allOrders) {
+            const email = o.guestEmail || o.user?.email;
+            if (!email || seenEmails.has(email.toLowerCase())) continue;
+            seenEmails.add(email.toLowerCase());
+            const addr = o.address;
+            contactsSheet.addRow({
+                email,
+                name: o.guestName || o.user?.name || '',
+                phone: o.guestPhone || o.user?.phone || addr?.phone || '',
+                city: addr?.city || '',
+                state: addr?.state || '',
+                pincode: addr?.pincode || '',
+                address: addr ? [addr.line1, addr.line2, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ') : '',
+                source: o.guestEmail ? 'Guest Checkout' : 'Checkout',
+            });
+        }
+
+        contactsSheet.autoFilter = { from: 'A1', to: `H${seenEmails.size + 1}` };
+
+        // Send the file
+        const dateStr = new Date().toISOString().split('T')[0];
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=happyhopz_visitors_${dateStr}.xlsx`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (error: any) {
+        console.error('❌ [Visitor Export] Error:', error.message);
+        res.status(500).json({ error: 'Failed to export visitor data' });
+    }
+});
 
 // Update user role (Admin only)
 router.put('/users/:id/role', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
