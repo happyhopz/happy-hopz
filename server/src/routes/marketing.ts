@@ -141,7 +141,7 @@ router.get('/abandoned-carts', authenticate, requireStaff, async (req, res) => {
     }
 });
 
-import { sendAbandonedCartEmail } from '../utils/email';
+import { sendAbandonedCartEmail, sendWelcomeCouponEmail } from '../utils/email';
 
 // Manually trigger recovery for a specific user
 router.post('/abandoned-carts/recover', authenticate, requireStaff, async (req: AuthRequest, res: Response) => {
@@ -214,7 +214,12 @@ router.post('/subscribe', async (req, res) => {
         }
 
         await prisma.newsletterSubscriber.create({
-            data: { email, name, source }
+            data: { email, name: name || 'Friend', source }
+        });
+
+        // Send welcome email with coupon
+        sendWelcomeCouponEmail(email, name || 'Friend').catch((err: Error) => {
+            console.error('Failed to send welcome email:', err);
         });
 
         res.status(201).json({ message: 'Thank you for subscribing! 🐼' });

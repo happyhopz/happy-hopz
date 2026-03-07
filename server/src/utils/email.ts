@@ -930,3 +930,86 @@ export const sendAbandonedCartEmail = async (email: string, name: string, cartIt
         throw error;
     }
 };
+export const sendWelcomeCouponEmail = async (email: string, name: string = 'Friend') => {
+    if (!process.env.SENDGRID_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
+        console.log(`📠 WELCOME EMAIL LOGGED FOR ${email} - No email provider configured`);
+        return;
+    }
+
+    const subject = `🎁 Your 5% OFF Welcome Gift from Happy Hopz!`;
+
+    const bodyHtml = `
+        ${getCommonStyles()}
+        <style>
+            .coupon-box {
+                background: #ffffff;
+                border: 2px dashed #FF4D8D;
+                padding: 20px;
+                border-radius: 16px;
+                text-align: center;
+                margin: 30px 0;
+            }
+            .coupon-code {
+                font-family: inherit;
+                font-size: 32px;
+                font-weight: 800;
+                color: #FF4D8D;
+                letter-spacing: 2px;
+                margin: 10px 0;
+            }
+        </style>
+        <div style="font-family: 'Outfit', sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; color: #1e293b;">
+            <div style="border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); background: #ffffff;">
+                <div style="text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #fff5f5 0%, #fff1f2 100%); border-bottom: 2px solid #fff1f2;">
+                    <h2 style="color: #FF4D8D; margin: 0; font-size: 32px; font-weight: 800; font-family: 'Outfit', sans-serif;">Welcome to the Family! 🐼</h2>
+                    <p style="color: #64748b; font-size: 16px; margin-top: 10px; font-weight: 500;">We're so happy to have you here.</p>
+                </div>
+                
+                <div style="padding: 40px 30px; text-align: center;">
+                    <p style="margin-top: 0; font-size: 18px; line-height: 1.6; font-family: 'Outfit', sans-serif;">Hi <strong>${name}</strong>,</p>
+                    <p style="color: #475569; line-height: 1.6; font-size: 16px;">As a thank you for joining our newsletter, here's a special gift for your first order at Happy Hopz!</p>
+                    
+                    <div class="coupon-box">
+                        <p style="margin: 0; color: #64748b; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">USE THIS CODE AT CHECKOUT</p>
+                        <div class="coupon-code">WELCOME5</div>
+                        <p style="margin: 0; color: #FF4D8D; font-weight: 700; font-size: 14px;">Valid on your first order only</p>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="${SITE_URL}" style="display: inline-block; background: #FF4D8D; color: #ffffff !important; padding: 18px 40px; text-decoration: none; border-radius: 40px; font-weight: 800; text-align: center; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(255,77,141,0.2);">Shop Now</a>
+                    </div>
+                    
+                    <p style="margin-top: 30px; color: #94a3b8; font-size: 13px; line-height: 1.6;">
+                        Explore our premium collection of kids' footwear designed for comfort and style.
+                    </p>
+                </div>
+            </div>
+            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">© 2026 Happy Hopz Footwear • Premium Kids Footwear</p>
+        </div>
+    `;
+
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            await sgMail.send({
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
+                to: email,
+                replyTo: VERIFIED_SENDER,
+                subject: subject,
+                html: bodyHtml
+            });
+            console.log(`✅ [SendGrid] Welcome coupon email sent to ${email}`);
+            return;
+        }
+
+        await transporter.sendMail({
+            from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
+            to: email,
+            replyTo: VERIFIED_SENDER,
+            subject: subject,
+            html: bodyHtml
+        });
+        console.log(`✅ [Nodemailer] Welcome coupon email sent to ${email}`);
+    } catch (error: any) {
+        console.error(`🔴 [Welcome Coupon Email Error] Failed for ${email}:`, error.message);
+    }
+};

@@ -102,7 +102,7 @@ const MarketingPopup = () => {
                             {!submitted ? (
                                 <>
                                     <h2 className="text-3xl md:text-4xl font-fredoka font-bold text-gray-900 leading-tight mb-3">
-                                        <span className="text-pink-500">10% OFF</span> For You! 🎁
+                                        <span className="text-pink-500">5% OFF</span> For You! 🎁
                                     </h2>
                                     <p className="text-gray-500 text-sm md:text-base mb-8 leading-relaxed">
                                         Join our family for early access to sales and <span className="text-gray-900 font-medium">exclusive discounts</span> for your little ones.
@@ -135,12 +135,25 @@ const MarketingPopup = () => {
                                         </button>
                                     </form>
 
-                                    <button
-                                        onClick={handleClose}
-                                        className="mt-6 text-[10px] text-gray-400 font-medium uppercase tracking-widest hover:text-gray-600 transition-colors underline decoration-gray-200 underline-offset-4"
-                                    >
-                                        No thanks, maybe later
-                                    </button>
+                                    <div className="mt-6 flex flex-col items-center gap-4">
+                                        <button
+                                            onClick={handleClose}
+                                            className="text-[10px] text-gray-400 font-medium uppercase tracking-widest hover:text-gray-600 transition-colors underline decoration-gray-200 underline-offset-4"
+                                        >
+                                            No thanks, maybe later
+                                        </button>
+
+                                        <div className="h-px w-20 bg-gray-100" />
+
+                                        <p className="text-[11px] text-gray-500 font-medium">
+                                            Already have an account? {' '}
+                                            <a href="/login" className="text-pink-500 font-bold hover:underline" onClick={(e) => {
+                                                e.preventDefault();
+                                                handleClose();
+                                                window.location.href = '/login';
+                                            }}>Log In</a>
+                                        </p>
+                                    </div>
 
                                     <p className="text-[9px] text-gray-300 mt-6 max-w-[240px] mx-auto leading-tight">
                                         By joining you agree to our newsletter policies. <br />You can unsubscribe at any time.
@@ -157,7 +170,7 @@ const MarketingPopup = () => {
                                     </div>
                                     <h2 className="text-3xl font-fredoka font-bold text-gray-900 mb-2">Check your inbox! 🎉</h2>
                                     <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-                                        Your 10% discount code is on its way to <br />
+                                        Your 5% discount code is on its way to <br />
                                         <span className="text-pink-500 font-bold">{email}</span>
                                     </p>
                                     <div className="py-2.5 px-6 bg-green-50 rounded-2xl border border-green-100 inline-flex items-center gap-2">
