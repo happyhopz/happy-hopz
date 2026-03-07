@@ -2,6 +2,8 @@ import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { authenticate, requireAdmin, AuthRequest, requireStaff } from '../middleware/auth';
+import { sendVerificationEmail, sendWelcomeCouponEmail } from '../utils/email';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -141,7 +143,7 @@ router.get('/abandoned-carts', authenticate, requireStaff, async (req, res) => {
     }
 });
 
-import { sendAbandonedCartEmail, sendWelcomeCouponEmail } from '../utils/email';
+import { sendAbandonedCartEmail } from '../utils/email';
 
 // Manually trigger recovery for a specific user
 router.post('/abandoned-carts/recover', authenticate, requireStaff, async (req: AuthRequest, res: Response) => {
@@ -192,42 +194,121 @@ const subscribeSchema = z.object({
     source: z.enum(['FOOTER', 'POPUP']).default('FOOTER')
 });
 
-// Subscribe to newsletter
+// Subscribe to newsletter - Step 1: Request OTP
 router.post('/subscribe', async (req, res) => {
     try {
         const { email, name, source } = subscribeSchema.parse(req.body);
 
-        // check if already subscribed
+        // check if already subscribed and verified
         const existing = await prisma.newsletterSubscriber.findUnique({
             where: { email }
         });
 
-        if (existing) {
-            if (existing.status === 'UNSUBSCRIBED') {
-                await prisma.newsletterSubscriber.update({
-                    where: { email },
-                    data: { status: 'SUBSCRIBED', updatedAt: new Date() }
-                });
-                return res.json({ message: 'Welcome back! You have been re-subscribed.' });
-            }
+        if (existing && existing.status === 'SUBSCRIBED') {
             return res.status(400).json({ error: 'You are already subscribed!' });
         }
 
-        await prisma.newsletterSubscriber.create({
-            data: { email, name: name || 'Friend', source }
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const codeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        await (prisma.newsletterSubscriber as any).upsert({
+            where: { email },
+            update: {
+                verificationCode: otp,
+                codeExpires,
+                name: name || existing?.name,
+                source: source || existing?.source
+            },
+            create: {
+                email,
+                name: name || 'Friend',
+                source,
+                verificationCode: otp,
+                codeExpires,
+                status: 'PENDING'
+            }
         });
 
-        // Send welcome email with coupon
-        sendWelcomeCouponEmail(email, name || 'Friend').catch((err: Error) => {
-            console.error('Failed to send welcome email:', err);
-        });
+        // Send OTP via email
+        await sendVerificationEmail(email, otp);
 
-        res.status(201).json({ message: 'Thank you for subscribing! 🐼' });
+        res.json({ message: 'Verification code sent to your email!', otpRequired: true });
     } catch (error: any) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Please provide a valid email address.' });
         }
-        res.status(500).json({ error: 'Failed to subscribe. Please try again.' });
+        console.error('Subscription request error:', error);
+        res.status(500).json({ error: 'Failed to send verification code.' });
+    }
+});
+
+// Subscribe to newsletter - Step 2: Verify OTP
+router.post('/subscribe/verify', async (req, res) => {
+    try {
+        const { email, otp } = z.object({
+            email: z.string().email(),
+            otp: z.string().length(6)
+        }).parse(req.body);
+
+        const subscriber = await prisma.newsletterSubscriber.findUnique({
+            where: { email }
+        });
+
+        if (!subscriber || subscriber.verificationCode !== otp) {
+            return res.status(400).json({ error: 'Invalid verification code' });
+        }
+
+        if (subscriber.codeExpires && subscriber.codeExpires < new Date()) {
+            return res.status(400).json({ error: 'Verification code expired' });
+        }
+
+        // Finalize subscription
+        await (prisma.newsletterSubscriber as any).update({
+            where: { email },
+            data: {
+                status: 'SUBSCRIBED',
+                isVerified: true,
+                verificationCode: null,
+                codeExpires: null,
+                updatedAt: new Date()
+            }
+        });
+
+        // Send welcome email with coupon
+        sendWelcomeCouponEmail(email, subscriber.name || 'Friend').catch((err: Error) => {
+            console.error('Failed to send welcome email:', err);
+        });
+
+        // OPTIONAL LOGIN: If user exists, return token
+        const user = await prisma.user.findUnique({ where: { email } });
+        let token = null;
+        let userData = null;
+
+        if (user) {
+            token = jwt.sign(
+                { id: user.id, email: user.email, role: user.role },
+                process.env.JWT_SECRET!,
+                { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
+            );
+            userData = {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                isVerified: user.isVerified
+            };
+        }
+
+        res.json({
+            message: 'Successfully subscribed! 🎁',
+            coupon: 'WELCOME5',
+            user: userData,
+            token
+        });
+    } catch (error: any) {
+        console.error('Subscription verification error:', error);
+        res.status(500).json({ error: 'Verification failed. Please try again.' });
     }
 });
 

@@ -169,7 +169,9 @@ export const marketingAPI = {
     getActiveSale: () => api.get('/marketing/flash-sales/active'),
     getActivePopup: () => api.get('/marketing/popups/active'),
     subscribe: (data: { email: string; name?: string; source: 'FOOTER' | 'POPUP' }) =>
-        api.post('/marketing/subscribe', data)
+        api.post('/marketing/subscribe', data),
+    verifySubscription: (data: { email: string; otp: string }) =>
+        api.post('/marketing/subscribe/verify', data)
 };
 
 export const settingsAPI = {

@@ -21,6 +21,7 @@ interface AuthContextType {
     googleLogin: (credential: string) => Promise<void>;
     logout: () => void;
     setUser: (user: User | null) => void;
+    onLoginSuccess: (user: User, token: string) => void;
     isAdmin: boolean;
 }
 
@@ -91,10 +92,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('user');
     };
 
+    const onLoginSuccess = (userData: User, userToken: string) => {
+        setUser(userData);
+        setToken(userToken);
+        localStorage.setItem('token', userToken);
+        localStorage.setItem('user', JSON.stringify(userData));
+    };
+
     const isAdmin = user?.role === 'ADMIN' || user?.email === 'happyhopz308@gmail.com';
 
     return (
-        <AuthContext.Provider value={{ user, setUser, token, loading, login, signup, googleLogin, logout, isAdmin }}>
+        <AuthContext.Provider value={{ user, setUser, token, loading, login, signup, googleLogin, logout, onLoginSuccess, isAdmin }}>
             {children}
         </AuthContext.Provider>
     );

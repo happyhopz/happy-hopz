@@ -284,13 +284,16 @@ model FlashSale {
 }
 
 model NewsletterSubscriber {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  source    String?  @default("FOOTER") // FOOTER, POPUP
-  status    String   @default("SUBSCRIBED") // SUBSCRIBED, UNSUBSCRIBED
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(uuid())
+  email            String   @unique
+  name             String?
+  source           String?  @default("FOOTER") // FOOTER, POPUP
+  status           String   @default("SUBSCRIBED") // PENDING, SUBSCRIBED, UNSUBSCRIBED
+  verificationCode String?
+  codeExpires      DateTime?
+  isVerified       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model MarketingPopup {
