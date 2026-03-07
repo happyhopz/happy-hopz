@@ -3,15 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, Mail, Sparkles } from 'lucide-react';
 import { marketingAPI } from '@/lib/api';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 import pandaLogo from '@/assets/panda-logo.png';
 
 const MarketingPopup = () => {
+    const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
     useEffect(() => {
+        // Don't show if user is logged in
+        if (user) return;
+
         // Check if already seen or dismissed
         const hasSeen = localStorage.getItem('hh_popup_seen');
         const hasSubscribed = localStorage.getItem('hh_is_subscribed');
@@ -23,7 +28,7 @@ const MarketingPopup = () => {
             }, 10000);
             return () => clearTimeout(timer);
         }
-    }, []);
+    }, [user]);
 
     const handleClose = () => {
         setIsOpen(false);
