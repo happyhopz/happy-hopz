@@ -101,10 +101,11 @@ router.get('/popups/active', async (req, res) => {
 
 router.get('/abandoned-carts', authenticate, requireStaff, async (req, res) => {
     try {
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-        // Find users who have cart items but haven't placed an order in the last 24h
-        // and whose cart hasn't been updated recently.
+        // Find users who have cart items updated between 2 and 24 hours ago
+        // and haven't placed an order in that period.
         const abandonedCarts = await prisma.user.findMany({
             where: {
                 cartItems: { some: {} },
@@ -126,10 +127,102 @@ router.get('/abandoned-carts', authenticate, requireStaff, async (req, res) => {
             }
         });
 
-        res.json(abandonedCarts);
+        // Add a 'suggestedAction' based on item count/value (future enhancement)
+        const enrichedCarts = abandonedCarts.map(cart => ({
+            ...cart,
+            itemCount: cart.cartItems.reduce((acc, item) => acc + item.quantity, 0),
+            totalValue: cart.cartItems.reduce((acc, item) => acc + (item.product.discountPrice || item.product.price) * item.quantity, 0)
+        }));
+
+        res.json(enrichedCarts.sort((a, b) => b.totalValue - a.totalValue));
     } catch (error) {
         console.error('Abandoned cart fetch error:', error);
         res.status(500).json({ error: 'Failed to fetch abandoned carts' });
+    }
+});
+
+import { sendAbandonedCartEmail } from '../utils/email';
+
+// Manually trigger recovery for a specific user
+router.post('/abandoned-carts/recover', authenticate, requireStaff, async (req: AuthRequest, res: Response) => {
+    try {
+        const { userId } = z.object({ userId: z.string() }).parse(req.body);
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                cartItems: {
+                    include: { product: true }
+                }
+            }
+        });
+
+        if (!user || user.cartItems.length === 0) {
+            return res.status(404).json({ error: 'User not found or cart is empty' });
+        }
+
+        const email = user.email;
+        const name = user.name || 'Friend';
+
+        await sendAbandonedCartEmail(email, name, user.cartItems);
+
+        // Log the recovery attempt
+        await prisma.auditLog.create({
+            data: {
+                action: 'ABANDONED_CART_RECOVERY',
+                entity: 'USER',
+                entityId: userId,
+                details: `Sent recovery email to ${email}`,
+                adminId: req.user?.id
+            }
+        });
+
+        res.json({ message: `Recovery email sent to ${email} successfully!` });
+    } catch (error) {
+        console.error('Recovery trigger error:', error);
+        res.status(500).json({ error: 'Failed to send recovery message' });
+    }
+});
+
+// --- Newsletter Subscription ---
+
+const subscribeSchema = z.object({
+    email: z.string().email(),
+    name: z.string().optional(),
+    source: z.enum(['FOOTER', 'POPUP']).default('FOOTER')
+});
+
+// Subscribe to newsletter
+router.post('/subscribe', async (req, res) => {
+    try {
+        const { email, name, source } = subscribeSchema.parse(req.body);
+
+        // check if already subscribed
+        const existing = await prisma.newsletterSubscriber.findUnique({
+            where: { email }
+        });
+
+        if (existing) {
+            if (existing.status === 'UNSUBSCRIBED') {
+                await prisma.newsletterSubscriber.update({
+                    where: { email },
+                    data: { status: 'SUBSCRIBED', updatedAt: new Date() }
+                });
+                return res.json({ message: 'Welcome back! You have been re-subscribed.' });
+            }
+            return res.status(400).json({ error: 'You are already subscribed!' });
+        }
+
+        await prisma.newsletterSubscriber.create({
+            data: { email, name, source }
+        });
+
+        res.status(201).json({ message: 'Thank you for subscribing! 🐼' });
+    } catch (error: any) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Please provide a valid email address.' });
+        }
+        res.status(500).json({ error: 'Failed to subscribe. Please try again.' });
     }
 });
 

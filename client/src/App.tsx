@@ -8,6 +8,7 @@ import AdminLayout from "./components/AdminLayout";
 import WhatsAppButton from "./components/WhatsAppButton";
 import { AuthProvider } from "@/hooks/useAuth";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import MarketingPopup from "./components/MarketingPopup";
 import Index from "./pages/Index";
 import ScrollToTop from "./components/ScrollToTop";
 import Login from "./pages/Login";
@@ -111,6 +112,7 @@ const AppInner = () => {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <MarketingPopup />
       <WhatsAppButton />
     </>
   );

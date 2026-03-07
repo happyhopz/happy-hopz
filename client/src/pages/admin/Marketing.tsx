@@ -31,13 +31,19 @@ const Marketing = () => {
     });
 
     // Mutations
-    const createSaleMutation = useMutation({
-        mutationFn: adminAPI.createFlashSale,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-flash-sales'] });
-            toast.success('Flash Sale scheduled successfully!');
+    const recoverMutation = useMutation({
+        mutationFn: adminAPI.recoverAbandonedCart,
+        onSuccess: (res) => {
+            toast.success(res.data.message || 'Recovery email sent!');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to send recovery email');
         }
     });
+
+    const handleRecover = (userId: string) => {
+        recoverMutation.mutate(userId);
+    };
 
     return (
         <div className="space-y-8">
@@ -171,9 +177,15 @@ const Marketing = () => {
                                                 {user.cartItems.length} items left in cart
                                             </Badge>
                                             <div className="flex gap-2">
-                                                <Button size="sm" variant="outline" className="gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="gap-2"
+                                                    onClick={() => handleRecover(user.id)}
+                                                    disabled={recoverMutation.isPending}
+                                                >
                                                     <Mail className="w-4 h-4" />
-                                                    Recovery Email
+                                                    {recoverMutation.isPending && recoverMutation.variables === user.id ? 'Sending...' : 'Recovery Email'}
                                                 </Button>
                                                 <Button size="sm" className="gap-2">
                                                     View Items

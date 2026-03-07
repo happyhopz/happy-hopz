@@ -145,6 +145,7 @@ export const adminAPI = {
 
     // Marketing & Growth
     getAbandonedCarts: () => api.get('/marketing/abandoned-carts'),
+    recoverAbandonedCart: (userId: string) => api.post('/marketing/abandoned-carts/recover', { userId }),
     getFlashSales: () => api.get('/marketing/flash-sales'),
     createFlashSale: (data: any) => api.post('/marketing/flash-sales', data),
     getPopups: () => api.get('/marketing/popups'),
@@ -166,7 +167,9 @@ export const analyticsAPI = {
 
 export const marketingAPI = {
     getActiveSale: () => api.get('/marketing/flash-sales/active'),
-    getActivePopup: () => api.get('/marketing/popups/active')
+    getActivePopup: () => api.get('/marketing/popups/active'),
+    subscribe: (data: { email: string; name?: string; source: 'FOOTER' | 'POPUP' }) =>
+        api.post('/marketing/subscribe', data)
 };
 
 export const settingsAPI = {

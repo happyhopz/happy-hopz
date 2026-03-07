@@ -856,3 +856,77 @@ export const sendAdminStatusUpdateEmail = async (order: any) => {
         throw error;
     }
 };
+
+export const sendAbandonedCartEmail = async (email: string, name: string, cartItems: any[]) => {
+    if (!process.env.SENDGRID_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) return;
+
+    const subject = `🛒 Did you forget something, ${name}?`;
+    const checkoutUrl = `${SITE_URL}/cart`;
+
+    const itemsHtml = cartItems.map(item => `
+        <div style="display: flex; align-items: center; margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 24px; margin-right: 15px;">👟</div>
+            <div>
+                <p style="margin: 0; font-weight: 800; color: #1e293b; font-size: 14px;">${item.product?.name || item.name}</p>
+                <p style="margin: 2px 0 0 0; color: #64748b; font-size: 11px;">Size ${item.size} • ${String(item.color).toUpperCase()}</p>
+            </div>
+        </div>
+    `).join('');
+
+    const bodyHtml = `
+        ${getCommonStyles()}
+        <div style="font-family: 'Outfit', sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #ffffff; color: #1e293b;">
+            <div style="border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); background: #ffffff;">
+                <div style="text-align: center; padding: 40px 20px; background: #fff5f5; border-bottom: 2px solid #fff1f2;">
+                    <h2 style="color: #e11d48; margin: 0; font-size: 28px; font-weight: 800; font-family: 'Outfit', sans-serif;">Wait, don't go! 🐼</h2>
+                    <p style="color: #64748b; font-size: 14px; margin-top: 5px;">Your favorite items are waiting in your cart.</p>
+                </div>
+                
+                <div style="padding: 40px 30px;">
+                    <p style="margin-top: 0; font-size: 16px; line-height: 1.6; font-family: 'Outfit', sans-serif;">Hi <strong>${name}</strong>,</p>
+                    <p style="color: #475569; line-height: 1.6; font-family: 'Outfit', sans-serif;">We noticed you left some items in your cart. We've saved them for you, but they won't last long!</p>
+                    
+                    <div style="margin: 30px 0;">
+                        ${itemsHtml}
+                    </div>
+
+                    <div style="background: #fffbeb; border: 1px dashed #f59e0b; padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                        <p style="margin: 0; color: #92400e; font-weight: 800; font-size: 13px;">GIFT FOR YOU 🎁</p>
+                        <p style="margin: 5px 0 0 0; color: #b45309; font-size: 16px; font-weight: 800;">Get ₹100 OFF with code: <span style="background: #ffffff; padding: 2px 8px; border-radius: 4px; border: 1px solid #f59e0b;">RETURNING100</span></p>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <a href="${checkoutUrl}" style="display: inline-block; background: #e11d48; color: #ffffff !important; padding: 18px 35px; text-decoration: none; border-radius: 40px; font-weight: 800; text-align: center; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; font-family: 'Outfit', sans-serif;">Complete My Purchase</a>
+                    </div>
+                </div>
+            </div>
+            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">© 2026 Happy Hopz Footwear</p>
+        </div>
+    `;
+
+    try {
+        if (process.env.SENDGRID_API_KEY) {
+            await sgMail.send({
+                from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
+                to: email,
+                replyTo: VERIFIED_SENDER,
+                subject: subject,
+                html: bodyHtml
+            });
+            console.log(`✅ [SendGrid] Abandoned cart email sent to ${email}`);
+            return;
+        }
+
+        await transporter.sendMail({
+            from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
+            to: email,
+            replyTo: VERIFIED_SENDER,
+            subject: subject,
+            html: bodyHtml
+        });
+        console.log(`✅ [Nodemailer] Abandoned cart email sent to ${email}`);
+    } catch (error: any) {
+        console.error(`🔴 [Abandoned Cart Email Error] Failed for ${email}:`, error.message);
+        throw error;
+    }
+};

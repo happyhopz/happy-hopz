@@ -71,63 +71,35 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact - Clean & Polished */}
+          {/* Contact & Newsletter */}
           <div className="col-span-2 lg:col-span-1">
             <h4 className="font-fredoka font-semibold text-foreground mb-6">
-              Contact Us
+              Stay in the Loop
             </h4>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-start gap-4 text-muted-foreground text-sm font-nunito group">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center border border-border/40">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
-                <span className="font-medium leading-relaxed">
-                  114, Azad Rd, Vivekanand Puri, Sarai Rohilla, New Delhi, Delhi, 110007
-                </span>
-              </div>
+            <p className="text-muted-foreground text-xs mb-4">
+              Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals. 🎁
+            </p>
+            <NewsletterSignup />
 
+            <div className="mt-8 space-y-4">
               <a
                 href="mailto:happyhopz308@gmail.com?subject=Enquiry from Happy Hopz Website"
                 className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
               >
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm border border-border/40">
-                  <Mail className="w-5 h-5" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm border border-border/40">
+                  <Mail className="w-4 h-4" />
                 </div>
-                <span className="font-medium truncate">happyhopz308@gmail.com</span>
+                <span className="font-medium truncate text-xs">happyhopz308@gmail.com</span>
               </a>
 
               <a
                 href="tel:+919711864674"
                 className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
               >
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm border border-border/40">
-                  <Phone className="w-5 h-5" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-card flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm border border-border/40">
+                  <Phone className="w-4 h-4" />
                 </div>
-                <span className="font-medium">+91 97118 64674</span>
-              </a>
-
-              <a
-                href="https://www.instagram.com/happyhopzz?igsh=czMyaW1zYTY5ZWtz"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
-              >
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-purple-500 group-hover:via-pink-500 group-hover:to-orange-400 group-hover:text-white transition-all shadow-sm border border-border/40">
-                  <Instagram className="w-5 h-5" />
-                </div>
-                <span className="font-medium">@happyhopzz</span>
-              </a>
-
-              <a
-                href="https://www.facebook.com/share/18Hz57kKZa/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 text-muted-foreground text-sm font-nunito hover:text-primary transition-all group"
-              >
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-card flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm border border-border/40">
-                  <Facebook className="w-5 h-5" />
-                </div>
-                <span className="font-medium">Happy Hopz</span>
+                <span className="font-medium text-xs">+91 97118 64674</span>
               </a>
             </div>
           </div>
@@ -158,5 +130,52 @@ const FooterLink = ({ to, children }: { to: string; children: React.ReactNode })
     </Link>
   </li>
 );
+
+// New Signup Component
+import { useState } from 'react';
+import { marketingAPI } from '@/lib/api';
+import { toast } from 'sonner';
+
+const NewsletterSignup = () => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    try {
+      const res = await marketingAPI.subscribe({ email, source: 'FOOTER' });
+      toast.success(res.data.message || 'Subscribed successfully!');
+      setEmail('');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to subscribe');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
+      <div className="relative group">
+        <input
+          type="email"
+          placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full px-4 py-2.5 rounded-xl bg-card border border-border/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm transition-all shadow-sm group-hover:shadow-md"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full py-2.5 rounded-xl bg-primary text-white font-bold text-sm shadow-lg hover:shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+      >
+        {loading ? 'Joining...' : 'Join the Club 🐼'}
+      </button>
+    </form>
+  );
+};
 
 export default Footer;
