@@ -897,7 +897,7 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
         const utmCampaignCount: Record<string, number> = {};
         let totalDuration = 0;
         const sessionVisitorTypeMap = new Map<string, boolean>(); // sessionId -> isNew
-        const funnel: Record<string, number> = { home: 0, product: 0, cart: 0, checkout: 0, purchase: 0 };
+        const funnel = { visits: 0, product_views: 0, cart_views: 0, checkout_starts: 0, purchases: 0 };
         const sessionsSeen = new Set<string>();
 
         for (const rec of allRecords) {
@@ -944,11 +944,11 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
             if (!sessionsSeen.has(rec.sessionId)) {
                 sessionsSeen.add(rec.sessionId);
                 const p = rec.path.toLowerCase();
-                if (p === '/' || p === '/index') funnel.home++;
-                else if (p.startsWith('/products/')) funnel.product++;
-                else if (p.startsWith('/cart')) funnel.cart++;
-                else if (p.startsWith('/checkout')) funnel.checkout++;
-                else if (p.includes('order-success')) funnel.purchase++;
+                if (p === '/' || p === '/index') funnel.visits++;
+                else if (p.startsWith('/products/')) funnel.product_views++;
+                else if (p.startsWith('/cart')) funnel.cart_views++;
+                else if (p.startsWith('/checkout')) funnel.checkout_starts++;
+                else if (p.includes('order-success')) funnel.purchases++;
             }
         }
 
@@ -978,14 +978,11 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
                 utmSources: sortDesc(utmSourceCount),
                 utmCampaigns: sortDesc(utmCampaignCount),
                 avgDuration: allRecords.length > 0 ? Math.round(totalDuration / allRecords.length) : 0,
-                visitorType: (() => {
-                    let newSessions = 0;
-                    let returningSessions = 0;
-                    sessionVisitorTypeMap.forEach((isNew) => isNew ? newSessions++ : returningSessions++);
-                    return [
-                        { name: 'New', count: newSessions },
-                        { name: 'Returning', count: returningSessions }
-                    ];
+                visitorTypes: (() => {
+                    let newCount = 0;
+                    let returningCount = 0;
+                    sessionVisitorTypeMap.forEach((isNew) => isNew ? newCount++ : returningCount++);
+                    return { new: newCount, returning: returningCount };
                 })(),
                 funnel,
                 topEvents: sortDesc(eventCounts, 15)
