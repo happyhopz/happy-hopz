@@ -16,10 +16,16 @@ const getSessionId = (): string => {
 
 // Check if this is a first-time visitor (lasts forever on this browser)
 const checkIsNewVisitor = (): boolean => {
-    const key = 'hh_returning_visitor';
-    const isReturning = localStorage.getItem(key);
+    const localKey = 'hh_returning_visitor';
+    const sessionKey = 'hh_session_is_new';
+
+    // If we've already determined this session is "New", keep it true
+    if (sessionStorage.getItem(sessionKey) === 'true') return true;
+
+    const isReturning = localStorage.getItem(localKey);
     if (!isReturning) {
-        localStorage.setItem(key, 'true');
+        localStorage.setItem(localKey, 'true');
+        sessionStorage.setItem(sessionKey, 'true'); // Persist for this session
         return true;
     }
     return false;
