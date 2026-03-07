@@ -27,10 +27,10 @@ const MarketingPopup = () => {
         const hasSubscribed = localStorage.getItem('hh_is_subscribed');
 
         if (!hasSeen && !hasSubscribed) {
-            // Show after a short delay for better UX
+            // Show after 6 seconds of browsing
             const timer = setTimeout(() => {
                 setIsOpen(true);
-            }, 3000);
+            }, 6000);
             return () => clearTimeout(timer);
         }
     }, [user, location.pathname]);
