@@ -1,10 +1,16 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Gift, ArrowRight } from 'lucide-react';
+import { Gift, ArrowRight, ShoppingCart } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { productsAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import QuickBuyModal from '@/components/QuickBuyModal';
 
 const HamperSection = () => {
+    const { user } = useAuth();
+    const [quickBuyProduct, setQuickBuyProduct] = useState<any>(null);
+
     const { data: hampers, isLoading } = useQuery({
         queryKey: ['hamper-products'],
         queryFn: async () => {
@@ -12,6 +18,14 @@ const HamperSection = () => {
             return response.data;
         }
     });
+
+    const handleAddToCart = (product: any) => {
+        setQuickBuyProduct(product);
+    };
+
+    const handleBuyNow = (product: any) => {
+        setQuickBuyProduct(product);
+    };
 
     if (!isLoading && (!hampers || hampers.length === 0)) {
         return null;
@@ -87,14 +101,42 @@ const HamperSection = () => {
                                     )}
                                 </div>
 
-                                <Button className="w-full rounded-full bg-pink-50 text-pink-600 hover:bg-pink-600 hover:text-white border-0 font-bold text-xs md:text-sm h-8 md:h-10 transition-colors">
-                                    View Detail
-                                </Button>
+                                <div className="flex flex-col gap-2 w-full mt-auto">
+                                    <Button
+                                        className="w-full rounded-full bg-cyan border-2 border-cyan-500 text-black hover:bg-cyan/90 font-bold text-xs md:text-sm h-8 md:h-10 transition-all group/btn"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleAddToCart(hamper);
+                                        }}
+                                    >
+                                        <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 transition-transform group-hover/btn:scale-110" />
+                                        Add to Bag
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full rounded-full bg-white border-2 border-gray-100 text-black font-bold text-xs md:text-sm h-8 md:h-10 transition-all hover:scale-105 hover:border-orange-500 hover:bg-white hover:text-black shadow-soft"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleBuyNow(hamper);
+                                        }}
+                                    >
+                                        Buy Now
+                                    </Button>
+                                </div>
                             </Link>
                         ))}
                     </div>
                 )}
             </div>
+
+            <QuickBuyModal
+                product={quickBuyProduct}
+                isOpen={!!quickBuyProduct}
+                onClose={() => setQuickBuyProduct(null)}
+                user={user}
+            />
         </section>
     );
 };

@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { productsAPI, cartAPI, API_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { useEventTracking } from '@/hooks/useEventTracking';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BackButton from '@/components/BackButton';
@@ -57,6 +58,7 @@ const ProductDetail = () => {
     const [showSizeChart, setShowSizeChart] = useState(false);
     const [showSizeGuider, setShowSizeGuider] = useState(false);
     const [api, setApi] = useState<CarouselApi>();
+    const { trackEvent } = useEventTracking();
 
     const { data: product, isLoading: loadingProduct } = useQuery({
         queryKey: ['product', id],
@@ -97,8 +99,11 @@ const ProductDetail = () => {
                 images: product.images
             });
             sessionStorage.setItem('recentlyViewed', JSON.stringify(list.slice(0, 10)));
+
+            // Track product view event
+            trackEvent('VIEW_PRODUCT', product.name, product.id);
         }
-    }, [product]);
+    }, [product, trackEvent]);
 
     // Reset selection when product changes
     useEffect(() => {
@@ -176,6 +181,7 @@ const ProductDetail = () => {
                 queryClient.invalidateQueries({ queryKey: ['cart'] });
                 toast.success('Added to bag!');
             }
+            trackEvent('ADD_TO_CART', product.name, `${product.price}`);
         } catch (error) {
             toast.error('Failed to add to bag');
         } finally {
@@ -208,6 +214,7 @@ const ProductDetail = () => {
                 color: selectedColor
             });
             queryClient.invalidateQueries({ queryKey: ['cart'] });
+            trackEvent('BUY_NOW', product.name, `${product.price}`);
             navigate('/checkout');
         } catch (error) {
             toast.error('Failed to proceed to checkout');

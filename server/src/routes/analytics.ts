@@ -32,7 +32,11 @@ async function resolveGeo(ip: string): Promise<{ city?: string; region?: string;
 // POST /analytics/pageview — public, no auth required
 router.post('/pageview', async (req: Request, res: Response) => {
     try {
-        const { path, sessionId, referrer, screenWidth, screenHeight, language, userId, userEmail, utmSource, utmMedium, utmCampaign, utmTerm, utmContent } = req.body;
+        const {
+            path, sessionId, referrer, screenWidth, screenHeight, language,
+            userId, userEmail, utmSource, utmMedium, utmCampaign, utmTerm, utmContent,
+            isNewVisitor
+        } = req.body;
 
         if (!path || !sessionId) {
             return res.status(400).json({ error: 'path and sessionId are required' });
@@ -80,14 +84,15 @@ router.post('/pageview', async (req: Request, res: Response) => {
                 userEmail: userEmail ? String(userEmail).slice(0, 200) : null,
                 utmSource: utmSource ? String(utmSource).slice(0, 100) : null,
                 utmMedium: utmMedium ? String(utmMedium).slice(0, 100) : null,
-                utmCampaign: utmCampaign ? String(utmCampaign).slice(0, 200) : null,
-                utmTerm: utmTerm ? String(utmTerm).slice(0, 200) : null,
-                utmContent: utmContent ? String(utmContent).slice(0, 200) : null,
+                utmCampaign: utmCampaign ? String(utmCampaign).slice(0, 100) : null,
+                utmTerm: utmTerm ? String(utmTerm).slice(0, 100) : null,
+                utmContent: utmContent ? String(utmContent).slice(0, 100) : null,
+                isNewVisitor: !!isNewVisitor,
             }
         });
 
-        // Respond immediately
-        res.status(204).send();
+        // Respond with the ID so client can send pulses for THIS specific pageview
+        res.status(200).json({ id: pageView.id });
 
         // Background geo resolution
         resolveGeo(ip).then(async (geo) => {
@@ -106,6 +111,45 @@ router.post('/pageview', async (req: Request, res: Response) => {
         });
 
     } catch (error) {
+        res.status(204).send();
+    }
+});
+
+// POST /analytics/pulse — Update time on page
+router.post('/pulse', async (req: Request, res: Response) => {
+    try {
+        const { pageViewId, duration } = req.body;
+        if (!pageViewId || typeof duration !== 'number') return res.status(204).send();
+
+        await (prisma as any).pageView.update({
+            where: { id: pageViewId },
+            data: { duration }
+        });
+
+        res.status(204).send();
+    } catch {
+        res.status(204).send();
+    }
+});
+
+// POST /analytics/event — Track interactions (Add to Cart, Clicks, etc.)
+router.post('/event', async (req: Request, res: Response) => {
+    try {
+        const { sessionId, type, label, value, path } = req.body;
+        if (!sessionId || !type) return res.status(204).send();
+
+        await (prisma as any).analyticsEvent.create({
+            data: {
+                sessionId: String(sessionId).slice(0, 100),
+                type: String(type).slice(0, 50),
+                label: label ? String(label).slice(0, 200) : null,
+                value: value ? String(value).slice(0, 200) : null,
+                path: path ? String(path).slice(0, 500) : null,
+            }
+        });
+
+        res.status(204).send();
+    } catch {
         res.status(204).send();
     }
 });

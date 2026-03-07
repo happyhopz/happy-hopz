@@ -361,16 +361,33 @@ model PageView {
   userId       String?
   userEmail    String?
   // UTM marketing attribution
-  utmSource   String?
-  utmMedium   String?
-  utmCampaign String?
-  utmTerm     String?
-  utmContent  String?
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  utmTerm      String?
+  utmContent   String?
+  // Advanced metrics
+  duration     Int      @default(0) // Seconds spent on page
+  isNewVisitor Boolean  @default(true)
 
   @@index([createdAt])
   @@index([sessionId])
   @@index([device])
   @@index([userId])
   @@index([utmSource])
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(uuid())
+  sessionId  String
+  type       String   // CLICK, ADD_TO_CART, START_CHECKOUT, etc.
+  label      String?  // Product Name, Button Text, etc.
+  value      String?  // Price, ID, etc.
+  path       String?
+  createdAt  DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([type])
+  @@index([createdAt])
 }
 

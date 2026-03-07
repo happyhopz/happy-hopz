@@ -831,20 +831,60 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
         }
 
         // Fetch data + count in parallel
-        const [visitors, totalCount, allRecords] = await Promise.all([
+        const [totalCount, visitorsRaw, allRecordsRaw, allEventsRaw] = await Promise.all([
+            (prisma as any).pageView.count({ where }),
             (prisma as any).pageView.findMany({
                 where,
                 orderBy: { createdAt: 'desc' },
-                skip,
+                skip: (page - 1) * limit,
                 take: limit,
             }),
-            (prisma as any).pageView.count({ where }),
-            // For aggregations, fetch lighter data from recent 30 days
             (prisma as any).pageView.findMany({
                 where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
-                select: { device: true, country: true, referrer: true, path: true, browser: true, os: true }
+                select: { sessionId: true, device: true, country: true, referrer: true, path: true, browser: true, os: true, utmSource: true, utmCampaign: true, duration: true, isNewVisitor: true }
+            }),
+            (prisma as any).analyticsEvent.findMany({
+                where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+                select: { type: true, label: true, path: true }
             })
         ]);
+
+        const visitors = visitorsRaw as any[];
+        const visitorEmails = [...new Set(visitors.filter(v => v.userEmail).map(v => v.userEmail))];
+        const visitorUserIds = [...new Set(visitors.filter(v => v.userId).map(v => v.userId))];
+
+        const [relatedUsers, relatedOrders] = await Promise.all([
+            visitorUserIds.length > 0 ? prisma.user.findMany({
+                where: { id: { in: visitorUserIds } },
+                select: { id: true, name: true, phone: true, email: true }
+            }) : Promise.resolve([]),
+            (visitorEmails.length > 0 || visitorUserIds.length > 0) ? prisma.order.findMany({
+                where: {
+                    OR: [
+                        { userId: { in: visitorUserIds as string[] } },
+                        { guestEmail: { in: visitorEmails as string[] } }
+                    ]
+                },
+                select: { guestEmail: true, guestName: true, guestPhone: true, userId: true },
+                orderBy: { createdAt: 'desc' }
+            }) : Promise.resolve([])
+        ]);
+
+        const leadMap = new Map();
+        relatedUsers.forEach((u: any) => leadMap.set(u.id, { name: u.name, phone: u.phone }));
+        relatedOrders.forEach((o: any) => {
+            if (o.userId && !leadMap.has(o.userId)) leadMap.set(o.userId, { name: o.guestName, phone: o.guestPhone });
+            if (o.guestEmail && !leadMap.has(o.guestEmail)) leadMap.set(o.guestEmail, { name: o.guestName, phone: o.guestPhone });
+        });
+
+        const enrichedVisitors = visitors.map(v => ({
+            ...v,
+            leadName: v.userId ? leadMap.get(v.userId)?.name : (v.userEmail ? leadMap.get(v.userEmail)?.name : null),
+            leadPhone: v.userId ? leadMap.get(v.userId)?.phone : (v.userEmail ? leadMap.get(v.userEmail)?.phone : null)
+        }));
+
+        const allRecords = allRecordsRaw as any[];
+        const allEvents = allEventsRaw as any[];
 
         // Compute aggregations
         const deviceCount: Record<string, number> = {};
@@ -855,6 +895,11 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
         const osCount: Record<string, number> = {};
         const utmSourceCount: Record<string, number> = {};
         const utmCampaignCount: Record<string, number> = {};
+        let totalDuration = 0;
+        let newVisitors = 0;
+        let returningVisitors = 0;
+        const funnel: Record<string, number> = { home: 0, product: 0, cart: 0, checkout: 0, purchase: 0 };
+        const sessionsSeen = new Set<string>();
 
         for (const rec of allRecords) {
             const d = rec.device || 'unknown';
@@ -886,6 +931,29 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
             if (rec.utmCampaign) {
                 utmCampaignCount[rec.utmCampaign] = (utmCampaignCount[rec.utmCampaign] || 0) + 1;
             }
+
+            // Duration and Visitor Type
+            totalDuration += rec.duration || 0;
+            if (rec.isNewVisitor) newVisitors++;
+            else returningVisitors++;
+
+            // Simple Funnel Mapping
+            if (!sessionsSeen.has(rec.sessionId)) {
+                sessionsSeen.add(rec.sessionId);
+                const p = rec.path.toLowerCase();
+                if (p === '/' || p === '/index') funnel.home++;
+                else if (p.startsWith('/products/')) funnel.product++;
+                else if (p.startsWith('/cart')) funnel.cart++;
+                else if (p.startsWith('/checkout')) funnel.checkout++;
+                else if (p.includes('order-success')) funnel.purchase++;
+            }
+        }
+
+        // Aggregate Events
+        const eventCounts: Record<string, number> = {};
+        for (const ev of allEvents) {
+            const key = `${ev.type}${ev.label ? ': ' + ev.label : ''}`;
+            eventCounts[key] = (eventCounts[key] || 0) + 1;
         }
 
         const sortDesc = (obj: Record<string, number>, limit = 10) =>
@@ -895,7 +963,7 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
                 .map(([name, count]) => ({ name, count }));
 
         res.json({
-            visitors,
+            visitors: enrichedVisitors,
             pagination: { page, limit, totalCount, totalPages: Math.ceil(totalCount / limit) },
             aggregations: {
                 devices: sortDesc(deviceCount),
@@ -906,6 +974,13 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
                 operatingSystems: sortDesc(osCount),
                 utmSources: sortDesc(utmSourceCount),
                 utmCampaigns: sortDesc(utmCampaignCount),
+                avgDuration: allRecords.length > 0 ? Math.round(totalDuration / allRecords.length) : 0,
+                visitorType: [
+                    { name: 'New', count: newVisitors },
+                    { name: 'Returning', count: returningVisitors }
+                ],
+                funnel,
+                topEvents: sortDesc(eventCounts, 15)
             }
         });
     } catch (error: any) {
@@ -1009,6 +1084,8 @@ router.get('/visitors/export', async (req: AuthRequest, res: Response) => {
             { header: 'UTM Campaign', key: 'utmCampaign', width: 15 },
             { header: 'UTM Term', key: 'utmTerm', width: 15 },
             { header: 'UTM Content', key: 'utmContent', width: 15 },
+            { header: 'Duration (sec)', key: 'duration', width: 12 },
+            { header: 'Visitor Type', key: 'visitorType', width: 12 },
         ];
 
         // Style header row
@@ -1017,42 +1094,36 @@ router.get('/visitors/export', async (req: AuthRequest, res: Response) => {
         ws.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
 
         // Add data rows with enrichment
-        for (const v of pageViews) {
-            const userProfile = v.userId ? userMap.get(v.userId) : null;
-            const orderData = v.userId
-                ? orderByUser.get(v.userId)
-                : v.userEmail
-                    ? orderByEmail.get(v.userEmail)
-                    : null;
-
-            const addr = orderData?.address;
-            const addressStr = addr
-                ? [addr.line1, addr.line2, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ')
-                : '';
+        for (const pv of pageViews) {
+            const user = pv.userId ? userMap.get(pv.userId) : null;
+            const checkoutData = (pv.userId ? orderByUser.get(pv.userId) : null) || (pv.userEmail ? orderByEmail.get(pv.userEmail) : null);
+            const addr = checkoutData?.address || {};
 
             ws.addRow({
-                datetime: new Date(v.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-                path: v.path,
-                sessionId: v.sessionId,
-                ip: v.ip || '',
-                city: v.city || (addr?.city || ''),
-                region: v.region || (addr?.state || ''),
-                country: v.country || '',
-                device: v.device || 'desktop',
-                browser: v.browser || '',
-                os: v.os || '',
-                screen: v.screenWidth && v.screenHeight ? `${v.screenWidth}×${v.screenHeight}` : '',
-                language: v.language || '',
-                referrer: v.referrer || 'Direct',
-                userEmail: v.userEmail || userProfile?.email || orderData?.guestEmail || '',
-                userName: userProfile?.name || orderData?.guestName || '',
-                userPhone: userProfile?.phone || orderData?.guestPhone || (addr?.phone || ''),
-                address: addressStr,
-                utmSource: v.utmSource || '',
-                utmMedium: v.utmMedium || '',
-                utmCampaign: v.utmCampaign || '',
-                utmTerm: v.utmTerm || '',
-                utmContent: v.utmContent || '',
+                datetime: new Date(pv.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                path: pv.path,
+                sessionId: pv.sessionId,
+                ip: pv.ip || '',
+                city: pv.city || (addr?.city || ''),
+                region: pv.region || (addr?.state || ''),
+                country: pv.country || '',
+                device: pv.device || 'desktop',
+                browser: pv.browser || '',
+                os: pv.os || '',
+                screen: pv.screenWidth && pv.screenHeight ? `${pv.screenWidth}×${pv.screenHeight}` : '',
+                language: pv.language || '',
+                referrer: pv.referrer || 'Direct',
+                userEmail: pv.userEmail || user?.email || '',
+                userName: user?.name || checkoutData?.guestName || '',
+                userPhone: user?.phone || checkoutData?.guestPhone || (addr?.phone || ''),
+                address: addr.line1 ? `${addr.line1}, ${addr.line2 ? addr.line2 + ', ' : ''}${addr.city}, ${addr.state} - ${addr.pincode}` : '',
+                utmSource: pv.utmSource || '',
+                utmMedium: pv.utmMedium || '',
+                utmCampaign: pv.utmCampaign || '',
+                utmTerm: pv.utmTerm || '',
+                utmContent: pv.utmContent || '',
+                duration: pv.duration || 0,
+                isNewVisitor: pv.isNewVisitor ? 'Yes' : 'No',
             });
         }
 

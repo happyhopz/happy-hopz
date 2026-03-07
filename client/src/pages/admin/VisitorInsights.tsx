@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
     Eye, Monitor, Smartphone, Tablet, Globe, ArrowUpRight,
-    ChevronLeft, ChevronRight, Filter, MapPin, Clock, Download, Loader2, Mail
+    ChevronLeft, ChevronRight, Filter, MapPin, Clock, Download, Loader2, Mail, Users, TrendingUp, MousePointer2,
+    UserCheck, Fingerprint, Phone
 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
-    BarChart, Bar, XAxis, YAxis, CartesianGrid
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
 } from 'recharts';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -101,6 +102,27 @@ const VisitorInsights = () => {
     const pagination = data?.pagination || { page: 1, totalPages: 1, totalCount: 0 };
     const agg = data?.aggregations || {};
 
+    const formatDuration = (seconds: number) => {
+        if (!seconds) return '0s';
+        if (seconds < 60) return `${Math.round(seconds)}s`;
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.round(seconds % 60);
+        return `${mins}m ${secs}s`;
+    };
+
+    const visitorTypeData = [
+        { name: 'New', value: agg.visitorTypes?.new || 0, color: '#6366f1' },
+        { name: 'Returning', value: agg.visitorTypes?.returning || 0, color: '#ec4899' }
+    ];
+
+    const funnelData = [
+        { name: 'Visits', value: agg.funnel?.visits || 0, fill: '#6366f1' },
+        { name: 'Product', value: agg.funnel?.product_views || 0, fill: '#8b5cf6' },
+        { name: 'Cart', value: agg.funnel?.cart_views || 0, fill: '#d946ef' },
+        { name: 'Checkout', value: agg.funnel?.checkout_starts || 0, fill: '#ec4899' },
+        { name: 'Purchase', value: agg.funnel?.purchases || 0, fill: '#f43f5e' }
+    ];
+
     // Compute device summary for header cards
     const totalDeviceViews = (agg.devices || []).reduce((s: number, d: any) => s + d.count, 0);
     const getDevicePercent = (name: string) => {
@@ -162,13 +184,98 @@ const VisitorInsights = () => {
                         </Card>
                         <Card className="bg-emerald-50/60 border-emerald-100">
                             <CardContent className="p-4 text-center">
-                                <Globe className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+                                <Clock className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
                                 <p className="text-3xl font-fredoka font-bold text-emerald-800">
-                                    {(agg.countries || [])[0]?.name || '—'}
+                                    {formatDuration(agg.avgDuration || 0)}
                                 </p>
-                                <p className="text-[10px] text-emerald-500 uppercase font-semibold">Top Country</p>
+                                <p className="text-[10px] text-emerald-500 uppercase font-semibold">Avg. Duration</p>
                             </CardContent>
                         </Card>
+                        <Card className="bg-blue-50/60 border-blue-100">
+                            <CardContent className="p-4 text-center">
+                                <Users className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+                                <p className="text-3xl font-fredoka font-bold text-blue-800">
+                                    {agg.visitorTypes?.new ? Math.round((agg.visitorTypes.new / (agg.visitorTypes.new + (agg.visitorTypes.returning || 0))) * 100) : 0}%
+                                </p>
+                                <p className="text-[10px] text-blue-500 uppercase font-semibold">New Visitors</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Advanced Analytics Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        {/* Conversion Funnel */}
+                        <Card className="border-none shadow-sm">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <TrendingUp className="w-4 h-4 text-rose-500" />
+                                    CONVERSION FUNNEL
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[250px] w-full mt-4">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={funnelData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600 }} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                                cursor={{ fill: '#f8fafc' }}
+                                            />
+                                            <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={40}>
+                                                {funnelData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Visitor Type & Device Summary */}
+                        <div className="grid grid-cols-1 gap-6">
+                            <Card className="border-none shadow-sm">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-indigo-500" />
+                                        VISITOR TYPES
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="flex items-center">
+                                    <div className="h-[180px] w-1/2">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={visitorTypeData}
+                                                    innerRadius={50}
+                                                    outerRadius={70}
+                                                    paddingAngle={5}
+                                                    dataKey="value"
+                                                >
+                                                    {visitorTypeData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="w-1/2 space-y-3">
+                                        {visitorTypeData.map((item) => (
+                                            <div key={item.name} className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                                                    <span className="text-sm font-medium">{item.name}</span>
+                                                </div>
+                                                <span className="text-sm font-bold">{item.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
 
                     {/* Charts Row */}
@@ -195,25 +302,31 @@ const VisitorInsights = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Top Referrers */}
+                        {/* Top Interaction Events */}
                         <Card>
-                            <CardHeader><CardTitle className="text-sm font-semibold">Top Referrers</CardTitle></CardHeader>
+                            <CardHeader>
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <MousePointer2 className="w-4 h-4 text-amber-500" />
+                                    TOP EVENTS
+                                </CardTitle>
+                            </CardHeader>
                             <CardContent>
-                                {(agg.referrers || []).length > 0 ? (
-                                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                                        {(agg.referrers || []).slice(0, 8).map((r: any, i: number) => (
-                                            <div key={r.name} className="flex items-center justify-between text-sm">
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
-                                                    <span className="truncate text-xs">{r.name}</span>
-                                                </div>
-                                                <Badge variant="secondary" className="text-[10px] ml-2 flex-shrink-0">{r.count}</Badge>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">No referrer data</div>
-                                )}
+                                <div className="h-[200px]">
+                                    {(agg.topEvents || []).length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={(agg.topEvents || []).slice(0, 6)} layout="vertical" margin={{ left: 5, right: 20 }}>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} hide />
+                                                <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fontWeight: 600 }} width={90} axisLine={false} tickLine={false} />
+                                                <Tooltip />
+                                                <Bar dataKey="count" fill="#8b5cf6" radius={[0, 6, 6, 0]} barSize={16}>
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">No event data recorded</div>
+                                    )}
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -272,15 +385,14 @@ const VisitorInsights = () => {
                                     <thead>
                                         <tr className="border-b bg-gray-50/80">
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Time</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">User</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">IP</th>
+                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Type</th>
+                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">User / Lead</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Location</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Source</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Device</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Browser / OS</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Page</th>
                                             <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Referrer</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Screen</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -292,18 +404,49 @@ const VisitorInsights = () => {
                                                         {format(new Date(v.createdAt), 'dd MMM, HH:mm')}
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3">
-                                                    {v.userEmail ? (
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <Mail className="w-3 h-3 text-blue-400" />
-                                                            <span className="truncate max-w-[120px]" title={v.userEmail}>{v.userEmail}</span>
-                                                        </div>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    {v.isNewVisitor ? (
+                                                        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 font-bold uppercase py-0 px-1.5 h-5">
+                                                            New
+                                                        </Badge>
                                                     ) : (
-                                                        <span className="text-xs text-muted-foreground">Anonymous</span>
+                                                        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-bold uppercase py-0 px-1.5 h-5">
+                                                            Returning
+                                                        </Badge>
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{maskIp(v.ip)}</span>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        {v.leadName ? (
+                                                            <div className="flex items-center gap-1 text-xs font-bold text-foreground">
+                                                                <UserCheck className="w-3 h-3 text-emerald-500" />
+                                                                <span>{v.leadName}</span>
+                                                                <span className="text-[9px] text-muted-foreground font-normal ml-1">({maskIp(v.ip)})</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-[10px] font-mono text-muted-foreground bg-gray-100 px-1 rounded flex items-center gap-1 w-fit">
+                                                                <Fingerprint className="w-2.5 h-2.5" />
+                                                                {maskIp(v.ip)}
+                                                            </span>
+                                                        )}
+
+                                                        {(v.userEmail || v.leadPhone) && (
+                                                            <div className="flex flex-col gap-0.5 mt-0.5">
+                                                                {v.userEmail && (
+                                                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                                        <Mail className="w-2.5 h-2.5 text-blue-400" />
+                                                                        <span className="truncate max-w-[150px]">{v.userEmail}</span>
+                                                                    </div>
+                                                                )}
+                                                                {v.leadPhone && (
+                                                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                                        <Phone className="w-2.5 h-2.5 text-emerald-400" />
+                                                                        <span>{v.leadPhone}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     {v.city || v.country ? (

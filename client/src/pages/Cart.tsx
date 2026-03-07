@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { cartAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { useEventTracking } from '@/hooks/useEventTracking';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BackButton from '@/components/BackButton';
@@ -14,6 +16,7 @@ const Cart = () => {
     const navigate = useNavigate();
     const { user, loading } = useAuth();
     const queryClient = useQueryClient();
+    const { trackEvent } = useEventTracking();
 
     const { data: cartItems, isLoading } = useQuery({
         queryKey: ['cart', user?.id],
@@ -57,9 +60,10 @@ const Cart = () => {
             }
             return cartAPI.remove(id);
         },
-        onSuccess: () => {
+        onSuccess: (data, id) => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
             toast.success('Item removed');
+            trackEvent('REMOVE_FROM_CART', id);
         }
     });
 
@@ -78,6 +82,12 @@ const Cart = () => {
         const price = item.product?.discountPrice || item.product?.price || 0;
         return sum + (price * item.quantity);
     }, 0) || 0;
+
+    useEffect(() => {
+        if (cartItems && cartItems.length > 0) {
+            trackEvent('VIEW_CART', `Items: ${cartItems.length}`, `Total: ${total}`);
+        }
+    }, [cartItems, trackEvent, total]);
 
     return (
         <div className="min-h-screen bg-background">

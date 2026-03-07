@@ -4,6 +4,7 @@ import upiQr from '@/assets/upi-qr.jpg';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartAPI, ordersAPI, addressAPI, paymentAPI, settingsAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { useEventTracking } from '@/hooks/useEventTracking';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BackButton from '@/components/BackButton';
@@ -54,6 +55,7 @@ const Checkout = () => {
     const queryClient = useQueryClient();
     const { user, loading } = useAuth();
     const [currentStep, setCurrentStep] = useState<CheckoutStep>('address');
+    const { trackEvent } = useEventTracking();
 
     // UI State
     // UI State
@@ -173,6 +175,7 @@ const Checkout = () => {
             setShowAddForm(false);
             setAddress({ name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '' });
             toast.success('Address saved successfully');
+            trackEvent('ADD_ADDRESS', 'Success');
             setCurrentStep('payment'); // Auto-proceed to payment
         }
     });
@@ -307,6 +310,7 @@ const Checkout = () => {
             // For COD, we navigate immediately. For Online, we wait for payment verification.
             if (data.paymentMethod === 'COD') {
                 toast.success('Order placed successfully! 🎊');
+                trackEvent('ORDER_SUCCESS', 'COD', `${data.total}`);
                 navigate(`/orders/${data.id}`);
             }
         },
@@ -332,6 +336,12 @@ const Checkout = () => {
     const shipping = subtotal >= freeThreshold ? 0 : deliveryCharge;
     const couponDiscount = appliedCoupon ? appliedCoupon.discountAmount : 0;
     const total = subtotal + tax + shipping - couponDiscount;
+
+    useEffect(() => {
+        if (cartItems && cartItems.length > 0) {
+            trackEvent('START_CHECKOUT', `Items: ${cartItems.length}`, `Total: ${total}`);
+        }
+    }, [cartItems, trackEvent, total]);
 
     const itemCount = cartItems?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
     const savings = cartItems?.reduce((sum: number, item: any) => {
@@ -445,6 +455,7 @@ const Checkout = () => {
             setCouponExpiry(new Date(data.expiresAt));
             localStorage.setItem('appliedCoupon', JSON.stringify(data));
             toast.success(`Coupon applied! You saved ₹${data.discountAmount}`);
+            trackEvent('APPLY_COUPON', codeToApply, `${data.discountAmount}`);
             setCouponCode('');
         } catch (error: any) {
             toast.error(error.message || 'Failed to apply coupon');
@@ -567,6 +578,7 @@ const Checkout = () => {
                             if (isGuest) localStorage.removeItem('cart');
                             localStorage.removeItem('appliedCoupon');
                             toast.success('Payment successful! Order confirmed. 🎊');
+                            trackEvent('ORDER_SUCCESS', 'ONLINE', `${orderRes.total}`);
                             navigate(`/orders/${orderRes.id}`);
                         } catch (err) {
                             toast.error('Payment verification failed. Please contact support.');
