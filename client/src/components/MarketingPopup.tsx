@@ -18,19 +18,30 @@ const MarketingPopup = () => {
     const [submitted, setSubmitted] = useState(false);
 
     useEffect(() => {
-        console.log('🔍 [Popup Debug] FORCED visibility check...', {
-            path: location.pathname
-        });
+        if (authLoading) return;
 
-        const timer = setTimeout(() => {
-            console.log('✨ [Popup Debug] FORCING POPUP OPEN');
-            setIsOpen(true);
-        }, 1000);
-        return () => clearTimeout(timer);
-    }, [location.pathname]);
+        // Skip if user is logged in or on admin routes
+        if (user || location.pathname.startsWith('/admin')) {
+            setIsOpen(false);
+            return;
+        }
+
+        const hasSeen = localStorage.getItem('hh_marketing_v1');
+        const hasSubscribed = localStorage.getItem('hh_is_subscribed');
+
+        if (!hasSeen && !hasSubscribed) {
+            const timer = setTimeout(() => {
+                setIsOpen(true);
+                // Mark as seen immediately once it pops up so it doesn't show again on navigation
+                localStorage.setItem('hh_marketing_v1', 'true');
+            }, 6000);
+            return () => clearTimeout(timer);
+        }
+    }, [user, location.pathname, authLoading]);
 
     const handleClose = () => {
         setIsOpen(false);
+        localStorage.setItem('hh_marketing_v1', 'true');
     };
 
     const handleSubscribe = async (e: React.FormEvent) => {
