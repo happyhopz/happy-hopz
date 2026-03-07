@@ -66,109 +66,103 @@ const MarketingPopup = () => {
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-lg md:max-w-3xl bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh] overflow-y-auto scrollbar-hide border border-white/20"
+                        className="relative w-full max-w-md bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto scrollbar-hide border border-white/20"
                     >
                         {/* Close Button */}
                         <button
                             onClick={handleClose}
-                            className="absolute top-6 right-6 z-30 p-2.5 rounded-full bg-white/90 backdrop-blur-sm border border-black/5 hover:bg-white shadow-md transition-all hover:scale-110 active:scale-90group"
+                            className="absolute top-4 right-4 z-30 p-2 rounded-full bg-gray-100/50 hover:bg-gray-100 transition-all hover:rotate-90"
                         >
-                            <X className="w-5 h-5 text-gray-500 group-hover:text-pink-500 transition-colors" />
+                            <X className="w-4 h-4 text-gray-400" />
                         </button>
 
-                        {/* Image Section */}
-                        <div className="md:w-5/12 bg-gradient-to-br from-pink-50 via-orange-50 to-pink-100 flex items-center justify-center p-8 md:p-12 flex-shrink-0 relative overflow-hidden">
-                            <div className="absolute inset-0 opacity-20 pointer-events-none">
-                                <div className="absolute top-[-10%] left-[-10%] w-40 h-40 bg-pink-300 rounded-full blur-3xl animate-pulse" />
-                                <div className="absolute bottom-[-10%] right-[-10%] w-40 h-40 bg-orange-300 rounded-full blur-3xl animate-pulse delay-1000" />
-                            </div>
-
+                        {/* Top Accent / Logo Section */}
+                        <div className="bg-gradient-to-b from-pink-50 to-white pt-10 pb-6 flex flex-col items-center relative">
                             <motion.div
-                                initial={{ rotate: -10, scale: 0.8 }}
-                                animate={{ rotate: 0, scale: 1 }}
-                                transition={{ delay: 0.2, type: 'spring', stiffness: 100 }}
-                                className="relative z-10"
+                                initial={{ y: -20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                className="relative mb-4"
                             >
+                                <div className="absolute inset-0 bg-pink-200 blur-2xl opacity-30 rounded-full animate-pulse" />
                                 <img
                                     src={pandaLogo}
                                     alt="Happy panda"
-                                    className="w-40 h-40 md:w-64 md:h-64 object-contain drop-shadow-2xl"
+                                    className="w-24 h-24 md:w-28 md:h-28 object-contain relative z-10"
                                 />
-                                <motion.div
-                                    animate={{ y: [0, -10, 0] }}
-                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                    className="absolute -top-4 -right-4 bg-white p-3 rounded-2xl shadow-premium border border-pink-50"
-                                >
-                                    <Sparkles className="w-6 h-6 text-orange-400 fill-orange-400" />
-                                </motion.div>
                             </motion.div>
+
+                            <div className="flex items-center gap-2 px-4 py-1.5 bg-pink-500/10 rounded-full border border-pink-500/20">
+                                <Sparkles className="w-3.5 h-3.5 text-pink-600 fill-pink-600" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-600">Exclusive Offer</span>
+                            </div>
                         </div>
 
                         {/* Content Section */}
-                        <div className="md:w-7/12 p-8 md:p-14 flex flex-col justify-center bg-white relative">
+                        <div className="px-8 pb-10 text-center">
                             {!submitted ? (
                                 <>
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="px-3 py-1 bg-orange-100/50 rounded-full flex items-center gap-1.5">
-                                            <Sparkles className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-                                            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-orange-700">Special Welcome Offer</span>
-                                        </div>
-                                    </div>
-                                    <h2 className="text-3xl md:text-5xl font-fredoka font-bold text-gray-900 leading-[1.1] mb-4">
-                                        Unlock <span className="text-pink-500">10% OFF</span> Your First Pair! 🎁
+                                    <h2 className="text-3xl md:text-4xl font-fredoka font-bold text-gray-900 leading-tight mb-3">
+                                        <span className="text-pink-500">10% OFF</span> For You! 🎁
                                     </h2>
-                                    <p className="text-gray-500 text-sm md:text-lg mb-8 leading-relaxed max-w-md">
-                                        Join over <span className="text-gray-900 font-bold">10,000+</span> Happy Hopz members and get exclusive early access to new collections.
+                                    <p className="text-gray-500 text-sm md:text-base mb-8 leading-relaxed">
+                                        Join our family for early access to sales and <span className="text-gray-900 font-medium">exclusive discounts</span> for your little ones.
                                     </p>
 
-                                    <form onSubmit={handleSubscribe} className="space-y-4">
+                                    <form onSubmit={handleSubscribe} className="space-y-4 max-w-[280px] mx-auto">
                                         <div className="relative group">
-                                            <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-orange-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-300" />
-                                            <div className="relative">
-                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                                <input
-                                                    type="email"
-                                                    required
-                                                    placeholder="Enter your email address"
-                                                    value={email}
-                                                    onChange={(e) => setEmail(e.target.value)}
-                                                    className="w-full pl-12 pr-4 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:bg-white transition-all text-base"
-                                                />
-                                            </div>
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-pink-500 transition-colors" />
+                                            <input
+                                                type="email"
+                                                required
+                                                placeholder="your@email.com"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-pink-500/10 focus:bg-white focus:border-pink-500 transition-all text-sm text-center"
+                                            />
                                         </div>
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full py-4.5 md:py-5 bg-[#FF4D8D] text-white font-black rounded-2xl shadow-xl shadow-pink-200 hover:shadow-pink-400 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3 relative z-10 overflow-hidden group"
+                                            className="w-full py-4 bg-[#FF4D8D] text-white font-black rounded-2xl shadow-xl shadow-pink-200 hover:shadow-pink-300 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 relative overflow-hidden"
                                             style={{ backgroundColor: '#FF4D8D' }}
                                         >
-                                            <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
-                                            {loading ? 'Processing...' : (
+                                            {loading ? 'Sending...' : (
                                                 <>
-                                                    <Gift className="w-5 h-5 text-white animate-bounce" />
-                                                    <span className="text-base md:text-lg uppercase tracking-wider text-white">Claim My Discount Now</span>
+                                                    <Gift className="w-4 h-4 text-white" />
+                                                    <span className="text-sm uppercase tracking-widest text-white">Get My Discount</span>
                                                 </>
                                             )}
                                         </button>
                                     </form>
-                                    <p className="text-[11px] text-center text-gray-400 mt-6 leading-tight">
-                                        No spam, just sprinkles. ✨ Unsubscribe at any time.
+
+                                    <button
+                                        onClick={handleClose}
+                                        className="mt-6 text-[10px] text-gray-400 font-medium uppercase tracking-widest hover:text-gray-600 transition-colors underline decoration-gray-200 underline-offset-4"
+                                    >
+                                        No thanks, maybe later
+                                    </button>
+
+                                    <p className="text-[9px] text-gray-300 mt-6 max-w-[240px] mx-auto leading-tight">
+                                        By joining you agree to our newsletter policies. <br />You can unsubscribe at any time.
                                     </p>
                                 </>
                             ) : (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-center py-8 md:py-12"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="py-10"
                                 >
-                                    <div className="w-20 h-20 bg-green-100 rounded-[2rem] rotate-12 flex items-center justify-center mx-auto mb-6 shadow-premium">
+                                    <div className="w-20 h-20 bg-green-100 rounded-[2rem] rotate-12 flex items-center justify-center mx-auto mb-6 shadow-sm">
                                         <Sparkles className="w-10 h-10 text-green-600 -rotate-12" />
                                     </div>
-                                    <h2 className="text-3xl md:text-4xl font-fredoka font-bold text-gray-900 mb-4">Check your inbox! 🎉</h2>
-                                    <p className="text-gray-500 text-lg mb-8 leading-relaxed">Your 10% discount code is on its way to <br /><span className="text-pink-500 font-bold">{email}</span></p>
-                                    <div className="py-3 px-6 bg-green-50 border border-green-200 rounded-2xl inline-flex items-center gap-2">
+                                    <h2 className="text-3xl font-fredoka font-bold text-gray-900 mb-2">Check your inbox! 🎉</h2>
+                                    <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+                                        Your 10% discount code is on its way to <br />
+                                        <span className="text-pink-500 font-bold">{email}</span>
+                                    </p>
+                                    <div className="py-2.5 px-6 bg-green-50 rounded-2xl border border-green-100 inline-flex items-center gap-2">
                                         <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
-                                        <span className="text-sm font-bold text-green-700 uppercase tracking-widest">Discount Active</span>
+                                        <span className="text-xs font-bold text-green-700 uppercase tracking-widest">Discount Active</span>
                                     </div>
                                 </motion.div>
                             )}
