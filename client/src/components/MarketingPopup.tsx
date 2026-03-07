@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import pandaLogo from '@/assets/panda-logo.png';
 
 const MarketingPopup = () => {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
     const [email, setEmail] = useState('');
@@ -16,28 +16,42 @@ const MarketingPopup = () => {
     const [submitted, setSubmitted] = useState(false);
 
     useEffect(() => {
+        if (authLoading) return;
+
+        console.log('🔍 [Popup Debug] checking visibility...', {
+            hasUser: !!user,
+            path: location.pathname,
+            hasSeenV3: localStorage.getItem('hh_popup_v3_seen'),
+            isSubscribed: localStorage.getItem('hh_is_subscribed')
+        });
+
         // Don't show if user is logged in or on admin routes
         if (user || location.pathname.startsWith('/admin')) {
+            console.log('🚫 [Popup Debug] Blocked: logged in or admin route');
             setIsOpen(false);
             return;
         }
 
         // Check if already seen or subscribed in this session or overall
-        const hasSeen = localStorage.getItem('hh_popup_v2_seen');
+        const hasSeen = localStorage.getItem('hh_popup_v3_seen');
         const hasSubscribed = localStorage.getItem('hh_is_subscribed');
 
         if (!hasSeen && !hasSubscribed) {
+            console.log('⏰ [Popup Debug] timer started (6s)...');
             // Show after 6 seconds of browsing
             const timer = setTimeout(() => {
+                console.log('✨ [Popup Debug] SHOWING POPUP');
                 setIsOpen(true);
             }, 6000);
             return () => clearTimeout(timer);
+        } else {
+            console.log('🚫 [Popup Debug] Blocked: already seen or subscribed');
         }
-    }, [user, location.pathname]);
+    }, [user, location.pathname, authLoading]);
 
     const handleClose = () => {
         setIsOpen(false);
-        localStorage.setItem('hh_popup_v2_seen', 'true');
+        localStorage.setItem('hh_popup_v3_seen', 'true');
     };
 
     const handleSubscribe = async (e: React.FormEvent) => {
