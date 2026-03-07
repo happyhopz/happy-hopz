@@ -22,22 +22,22 @@ const MarketingPopup = () => {
             return;
         }
 
-        // Check if already seen or dismissed
-        const hasSeen = localStorage.getItem('hh_popup_seen');
+        // Check if already seen or subscribed in this session or overall
+        const hasSeen = localStorage.getItem('hh_popup_v2_seen');
         const hasSubscribed = localStorage.getItem('hh_is_subscribed');
 
         if (!hasSeen && !hasSubscribed) {
-            // Show after 4 seconds of browsing
+            // Show after a short delay for better UX
             const timer = setTimeout(() => {
                 setIsOpen(true);
-            }, 4000);
+            }, 3000);
             return () => clearTimeout(timer);
         }
     }, [user, location.pathname]);
 
     const handleClose = () => {
         setIsOpen(false);
-        localStorage.setItem('hh_popup_seen', 'true');
+        localStorage.setItem('hh_popup_v2_seen', 'true');
     };
 
     const handleSubscribe = async (e: React.FormEvent) => {
