@@ -80,7 +80,7 @@ const MarketingPopup = () => {
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-md bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto scrollbar-hide border border-white/20"
+                        className="relative w-full max-w-md bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col border border-white/20"
                     >
                         {/* Close Button */}
                         <button
@@ -91,7 +91,7 @@ const MarketingPopup = () => {
                         </button>
 
                         {/* Top Accent / Logo Section */}
-                        <div className="bg-gradient-to-b from-pink-50 to-white pt-10 pb-6 flex flex-col items-center relative">
+                        <div className="bg-gradient-to-b from-pink-50 to-white pt-8 pb-4 flex flex-col items-center relative">
                             <motion.div
                                 initial={{ y: -20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
