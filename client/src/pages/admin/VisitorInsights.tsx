@@ -287,12 +287,20 @@ const VisitorInsights = () => {
                                 <div className="h-[200px]">
                                     {(agg.utmCampaigns || []).length > 0 ? (
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={(agg.utmCampaigns || []).slice(0, 6)} layout="vertical" margin={{ left: 5, right: 20 }}>
-                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-                                                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={70} />
+                                            <BarChart data={(agg.utmCampaigns || []).slice(0, 6)} layout="vertical" margin={{ left: 0, right: 30, top: 0, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} hide />
+                                                <YAxis
+                                                    type="category"
+                                                    dataKey="name"
+                                                    tick={{ fontSize: 10, fontWeight: 500 }}
+                                                    width={100}
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+                                                />
                                                 <Tooltip formatter={(v: any) => [`${v} clicks`, '']} />
-                                                <Bar dataKey="count" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={18} />
+                                                <Bar dataKey="count" fill="#f59e0b" radius={[0, 4, 4, 0]} barSize={14} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     ) : (
@@ -314,13 +322,20 @@ const VisitorInsights = () => {
                                 <div className="h-[200px]">
                                     {(agg.topEvents || []).length > 0 ? (
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={(agg.topEvents || []).slice(0, 6)} layout="vertical" margin={{ left: 5, right: 20 }}>
+                                            <BarChart data={(agg.topEvents || []).slice(0, 6)} layout="vertical" margin={{ left: 0, right: 30, top: 0, bottom: 0 }}>
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                                                 <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} hide />
-                                                <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fontWeight: 600 }} width={90} axisLine={false} tickLine={false} />
+                                                <YAxis
+                                                    type="category"
+                                                    dataKey="name"
+                                                    tick={{ fontSize: 10, fontWeight: 500 }}
+                                                    width={120}
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tickFormatter={(value) => value.length > 18 ? `${value.substring(0, 18)}...` : value}
+                                                />
                                                 <Tooltip />
-                                                <Bar dataKey="count" fill="#8b5cf6" radius={[0, 6, 6, 0]} barSize={16}>
-                                                </Bar>
+                                                <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={14} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     ) : (
