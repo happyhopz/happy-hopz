@@ -80,9 +80,8 @@ const MarketingPopup = () => {
             {isOpen && (
                 <div
                     key="marketing-popup-backdrop"
-                    className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 border-4 border-red-600"
+                    className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
                 >
-                    {(() => { console.log('🎨 [Popup Debug] Rendering Backdrop & Content'); return null; })()}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
