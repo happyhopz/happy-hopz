@@ -274,5 +274,3 @@ const ImageUpload = ({ images, onChange, maxImages = 5 }: ImageUploadProps) => {
 };
 
 export default ImageUpload;
-
-export default ImageUpload;
