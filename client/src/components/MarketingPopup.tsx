@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, Mail, Sparkles } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { marketingAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,27 +9,31 @@ import pandaLogo from '@/assets/panda-logo.png';
 
 const MarketingPopup = () => {
     const { user } = useAuth();
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
     useEffect(() => {
-        // Don't show if user is logged in
-        if (user) return;
+        // Don't show if user is logged in or on admin routes
+        if (user || location.pathname.startsWith('/admin')) {
+            setIsOpen(false);
+            return;
+        }
 
         // Check if already seen or dismissed
         const hasSeen = localStorage.getItem('hh_popup_seen');
         const hasSubscribed = localStorage.getItem('hh_is_subscribed');
 
         if (!hasSeen && !hasSubscribed) {
-            // Show after 10 seconds of browsing
+            // Show after 4 seconds of browsing
             const timer = setTimeout(() => {
                 setIsOpen(true);
-            }, 10000);
+            }, 4000);
             return () => clearTimeout(timer);
         }
-    }, [user]);
+    }, [user, location.pathname]);
 
     const handleClose = () => {
         setIsOpen(false);
