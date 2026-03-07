@@ -70,6 +70,7 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
             const sgMsg = {
                 from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
                 to: email,
+                replyTo: VERIFIED_SENDER,
                 subject: subject,
                 html: bodyHtml,
                 attachments: sgAttachments.length > 0 ? sgAttachments : undefined
@@ -92,13 +93,9 @@ export const sendOrderEmail = async (email: string, order: any, type: 'CONFIRMAT
         const mailOptions: any = {
             from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
             to: email,
+            replyTo: VERIFIED_SENDER,
             subject: subject,
             html: bodyHtml,
-            headers: {
-                'X-Priority': '1 (Highest)',
-                'Importance': 'high',
-                'Priority': 'urgent'
-            },
             attachments: [...allAttachments, ...(order._inlineAttachments || [])]
         };
 
@@ -125,6 +122,7 @@ export const sendVerificationEmail = async (email: string, code: string) => {
             await sgMail.send({
                 from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
                 to: email,
+                replyTo: VERIFIED_SENDER,
                 subject: 'Verify your Happy Hopz Account',
                 html: `<h2>Welcome to Happy Hopz!</h2><p>Your verification code is: <strong>${code}</strong></p>`
             });
@@ -135,6 +133,7 @@ export const sendVerificationEmail = async (email: string, code: string) => {
         await transporter.sendMail({
             from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
             to: email,
+            replyTo: VERIFIED_SENDER,
             subject: 'Verify your Happy Hopz Account',
             html: `<h2>Welcome to Happy Hopz!</h2><p>Your verification code is: <strong>${code}</strong></p>`
         });
@@ -154,6 +153,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
             await sgMail.send({
                 from: { email: VERIFIED_SENDER, name: 'Happy Hopz' },
                 to: email,
+                replyTo: VERIFIED_SENDER,
                 subject: 'Reset your Happy Hopz Password',
                 html: `<p>You requested a password reset. Click below to proceed:</p><a href="${resetUrl}">Reset Password</a>`
             });
@@ -164,6 +164,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
         await transporter.sendMail({
             from: `"Happy Hopz" <${VERIFIED_SENDER}>`,
             to: email,
+            replyTo: VERIFIED_SENDER,
             subject: 'Reset your Happy Hopz Password',
             html: `<p>You requested a password reset. Click below to proceed:</p><a href="${resetUrl}">Reset Password</a>`
         });
@@ -190,7 +191,7 @@ const getCommonStyles = () => `
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
         
         .email-container { 
-            font-family: 'Outfit', 'Segoe UI', Arial, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Outfit'; 
             max-width: 600px; 
             margin: auto; 
             padding: 20px; 
