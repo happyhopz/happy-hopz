@@ -67,14 +67,14 @@ const MarketingPopup = () => {
                         </button>
 
                         {/* Image Section */}
-                        <div className="md:w-2/5 bg-gradient-to-br from-pink-100 to-orange-100 flex items-center justify-center p-6 md:p-8 flex-shrink-0">
+                        <div className="md:w-2/5 bg-gradient-to-br from-pink-100 to-orange-100 flex items-center justify-center p-4 md:p-8 flex-shrink-0">
                             <motion.img
                                 initial={{ rotate: -10, scale: 0.8 }}
                                 animate={{ rotate: 0, scale: 1 }}
                                 transition={{ delay: 0.2, type: 'spring' }}
                                 src={pandaLogo}
                                 alt="Happy panda"
-                                className="w-24 h-24 md:w-full md:h-auto object-contain shadow-premium rounded-2xl"
+                                className="w-32 h-32 md:w-full md:h-auto object-contain shadow-premium rounded-2xl"
                             />
                         </div>
 
@@ -108,12 +108,13 @@ const MarketingPopup = () => {
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full py-3 md:py-3.5 bg-pink-500 bg-gradient-to-r from-pink-500 to-orange-500 text-white font-black rounded-xl shadow-lg shadow-pink-200 hover:shadow-pink-300 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 relative z-10"
+                                            className="w-full py-3 md:py-3.5 bg-[#FF4D8D] text-white font-black rounded-xl shadow-lg shadow-pink-200 hover:shadow-pink-300 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 relative z-10"
+                                            style={{ backgroundColor: '#FF4D8D', color: 'white' }}
                                         >
                                             {loading ? 'Processing...' : (
                                                 <>
-                                                    <Gift className="w-4 h-4" />
-                                                    <span className="text-sm md:text-base uppercase tracking-tight">Claim My Discount</span>
+                                                    <Gift className="w-4 h-4 text-white" />
+                                                    <span className="text-sm md:text-base uppercase tracking-tight text-white font-bold">Claim My Discount</span>
                                                 </>
                                             )}
                                         </button>
