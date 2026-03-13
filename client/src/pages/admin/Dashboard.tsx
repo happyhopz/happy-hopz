@@ -390,501 +390,512 @@ const AdminDashboard = () => {
                                                             paddingAngle={3}
                                                             dataKey="value"
                                                         >
-                                                        </div>
+                                                            <Cell fill="#22c55e" />
+                                                            <Cell fill="#ef4444" />
+                                                        </Pie>
+                                                        <Tooltip formatter={(value: any) => [`₹${Number(value).toFixed(2)}`, '']} />
+                                                        <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    </div>
                                 )}
-                                                    </CardContent>
-                                                </Card>
+                            </CardContent>
+                        </Card>
                     )}
 
-                                                {/* Inventory Investment Analysis */}
-                                                {stats?.totalInvestment > 0 && (
-                                                    <Card className="mb-8 border-2 border-blue-100 bg-blue-50/5">
-                                                        <CardHeader>
-                                                            <CardTitle className="font-fredoka flex items-center gap-2">
-                                                                <Package className="w-5 h-5 text-blue-600" />
-                                                                Inventory Investment Analysis
-                                                            </CardTitle>
-                                                        </CardHeader>
-                                                        <CardContent>
-                                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                                                                {/* Investment by Category Pie Chart */}
-                                                                <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
-                                                                    <p className="text-sm font-semibold text-blue-700 mb-4 flex items-center gap-2">
-                                                                        <Activity className="w-4 h-4" />
-                                                                        Investment by Category
-                                                                    </p>
-                                                                    <div className="h-[250px]">
-                                                                        <ResponsiveContainer width="100%" height="100%">
-                                                                            <PieChart>
-                                                                                <Pie
-                                                                                    data={stats.investmentByCategory || []}
-                                                                                    cx="50%"
-                                                                                    cy="50%"
-                                                                                    innerRadius={60}
-                                                                                    outerRadius={90}
-                                                                                    paddingAngle={3}
-                                                                                    dataKey="value"
-                                                                                >
-                                                                                    {(stats.investmentByCategory || []).map((_: any, index: number) => {
-                                                                                        const colors = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a', '#0891b2', '#4f46e5'];
-                                                                                        return <Cell key={`invest-cat-${index}`} fill={colors[index % colors.length]} />;
-                                                                                    })}
-                                                                                </Pie>
-                                                                                <Tooltip
-                                                                                    formatter={(value: any) => [`₹${Number(value).toFixed(2)}`, 'Investment']}
-                                                                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                                                                />
-                                                                                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                                                                            </PieChart>
-                                                                        </ResponsiveContainer>
-                                                                    </div>
-                                                                </div>
+                    {/* Inventory Investment Analysis */}
+                    {
+                        stats?.totalInvestment > 0 && (
+                            <Card className="mb-8 border-2 border-blue-100 bg-blue-50/5">
+                                <CardHeader>
+                                    <CardTitle className="font-fredoka flex items-center gap-2">
+                                        <Package className="w-5 h-5 text-blue-600" />
+                                        Inventory Investment Analysis
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                                        {/* Investment by Category Pie Chart */}
+                                        <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                                            <p className="text-sm font-semibold text-blue-700 mb-4 flex items-center gap-2">
+                                                <Activity className="w-4 h-4" />
+                                                Investment by Category
+                                            </p>
+                                            <div className="h-[250px]">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <PieChart>
+                                                        <Pie
+                                                            data={stats.investmentByCategory || []}
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            innerRadius={60}
+                                                            outerRadius={90}
+                                                            paddingAngle={3}
+                                                            dataKey="value"
+                                                        >
+                                                            {(stats.investmentByCategory || []).map((_: any, index: number) => {
+                                                                const colors = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a', '#0891b2', '#4f46e5'];
+                                                                return <Cell key={`invest-cat-${index}`} fill={colors[index % colors.length]} />;
+                                                            })}
+                                                        </Pie>
+                                                        <Tooltip
+                                                            formatter={(value: any) => [`₹${Number(value).toFixed(2)}`, 'Investment']}
+                                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                        />
+                                                        <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
 
-                                                                {/* Top Products by Investment Bar Chart */}
-                                                                <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
-                                                                    <p className="text-sm font-semibold text-blue-700 mb-4 flex items-center gap-2">
-                                                                        <TrendingUp className="w-4 h-4" />
-                                                                        Top Products by Investment
-                                                                    </p>
-                                                                    <div className="h-[250px]">
-                                                                        <ResponsiveContainer width="100%" height="100%">
-                                                                            <BarChart
-                                                                                layout="vertical"
-                                                                                data={stats.topInvestedProducts || []}
-                                                                                margin={{ left: 10, right: 30 }}
-                                                                            >
-                                                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                                                                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(val) => `₹${val}`} />
-                                                                                <YAxis
-                                                                                    type="category"
-                                                                                    dataKey="name"
-                                                                                    tick={{ fontSize: 10 }}
-                                                                                    width={120}
-                                                                                    tickFormatter={(str) => str.length > 20 ? `${str.slice(0, 17)}...` : str}
-                                                                                />
-                                                                                <Tooltip
-                                                                                    formatter={(value: any) => [`₹${Number(value).toFixed(2)}`, 'Total Investment']}
-                                                                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                                                                />
-                                                                                <Bar dataKey="totalInvestment" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={20} />
-                                                                            </BarChart>
-                                                                        </ResponsiveContainer>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                        {/* Top Products by Investment Bar Chart */}
+                                        <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                                            <p className="text-sm font-semibold text-blue-700 mb-4 flex items-center gap-2">
+                                                <TrendingUp className="w-4 h-4" />
+                                                Top Products by Investment
+                                            </p>
+                                            <div className="h-[250px]">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart
+                                                        layout="vertical"
+                                                        data={stats.topInvestedProducts || []}
+                                                        margin={{ left: 10, right: 30 }}
+                                                    >
+                                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                                        <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(val) => `₹${val}`} />
+                                                        <YAxis
+                                                            type="category"
+                                                            dataKey="name"
+                                                            tick={{ fontSize: 10 }}
+                                                            width={120}
+                                                            tickFormatter={(str) => str.length > 20 ? `${str.slice(0, 17)}...` : str}
+                                                        />
+                                                        <Tooltip
+                                                            formatter={(value: any) => [`₹${Number(value).toFixed(2)}`, 'Total Investment']}
+                                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                        />
+                                                        <Bar dataKey="totalInvestment" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={20} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                                            {/* Detailed Investment Table */}
-                                                            <div className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
-                                                                <div className="bg-blue-50/50 p-4 border-b border-blue-100 flex justify-between items-center">
-                                                                    <p className="text-sm font-bold text-blue-800 font-fredoka uppercase tracking-wider">Detailed Investment Analysis</p>
-                                                                    <Badge variant="outline" className="bg-white text-blue-600 border-blue-200">
-                                                                        {stats.allProductInvestments?.length || 0} Products
-                                                                    </Badge>
-                                                                </div>
-                                                                <div className="overflow-x-auto">
-                                                                    <table className="w-full text-left">
-                                                                        <thead>
-                                                                            <tr className="bg-gray-50/50 text-xs font-bold text-muted-foreground uppercase border-b border-gray-100">
-                                                                                <th className="px-6 py-4">Product Name</th>
-                                                                                <th className="px-6 py-4">Category</th>
-                                                                                <th className="px-6 py-4 text-center">In Stock</th>
-                                                                                <th className="px-6 py-4 text-right">Unit Cost</th>
-                                                                                <th className="px-6 py-4 text-right">Total Value</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody className="text-sm divide-y divide-gray-50 font-nunito">
-                                                                            {(stats.allProductInvestments || []).sort((a: any, b: any) => b.totalInvestment - a.totalInvestment).map((prod: any) => (
-                                                                                <tr key={prod.id} className="hover:bg-blue-50/30 transition-colors group">
-                                                                                    <td className="px-6 py-4">
-                                                                                        <p className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors uppercase tracking-tight">{prod.name}</p>
-                                                                                        <p className="text-[10px] text-muted-foreground font-mono">{prod.id?.slice(0, 8)}</p>
-                                                                                    </td>
-                                                                                    <td className="px-6 py-4">
-                                                                                        <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600">
-                                                                                            {prod.category}
-                                                                                        </Badge>
-                                                                                    </td>
-                                                                                    <td className="px-6 py-4 text-center">
-                                                                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${prod.stock <= 5 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                                                                                            {prod.stock}
-                                                                                        </span>
-                                                                                    </td>
-                                                                                    <td className="px-6 py-4 text-right tabular-nums">
-                                                                                        <span className="text-muted-foreground">₹</span>{prod.unitCost?.toFixed(2)}
-                                                                                    </td>
-                                                                                    <td className="px-6 py-4 text-right tabular-nums">
-                                                                                        <p className="font-black text-blue-700">
-                                                                                            <span className="text-[10px] mr-0.5">₹</span>{prod.totalInvestment?.toFixed(2)}
-                                                                                        </p>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            ))}
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                                <div className="p-4 bg-gray-50/30 border-t border-gray-100 text-right">
-                                                                    <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">
-                                                                        Total Inventory Value: <span className="text-blue-700 text-sm ml-2">₹{stats.totalInvestment?.toFixed(2)}</span>
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </CardContent>
-                                                    </Card>
+                                    {/* Detailed Investment Table */}
+                                    <div className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
+                                        <div className="bg-blue-50/50 p-4 border-b border-blue-100 flex justify-between items-center">
+                                            <p className="text-sm font-bold text-blue-800 font-fredoka uppercase tracking-wider">Detailed Investment Analysis</p>
+                                            <Badge variant="outline" className="bg-white text-blue-600 border-blue-200">
+                                                {stats.allProductInvestments?.length || 0} Products
+                                            </Badge>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left">
+                                                <thead>
+                                                    <tr className="bg-gray-50/50 text-xs font-bold text-muted-foreground uppercase border-b border-gray-100">
+                                                        <th className="px-6 py-4">Product Name</th>
+                                                        <th className="px-6 py-4">Category</th>
+                                                        <th className="px-6 py-4 text-center">In Stock</th>
+                                                        <th className="px-6 py-4 text-right">Unit Cost</th>
+                                                        <th className="px-6 py-4 text-right">Total Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="text-sm divide-y divide-gray-50 font-nunito">
+                                                    {(stats.allProductInvestments || []).sort((a: any, b: any) => b.totalInvestment - a.totalInvestment).map((prod: any) => (
+                                                        <tr key={prod.id} className="hover:bg-blue-50/30 transition-colors group">
+                                                            <td className="px-6 py-4">
+                                                                <p className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors uppercase tracking-tight">{prod.name}</p>
+                                                                <p className="text-[10px] text-muted-foreground font-mono">{prod.id?.slice(0, 8)}</p>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600">
+                                                                    {prod.category}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${prod.stock <= 5 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                                                    {prod.stock}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right tabular-nums">
+                                                                <span className="text-muted-foreground">₹</span>{prod.unitCost?.toFixed(2)}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right tabular-nums">
+                                                                <p className="font-black text-blue-700">
+                                                                    <span className="text-[10px] mr-0.5">₹</span>{prod.totalInvestment?.toFixed(2)}
+                                                                </p>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div className="p-4 bg-gray-50/30 border-t border-gray-100 text-right">
+                                            <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">
+                                                Total Inventory Value: <span className="text-blue-700 text-sm ml-2">₹{stats.totalInvestment?.toFixed(2)}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )
+                    }
+
+                    {/* Quick Navigation */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <Link to="/admin/products">
+                            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Package className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-fredoka font-bold text-lg">Products</h3>
+                                        <p className="text-sm text-muted-foreground">Manage inventory</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Link>
+                        <Link to="/admin/orders">
+                            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <ShoppingBag className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-fredoka font-bold text-lg">Orders</h3>
+                                        <p className="text-sm text-muted-foreground">View all orders</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Link>
+                        <Link to="/admin/users">
+                            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Users className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-fredoka font-bold text-lg">Users</h3>
+                                        <p className="text-sm text-muted-foreground">Manage customers</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Link>
+                        <Link to="/admin/coupons">
+                            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Ticket className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-fredoka font-bold text-lg">Coupons</h3>
+                                        <p className="text-sm text-muted-foreground">Discount codes</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Link>
+                        <Link to="/admin/reviews">
+                            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <MessageSquare className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-fredoka font-bold text-lg">Reviews</h3>
+                                        <p className="text-sm text-muted-foreground">Moderate feedback</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Link>
+                        <Link to="/admin/settings">
+                            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-pink-100 hover:border-pink-500 bg-pink-50/10">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-pink-100 flex items-center justify-center">
+                                        <IndianRupee className="w-6 h-6 text-pink-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-fredoka font-bold text-lg">Pricing & Tax</h3>
+                                        <p className="text-sm text-muted-foreground">GST & Shipping rules</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Link>
+                        <Link to="/admin/settings">
+                            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Settings className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-fredoka font-bold text-lg">System Settings</h3>
+                                        <p className="text-sm text-muted-foreground">General configuration</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
+                        {/* Revenue Trend Chart */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="font-fredoka">Revenue Trends (Last 7 Days)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[300px] w-full">
+                                    {Array.isArray(stats?.dailyRevenue) && stats.dailyRevenue.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={stats.dailyRevenue}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                                <XAxis
+                                                    dataKey="date"
+                                                    tickFormatter={(str) => {
+                                                        try {
+                                                            const date = new Date(str);
+                                                            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                                                        } catch (e) {
+                                                            return 'N/A';
+                                                        }
+                                                    }}
+                                                    tick={{ fontSize: 12 }}
+                                                />
+                                                <YAxis
+                                                    tickFormatter={(val) => `₹${val}`}
+                                                    tick={{ fontSize: 12 }}
+                                                />
+                                                <Tooltip
+                                                    formatter={(value) => [`₹${Number(value).toFixed(2)}`, 'Revenue']}
+                                                    labelFormatter={(label) => {
+                                                        try {
+                                                            return new Date(label).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+                                                        } catch (e) {
+                                                            return 'Invalid Date';
+                                                        }
+                                                    }}
+                                                />
+                                                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                                            No revenue data for the selected period
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        {/* Order Status Distribution - Donut Chart */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="font-fredoka">Order Status Distribution</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {Array.isArray(stats?.ordersByStatus) && stats.ordersByStatus.length > 0 ? (
+                                    <div className="h-[280px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={stats.ordersByStatus.map((s: any) => ({ name: s.status, value: s._count }))}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={100}
+                                                    paddingAngle={3}
+                                                    dataKey="value"
+                                                    label={({ name, value }) => `${name} (${value})`}
+                                                >
+                                                    {stats.ordersByStatus.map((_: any, index: number) => {
+                                                        const colors = ['#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e', '#ef4444', '#06b6d4', '#ec4899'];
+                                                        return <Cell key={`status-${index}`} fill={colors[index % colors.length]} />;
+                                                    })}
+                                                </Pie>
+                                                <Tooltip formatter={(value: any) => [`${value} orders`, '']} />
+                                                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
+                                        No order data available yet.
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Top Selling Products - Horizontal Bar Chart */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="font-fredoka flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-green-500" />
+                                    Top Selling Items
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {Array.isArray(stats?.topSellingProducts) && stats.topSellingProducts.length > 0 ? (
+                                    <div className="h-[280px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart
+                                                layout="vertical"
+                                                data={stats.topSellingProducts.map((item: any) => ({
+                                                    name: (item.name || item.product?.name || 'Unknown').slice(0, 20),
+                                                    sold: item._sum?.quantity || item.quantity || 0
+                                                }))}
+                                                margin={{ left: 10, right: 30 }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                                <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                                                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={100} />
+                                                <Tooltip formatter={(value: any) => [`${value} sold`, 'Quantity']} />
+                                                <Bar dataKey="sold" fill="#22c55e" radius={[0, 6, 6, 0]} barSize={20} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
+                                        No sales data available yet.
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                        {/* Activity Feed */}
+                        <Card className="lg:col-span-2">
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle className="flex items-center gap-2 font-fredoka">
+                                    <Activity className="w-5 h-5 text-primary" />
+                                    Real-time Audit Logs
+                                </CardTitle>
+                                <Badge variant="secondary" className="animate-pulse">Live</Badge>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2">
+                                    {auditLogs?.length > 0 ? auditLogs.map((log: any) => (
+                                        <div key={log.id} className="flex gap-4 relative">
+                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <Activity className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0 border-b border-gray-100 pb-4 last:border-0">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <p className="font-bold text-sm text-foreground uppercase tracking-tight">
+                                                        {log.action.replace(/_/g, ' ')}
+                                                    </p>
+                                                    <span className="text-[10px] text-muted-foreground whitespace-nowrap flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-full">
+                                                        <Clock className="w-3 h-3" />
+                                                        {format(new Date(log.createdAt), 'HH:mm • dd MMM')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Target: <span className="font-mono bg-gray-100 px-1 rounded">{log.entity}</span>
+                                                    {log.entityId && ` (${log.entityId.slice(0, 8)})`}
+                                                </p>
+                                                {log.details && (
+                                                    <div className="mt-2 p-2 bg-gray-50 rounded-lg text-[10px] font-mono text-muted-foreground border border-gray-100 overflow-x-auto">
+                                                        {(() => {
+                                                            try {
+                                                                const parsed = JSON.parse(log.details);
+                                                                return <pre>{JSON.stringify(parsed, null, 2)}</pre>;
+                                                            } catch (e) {
+                                                                return log.details;
+                                                            }
+                                                        })()}
+                                                    </div>
                                                 )}
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                                            <Activity className="w-12 h-12 mb-2 opacity-10" />
+                                            <p>No recent activity logs found</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                                                {/* Quick Navigation */}
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                                    <Link to="/admin/products">
-                                                        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                    <Package className="w-6 h-6 text-primary" />
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-fredoka font-bold text-lg">Products</h3>
-                                                                    <p className="text-sm text-muted-foreground">Manage inventory</p>
-                                                                </div>
-                                                            </div>
-                                                        </Card>
-                                                    </Link>
-                                                    <Link to="/admin/orders">
-                                                        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                    <ShoppingBag className="w-6 h-6 text-primary" />
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-fredoka font-bold text-lg">Orders</h3>
-                                                                    <p className="text-sm text-muted-foreground">View all orders</p>
-                                                                </div>
-                                                            </div>
-                                                        </Card>
-                                                    </Link>
-                                                    <Link to="/admin/users">
-                                                        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                    <Users className="w-6 h-6 text-primary" />
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-fredoka font-bold text-lg">Users</h3>
-                                                                    <p className="text-sm text-muted-foreground">Manage customers</p>
-                                                                </div>
-                                                            </div>
-                                                        </Card>
-                                                    </Link>
-                                                    <Link to="/admin/coupons">
-                                                        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                    <Ticket className="w-6 h-6 text-primary" />
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-fredoka font-bold text-lg">Coupons</h3>
-                                                                    <p className="text-sm text-muted-foreground">Discount codes</p>
-                                                                </div>
-                                                            </div>
-                                                        </Card>
-                                                    </Link>
-                                                    <Link to="/admin/reviews">
-                                                        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                    <MessageSquare className="w-6 h-6 text-primary" />
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-fredoka font-bold text-lg">Reviews</h3>
-                                                                    <p className="text-sm text-muted-foreground">Moderate feedback</p>
-                                                                </div>
-                                                            </div>
-                                                        </Card>
-                                                    </Link>
-                                                    <Link to="/admin/settings">
-                                                        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-pink-100 hover:border-pink-500 bg-pink-50/10">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-lg bg-pink-100 flex items-center justify-center">
-                                                                    <IndianRupee className="w-6 h-6 text-pink-600" />
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-fredoka font-bold text-lg">Pricing & Tax</h3>
-                                                                    <p className="text-sm text-muted-foreground">GST & Shipping rules</p>
-                                                                </div>
-                                                            </div>
-                                                        </Card>
-                                                    </Link>
-                                                    <Link to="/admin/settings">
-                                                        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                    <Settings className="w-6 h-6 text-primary" />
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-fredoka font-bold text-lg">System Settings</h3>
-                                                                    <p className="text-sm text-muted-foreground">General configuration</p>
-                                                                </div>
-                                                            </div>
-                                                        </Card>
-                                                    </Link>
+                        {/* Low Stock Alerts */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 font-fredoka">
+                                    <Package className="w-5 h-5 text-destructive" />
+                                    Low Stock Alert
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {Array.isArray(stats?.lowStockProducts) && stats.lowStockProducts.map((product: any) => (
+                                        <div key={product.id} className="flex items-center justify-between p-4 bg-red-50/30 border border-red-100 rounded-xl">
+                                            <div>
+                                                <p className="font-nunito font-bold text-sm">{product.name}</p>
+                                                <p className="text-[10px] text-muted-foreground">{product.category}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-fredoka font-black text-destructive">{product.stock}</p>
+                                                <p className="text-[8px] uppercase font-bold text-destructive/60">units</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(!stats?.lowStockProducts || stats.lowStockProducts.length === 0) && (
+                                        <div className="text-center py-6 text-muted-foreground text-sm">
+                                            All products in safe stock levels ✅
+                                        </div>
+                                    )}
+                                </div>
+                                <Link to="/admin/products">
+                                    <Button variant="outline" size="sm" className="w-full mt-4 rounded-xl text-xs h-10 border-2">
+                                        Manage Inventory
+                                    </Button>
+                                </Link>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Recent Orders */}
+                    <Card className="mb-8">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Recent Orders</CardTitle>
+                            <Link to="/admin/orders">
+                                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                                    View All
+                                </Button>
+                            </Link>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {Array.isArray(stats?.recentOrders) && stats.recentOrders.map((order: any) => (
+                                    <Link key={order.id} to={`/admin/orders/${order.id}`} className="block">
+                                        <div className="flex items-center justify-between p-4 bg-muted hover:bg-muted/80 transition-colors rounded-lg cursor-pointer">
+                                            <div>
+                                                <p className="font-nunito font-semibold">Order #{String(order.id).slice(0, 8)}</p>
+                                                <p className="text-sm text-muted-foreground">{order.user?.email}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-fredoka font-bold text-primary flex items-center justify-end gap-1">
+                                                    <IndianRupee className="w-4 h-4" />
+                                                    {(order.total || 0).toFixed(2)}
+                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-2 h-2 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                                                    <p className="text-sm text-muted-foreground uppercase">{order.status}</p>
                                                 </div>
-
-                                                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
-                                                    {/* Revenue Trend Chart */}
-                                                    <Card>
-                                                        <CardHeader>
-                                                            <CardTitle className="font-fredoka">Revenue Trends (Last 7 Days)</CardTitle>
-                                                        </CardHeader>
-                                                        <CardContent>
-                                                            <div className="h-[300px] w-full">
-                                                                {Array.isArray(stats?.dailyRevenue) && stats.dailyRevenue.length > 0 ? (
-                                                                    <ResponsiveContainer width="100%" height="100%">
-                                                                        <BarChart data={stats.dailyRevenue}>
-                                                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                                                            <XAxis
-                                                                                dataKey="date"
-                                                                                tickFormatter={(str) => {
-                                                                                    try {
-                                                                                        const date = new Date(str);
-                                                                                        return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-                                                                                    } catch (e) {
-                                                                                        return 'N/A';
-                                                                                    }
-                                                                                }}
-                                                                                tick={{ fontSize: 12 }}
-                                                                            />
-                                                                            <YAxis
-                                                                                tickFormatter={(val) => `₹${val}`}
-                                                                                tick={{ fontSize: 12 }}
-                                                                            />
-                                                                            <Tooltip
-                                                                                formatter={(value) => [`₹${Number(value).toFixed(2)}`, 'Revenue']}
-                                                                                labelFormatter={(label) => {
-                                                                                    try {
-                                                                                        return new Date(label).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-                                                                                    } catch (e) {
-                                                                                        return 'Invalid Date';
-                                                                                    }
-                                                                                }}
-                                                                            />
-                                                                            <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                                                                        </BarChart>
-                                                                    </ResponsiveContainer>
-                                                                ) : (
-                                                                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                                                                        No revenue data for the selected period
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </CardContent>
-                                                    </Card>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                                                    {/* Order Status Distribution - Donut Chart */}
-                                                    <Card>
-                                                        <CardHeader>
-                                                            <CardTitle className="font-fredoka">Order Status Distribution</CardTitle>
-                                                        </CardHeader>
-                                                        <CardContent>
-                                                            {Array.isArray(stats?.ordersByStatus) && stats.ordersByStatus.length > 0 ? (
-                                                                <div className="h-[280px]">
-                                                                    <ResponsiveContainer width="100%" height="100%">
-                                                                        <PieChart>
-                                                                            <Pie
-                                                                                data={stats.ordersByStatus.map((s: any) => ({ name: s.status, value: s._count }))}
-                                                                                cx="50%"
-                                                                                cy="50%"
-                                                                                innerRadius={60}
-                                                                                outerRadius={100}
-                                                                                paddingAngle={3}
-                                                                                dataKey="value"
-                                                                                label={({ name, value }) => `${name} (${value})`}
-                                                                            >
-                                                                                {stats.ordersByStatus.map((_: any, index: number) => {
-                                                                                    const colors = ['#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e', '#ef4444', '#06b6d4', '#ec4899'];
-                                                                                    return <Cell key={`status-${index}`} fill={colors[index % colors.length]} />;
-                                                                                })}
-                                                                            </Pie>
-                                                                            <Tooltip formatter={(value: any) => [`${value} orders`, '']} />
-                                                                            <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
-                                                                        </PieChart>
-                                                                    </ResponsiveContainer>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
-                                                                    No order data available yet.
-                                                                </div>
-                                                            )}
-                                                        </CardContent>
-                                                    </Card>
-
-                                                    {/* Top Selling Products - Horizontal Bar Chart */}
-                                                    <Card>
-                                                        <CardHeader>
-                                                            <CardTitle className="font-fredoka flex items-center gap-2">
-                                                                <TrendingUp className="w-5 h-5 text-green-500" />
-                                                                Top Selling Items
-                                                            </CardTitle>
-                                                        </CardHeader>
-                                                        <CardContent>
-                                                            {Array.isArray(stats?.topSellingProducts) && stats.topSellingProducts.length > 0 ? (
-                                                                <div className="h-[280px]">
-                                                                    <ResponsiveContainer width="100%" height="100%">
-                                                                        <BarChart
-                                                                            layout="vertical"
-                                                                            data={stats.topSellingProducts.map((item: any) => ({
-                                                                                name: (item.name || item.product?.name || 'Unknown').slice(0, 20),
-                                                                                sold: item._sum?.quantity || item.quantity || 0
-                                                                            }))}
-                                                                            margin={{ left: 10, right: 30 }}
-                                                                        >
-                                                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                                                            <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                                                                            <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={100} />
-                                                                            <Tooltip formatter={(value: any) => [`${value} sold`, 'Quantity']} />
-                                                                            <Bar dataKey="sold" fill="#22c55e" radius={[0, 6, 6, 0]} barSize={20} />
-                                                                        </BarChart>
-                                                                    </ResponsiveContainer>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
-                                                                    No sales data available yet.
-                                                                </div>
-                                                            )}
-                                                        </CardContent>
-                                                    </Card>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                                                    {/* Activity Feed */}
-                                                    <Card className="lg:col-span-2">
-                                                        <CardHeader className="flex flex-row items-center justify-between">
-                                                            <CardTitle className="flex items-center gap-2 font-fredoka">
-                                                                <Activity className="w-5 h-5 text-primary" />
-                                                                Real-time Audit Logs
-                                                            </CardTitle>
-                                                            <Badge variant="secondary" className="animate-pulse">Live</Badge>
-                                                        </CardHeader>
-                                                        <CardContent>
-                                                            <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2">
-                                                                {auditLogs?.length > 0 ? auditLogs.map((log: any) => (
-                                                                    <div key={log.id} className="flex gap-4 relative">
-                                                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                                                            <Activity className="w-4 h-4 text-primary" />
-                                                                        </div>
-                                                                        <div className="flex-1 min-w-0 border-b border-gray-100 pb-4 last:border-0">
-                                                                            <div className="flex justify-between items-start mb-1">
-                                                                                <p className="font-bold text-sm text-foreground uppercase tracking-tight">
-                                                                                    {log.action.replace(/_/g, ' ')}
-                                                                                </p>
-                                                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-full">
-                                                                                    <Clock className="w-3 h-3" />
-                                                                                    {format(new Date(log.createdAt), 'HH:mm • dd MMM')}
-                                                                                </span>
-                                                                            </div>
-                                                                            <p className="text-xs text-muted-foreground">
-                                                                                Target: <span className="font-mono bg-gray-100 px-1 rounded">{log.entity}</span>
-                                                                                {log.entityId && ` (${log.entityId.slice(0, 8)})`}
-                                                                            </p>
-                                                                            {log.details && (
-                                                                                <div className="mt-2 p-2 bg-gray-50 rounded-lg text-[10px] font-mono text-muted-foreground border border-gray-100 overflow-x-auto">
-                                                                                    {(() => {
-                                                                                        try {
-                                                                                            const parsed = JSON.parse(log.details);
-                                                                                            return <pre>{JSON.stringify(parsed, null, 2)}</pre>;
-                                                                                        } catch (e) {
-                                                                                            return log.details;
-                                                                                        }
-                                                                                    })()}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                )) : (
-                                                                    <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-                                                                        <Activity className="w-12 h-12 mb-2 opacity-10" />
-                                                                        <p>No recent activity logs found</p>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </CardContent>
-                                                    </Card>
-
-                                                    {/* Low Stock Alerts */}
-                                                    <Card>
-                                                        <CardHeader>
-                                                            <CardTitle className="flex items-center gap-2 font-fredoka">
-                                                                <Package className="w-5 h-5 text-destructive" />
-                                                                Low Stock Alert
-                                                            </CardTitle>
-                                                        </CardHeader>
-                                                        <CardContent>
-                                                            <div className="space-y-4">
-                                                                {Array.isArray(stats?.lowStockProducts) && stats.lowStockProducts.map((product: any) => (
-                                                                    <div key={product.id} className="flex items-center justify-between p-4 bg-red-50/30 border border-red-100 rounded-xl">
-                                                                        <div>
-                                                                            <p className="font-nunito font-bold text-sm">{product.name}</p>
-                                                                            <p className="text-[10px] text-muted-foreground">{product.category}</p>
-                                                                        </div>
-                                                                        <div className="text-right">
-                                                                            <p className="font-fredoka font-black text-destructive">{product.stock}</p>
-                                                                            <p className="text-[8px] uppercase font-bold text-destructive/60">units</p>
-                                                                        </div>
-                                                                    </div>
-                                                                ))}
-                                                                {(!stats?.lowStockProducts || stats.lowStockProducts.length === 0) && (
-                                                                    <div className="text-center py-6 text-muted-foreground text-sm">
-                                                                        All products in safe stock levels ✅
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <Link to="/admin/products">
-                                                                <Button variant="outline" size="sm" className="w-full mt-4 rounded-xl text-xs h-10 border-2">
-                                                                    Manage Inventory
-                                                                </Button>
-                                                            </Link>
-                                                        </CardContent>
-                                                    </Card>
-                                                </div>
-
-                                                {/* Recent Orders */}
-                                                <Card className="mb-8">
-                                                    <CardHeader className="flex flex-row items-center justify-between">
-                                                        <CardTitle>Recent Orders</CardTitle>
-                                                        <Link to="/admin/orders">
-                                                            <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
-                                                                View All
-                                                            </Button>
-                                                        </Link>
-                                                    </CardHeader>
-                                                    <CardContent>
-                                                        <div className="space-y-4">
-                                                            {Array.isArray(stats?.recentOrders) && stats.recentOrders.map((order: any) => (
-                                                                <Link key={order.id} to={`/admin/orders/${order.id}`} className="block">
-                                                                    <div className="flex items-center justify-between p-4 bg-muted hover:bg-muted/80 transition-colors rounded-lg cursor-pointer">
-                                                                        <div>
-                                                                            <p className="font-nunito font-semibold">Order #{String(order.id).slice(0, 8)}</p>
-                                                                            <p className="text-sm text-muted-foreground">{order.user?.email}</p>
-                                                                        </div>
-                                                                        <div className="text-right">
-                                                                            <p className="font-fredoka font-bold text-primary flex items-center justify-end gap-1">
-                                                                                <IndianRupee className="w-4 h-4" />
-                                                                                {(order.total || 0).toFixed(2)}
-                                                                            </p>
-                                                                            <div className="flex items-center gap-2">
-                                                                                <div className={`w-2 h-2 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                                                                                <p className="text-sm text-muted-foreground uppercase">{order.status}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </Link>
-                                                            ))}
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
-                                            </>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </>
             )}
-                                        </>
-                                        );
+        </>
+    );
 };
 
-                                        export default AdminDashboard;
+export default AdminDashboard;

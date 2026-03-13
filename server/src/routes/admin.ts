@@ -103,6 +103,9 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
                     stock: { gt: 0 }
                 },
                 select: {
+                    id: true,
+                    name: true,
+                    category: true,
                     stock: true,
                     costPrice: true,
                     boxPrice: true,
