@@ -182,19 +182,48 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             });
         });
 
-        // Calculate Total Investment (Current Stock Value)
+        // Calculate Total Investment (Current Stock Value) with details
         let totalInvestment = 0;
+        const investmentByCategory: Record<string, number> = {};
+        const productInvestmentDetails: any[] = [];
+
         allActiveProducts.forEach((product: any) => {
             const stock = product.stock || 0;
-            const costPrice = parseFloat(String(product.costPrice)) || (product.price * 0.6);
+            const price = parseFloat(String(product.price)) || 0;
+            const costPrice = parseFloat(String(product.costPrice)) || (price * 0.6);
             const boxPrice = parseFloat(String(product.boxPrice)) || 0;
             const tagPrice = parseFloat(String(product.tagPrice)) || 0;
             const shippingCost = parseFloat(String(product.shippingCost)) || 0;
             const otherCosts = parseFloat(String(product.otherCosts)) || 0;
 
-            const totalProductInvestment = costPrice + boxPrice + tagPrice + shippingCost + otherCosts;
-            totalInvestment += totalProductInvestment * stock;
+            const totalUnitCost = costPrice + boxPrice + tagPrice + shippingCost + otherCosts;
+            const productTotalInvestment = totalUnitCost * stock;
+
+            totalInvestment += productTotalInvestment;
+
+            // Group by category
+            const category = product.category || 'Other';
+            investmentByCategory[category] = (investmentByCategory[category] || 0) + productTotalInvestment;
+
+            // Product details for ranking
+            productInvestmentDetails.push({
+                id: product.id,
+                name: product.name,
+                category: category,
+                stock: stock,
+                unitCost: totalUnitCost,
+                totalInvestment: productTotalInvestment
+            });
         });
+
+        const investmentByCategoryArray = Object.entries(investmentByCategory).map(([name, value]) => ({
+            name,
+            value: parseFloat(value.toFixed(2))
+        })).sort((a, b) => b.value - a.value);
+
+        const topInvestedProducts = [...productInvestmentDetails]
+            .sort((a, b) => b.totalInvestment - a.totalInvestment)
+            .slice(0, 10);
 
         console.log(`[Dashboard Stats] Delivered Orders: ${completedOrders.length}, Net Profit: ₹${totalProfit.toFixed(2)}, Total Investment: ₹${totalInvestment.toFixed(2)}`);
 
@@ -234,6 +263,9 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             totalShippingCost,
             totalOtherCosts,
             totalInvestment,
+            investmentByCategory: investmentByCategoryArray,
+            topInvestedProducts,
+            allProductInvestments: productInvestmentDetails,
             totalCosts: totalProductCost + totalPackagingCost + totalLabelingCost + totalShippingCost + totalOtherCosts,
             profitMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0,
             averageOrderValue: deliveredOrders > 0 ? totalRevenue / deliveredOrders : 0,
