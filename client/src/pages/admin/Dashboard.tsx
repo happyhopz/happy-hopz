@@ -129,7 +129,7 @@ const AdminDashboard = () => {
             ) : (
                 <>
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -159,6 +159,19 @@ const AdminDashboard = () => {
                                 <div className="text-3xl font-fredoka font-bold flex items-center gap-1">
                                     <IndianRupee className="w-6 h-6" />
                                     {(stats?.totalRevenue || 0).toFixed(2)}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-blue-50/50 border-blue-100">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                <CardTitle className="text-sm font-medium text-blue-700">Total Investment</CardTitle>
+                                <Package className="w-4 h-4 text-blue-600" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-3xl font-fredoka font-bold text-blue-700 flex items-center gap-1">
+                                    <IndianRupee className="w-6 h-6" />
+                                    {(stats?.totalInvestment || 0).toFixed(2)}
                                 </div>
                             </CardContent>
                         </Card>

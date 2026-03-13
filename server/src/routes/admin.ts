@@ -57,7 +57,8 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             recentOrders,
             lowStockProducts,
             ordersByStatus,
-            topSellingItems
+            topSellingItems,
+            allActiveProducts
         ] = await Promise.all([
             prisma.user.count(),
             prisma.order.count({
@@ -95,6 +96,21 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
                 orderBy: { quantity: 'desc' },
                 take: 5,
                 include: { product: true }
+            }),
+            prisma.product.findMany({
+                where: {
+                    NOT: { status: 'DELETED' },
+                    stock: { gt: 0 }
+                },
+                select: {
+                    stock: true,
+                    costPrice: true,
+                    boxPrice: true,
+                    tagPrice: true,
+                    shippingCost: true,
+                    otherCosts: true,
+                    price: true
+                }
             })
         ]);
 
@@ -166,7 +182,21 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             });
         });
 
-        console.log(`[Dashboard Stats] Delivered Orders: ${completedOrders.length}, Net Profit: ₹${totalProfit.toFixed(2)}, Total Costs: ₹${(totalProductCost + totalPackagingCost + totalLabelingCost + totalShippingCost + totalOtherCosts).toFixed(2)}`);
+        // Calculate Total Investment (Current Stock Value)
+        let totalInvestment = 0;
+        allActiveProducts.forEach((product: any) => {
+            const stock = product.stock || 0;
+            const costPrice = parseFloat(String(product.costPrice)) || (product.price * 0.6);
+            const boxPrice = parseFloat(String(product.boxPrice)) || 0;
+            const tagPrice = parseFloat(String(product.tagPrice)) || 0;
+            const shippingCost = parseFloat(String(product.shippingCost)) || 0;
+            const otherCosts = parseFloat(String(product.otherCosts)) || 0;
+
+            const totalProductInvestment = costPrice + boxPrice + tagPrice + shippingCost + otherCosts;
+            totalInvestment += totalProductInvestment * stock;
+        });
+
+        console.log(`[Dashboard Stats] Delivered Orders: ${completedOrders.length}, Net Profit: ₹${totalProfit.toFixed(2)}, Total Investment: ₹${totalInvestment.toFixed(2)}`);
 
         // Calculate daily revenue (last 7 days)
         const sevenDaysAgo = new Date();
@@ -203,6 +233,7 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             totalLabelingCost,
             totalShippingCost,
             totalOtherCosts,
+            totalInvestment,
             totalCosts: totalProductCost + totalPackagingCost + totalLabelingCost + totalShippingCost + totalOtherCosts,
             profitMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0,
             averageOrderValue: deliveredOrders > 0 ? totalRevenue / deliveredOrders : 0,
