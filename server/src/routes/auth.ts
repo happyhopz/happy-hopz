@@ -237,68 +237,6 @@ router.post('/verify-email', authenticate, async (req: AuthRequest, res: Respons
 // Resend OTP
 // Existing resend-otp for email verification remains unchanged
 
-// New endpoint: Send OTP to mobile via WhatsApp
-router.post('/send-otp', async (req: Request, res: Response) => {
-    try {
-        const { phone } = z.object({ phone: z.string().min(10) }).parse(req.body);
-        let user = await prisma.user.findFirst({ where: { phone } });
-        // Auto-create user if not found (first-time mobile login)
-        if (!user) {
-            const placeholderEmail = `${phone.replace(/[^0-9]/g, '')}@mobile.happyhopz.com`;
-            user = await prisma.user.create({
-                data: {
-                    email: placeholderEmail,
-                    phone,
-                    name: `User ${phone.slice(-4)}`,
-                    password: '',
-                    promoNotifications: true,
-                    whatsappPromoNotifications: true,
-                } as any
-            });
-        }
-        // Generate OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const codeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { verificationCode: otp, codeExpires } as any
-        });
-        // Send via WhatsApp
-        await sendWhatsAppNotification(phone, 'hhz_otp_verification', [otp]);
-        res.json({ message: 'OTP sent to mobile number' });
-    } catch (error: any) {
-        console.error('Send OTP error:', error);
-        res.status(500).json({ error: 'Failed to send OTP' });
-    }
-});
-
-// New endpoint: Verify OTP and log in
-router.post('/verify-otp', async (req: Request, res: Response) => {
-    try {
-        const { phone, otp } = z.object({ phone: z.string().min(10), otp: z.string().length(6) }).parse(req.body);
-        const user = await prisma.user.findFirst({ where: { phone } });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        if ((user as any).verificationCode !== otp) {
-            return res.status(400).json({ error: 'Invalid OTP' });
-        }
-        if ((user as any).codeExpires && (user as any).codeExpires < new Date()) {
-            return res.status(400).json({ error: 'OTP expired' });
-        }
-        // Clear OTP fields
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { verificationCode: null, codeExpires: null } as any
-        });
-        // Generate JWT token
-        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET!, { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any });
-        res.json({ user, token });
-    } catch (error: any) {
-        console.error('Verify OTP error:', error);
-        res.status(500).json({ error: 'Failed to verify OTP' });
-    }
-});
 
 // Google Login
 router.post('/google', async (req: Request, res: Response) => {

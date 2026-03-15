@@ -19,12 +19,6 @@ const Login = () => {
     const { login, signup, googleLogin, user, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(false);
 
-    // Mobile OTP state
-    const [mobilePhone, setMobilePhone] = useState('');
-    const [mobileOtp, setMobileOtp] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
-    const [otpLoading, setOtpLoading] = useState(false);
-
     // Redirect if already logged in
     useEffect(() => {
         if (!authLoading && user) {
@@ -81,42 +75,6 @@ const Login = () => {
         }
     };
 
-    const handleSendOtp = async () => {
-        if (!mobilePhone || mobilePhone.length < 10) {
-            toast.error('Please enter a valid phone number');
-            return;
-        }
-        setOtpLoading(true);
-        try {
-            await authAPI.sendOtp(mobilePhone);
-            setOtpSent(true);
-            toast.success('OTP sent to your WhatsApp!');
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Failed to send OTP');
-        } finally {
-            setOtpLoading(false);
-        }
-    };
-
-    const handleVerifyOtp = async () => {
-        if (!mobileOtp || mobileOtp.length !== 6) {
-            toast.error('Please enter a valid 6-digit OTP');
-            return;
-        }
-        setOtpLoading(true);
-        try {
-            const res = await authAPI.verifyOtp(mobilePhone, mobileOtp);
-            const { token } = res.data;
-            localStorage.setItem('token', token);
-            toast.success('Logged in successfully!');
-            window.location.href = redirectUrl;
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || 'OTP verification failed');
-        } finally {
-            setOtpLoading(false);
-        }
-    };
-
     return (
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "912680393961-8o09ir0atdaa61cki2ij18ub7kqvfre1.apps.googleusercontent.com"}>
             <div className="min-h-screen gradient-hopz flex flex-col items-center justify-center p-4 py-12">
@@ -142,10 +100,9 @@ const Login = () => {
                     <Card className="shadow-2xl border-none ring-1 ring-black/5 animate-scale-in overflow-hidden rounded-3xl">
                         <Tabs defaultValue="login" className="w-full">
                             <CardHeader className="bg-muted/30 pb-2">
-                                <TabsList className="grid w-full grid-cols-3 p-1 bg-white/50 backdrop-blur rounded-2xl">
+                                <TabsList className="grid w-full grid-cols-2 p-1 bg-white/50 backdrop-blur rounded-2xl">
                                     <TabsTrigger value="login" className="rounded-xl data-[state=active]:shadow-sm">Login</TabsTrigger>
                                     <TabsTrigger value="signup" className="rounded-xl data-[state=active]:shadow-sm">Sign Up</TabsTrigger>
-                                    <TabsTrigger value="mobile" className="rounded-xl data-[state=active]:shadow-sm">Mobile OTP</TabsTrigger>
                                 </TabsList>
                             </CardHeader>
 
@@ -300,76 +257,6 @@ const Login = () => {
                                     </form>
                                 </TabsContent>
 
-                                {/* Mobile OTP Tab */}
-                                <TabsContent value="mobile" className="mt-0">
-                                    <CardContent className="space-y-4 pt-4">
-                                        <div>
-                                            <CardTitle className="text-xl">Login with Mobile</CardTitle>
-                                            <CardDescription>
-                                                We'll send an OTP to your WhatsApp
-                                            </CardDescription>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="mobile-phone">Phone Number</Label>
-                                            <Input
-                                                id="mobile-phone"
-                                                type="tel"
-                                                placeholder="+91 9876543210"
-                                                value={mobilePhone}
-                                                onChange={(e) => setMobilePhone(e.target.value)}
-                                                disabled={otpSent}
-                                                className="rounded-xl border-2 h-11"
-                                            />
-                                        </div>
-
-                                        {!otpSent ? (
-                                            <Button
-                                                type="button"
-                                                onClick={handleSendOtp}
-                                                className="w-full rounded-full h-12 text-base font-bold shadow-lg shadow-primary/20"
-                                                variant="hopz"
-                                                disabled={otpLoading}
-                                            >
-                                                {otpLoading ? 'Sending OTP...' : 'Send OTP via WhatsApp'}
-                                            </Button>
-                                        ) : (
-                                            <>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="mobile-otp">Enter 6-digit OTP</Label>
-                                                    <Input
-                                                        id="mobile-otp"
-                                                        type="text"
-                                                        inputMode="numeric"
-                                                        maxLength={6}
-                                                        placeholder="000000"
-                                                        value={mobileOtp}
-                                                        onChange={(e) => setMobileOtp(e.target.value.replace(/\D/g, ''))}
-                                                        className="rounded-xl border-2 h-11 text-center text-lg tracking-widest"
-                                                    />
-                                                </div>
-
-                                                <Button
-                                                    type="button"
-                                                    onClick={handleVerifyOtp}
-                                                    className="w-full rounded-full h-12 text-base font-bold shadow-lg shadow-primary/20"
-                                                    variant="hopz"
-                                                    disabled={otpLoading}
-                                                >
-                                                    {otpLoading ? 'Verifying...' : 'Verify & Login'}
-                                                </Button>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setOtpSent(false); setMobileOtp(''); }}
-                                                    className="w-full text-sm text-primary hover:underline mt-2"
-                                                >
-                                                    Change phone number
-                                                </button>
-                                            </>
-                                        )}
-                                    </CardContent>
-                                </TabsContent>
                             </div>
                         </Tabs>
                     </Card>
