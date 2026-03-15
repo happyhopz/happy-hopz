@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import {
     Eye, Monitor, Smartphone, Tablet, Globe, ArrowUpRight,
     ChevronLeft, ChevronRight, Filter, MapPin, Clock, Download, Loader2, Mail, Users, TrendingUp, MousePointer2,
-    UserCheck, Fingerprint, Phone
+    UserCheck, Fingerprint, Phone, Activity
 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import {
@@ -226,7 +226,53 @@ const VisitorInsights = () => {
                     </div>
 
                     {/* Advanced Analytics Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        {/* Daily Visitors Chart */}
+                        <Card className="border-none shadow-sm lg:col-span-2">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <Activity className="w-4 h-4 text-blue-500" />
+                                    DAILY VISITOR TREND
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[250px] w-full mt-4">
+                                    {Array.isArray(generalStats?.dailyVisitors) && generalStats.dailyVisitors.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={generalStats.dailyVisitors} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis 
+                                                    dataKey="date" 
+                                                    axisLine={false} 
+                                                    tickLine={false} 
+                                                    tick={{ fontSize: 11, fontWeight: 600 }}
+                                                    tickFormatter={(str) => {
+                                                        try { return new Date(str).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); }
+                                                        catch { return str; }
+                                                    }}
+                                                />
+                                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                                                <Tooltip
+                                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                                    cursor={{ fill: '#f8fafc' }}
+                                                    formatter={(value, name) => [`${value}`, name === 'realVisitors' ? 'Real Unique Vis.' : (name === 'visitors' ? 'Sessions' : 'Page Views')]}
+                                                    labelFormatter={(label) => {
+                                                        try { return new Date(label).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }); }
+                                                        catch { return label; }
+                                                    }}
+                                                />
+                                                <Bar dataKey="realVisitors" fill="#22c55e" radius={[4, 4, 0, 0]} name="realVisitors" />
+                                                <Bar dataKey="visitors" fill="#6366f1" radius={[4, 4, 0, 0]} name="visitors" />
+                                                <Bar dataKey="views" fill="#c7d2fe" radius={[4, 4, 0, 0]} name="views" />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">No daily chart data available</div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         {/* Conversion Funnel */}
                         <Card className="border-none shadow-sm">
                             <CardHeader className="pb-2">
@@ -257,6 +303,9 @@ const VisitorInsights = () => {
                             </CardContent>
                         </Card>
 
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         {/* Visitor Type & Device Summary */}
                         <div className="grid grid-cols-1 gap-6">
                             <Card className="border-none shadow-sm">
