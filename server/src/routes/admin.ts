@@ -822,7 +822,7 @@ router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
             })
         ]);
 
-        // Count unique visitors (distinct sessionIds)
+        // Count unique visitors (distinct sessionIds - legacy/browser based)
         const [todayUnique, weekUnique, monthUnique, totalUnique] = await Promise.all([
             (prisma as any).pageView.groupBy({ by: ['sessionId'], where: { createdAt: { gte: startOfToday } } }).then((r: any[]) => r.length),
             (prisma as any).pageView.groupBy({ by: ['sessionId'], where: { createdAt: { gte: startOfWeek } } }).then((r: any[]) => r.length),
@@ -830,16 +830,39 @@ router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
             (prisma as any).pageView.groupBy({ by: ['sessionId'] }).then((r: any[]) => r.length),
         ]);
 
+        // Count real unique visitors (distinct IP addresses, fallback to sessionId if missing)
+        const [todayRealUnique, weekRealUnique, monthRealUnique, totalRealUnique, last7DaysRealUniqueRaw] = await Promise.all([
+            (prisma as any).pageView.findMany({ where: { createdAt: { gte: startOfToday } }, select: { ip: true, sessionId: true, userEmail: true } }),
+            (prisma as any).pageView.findMany({ where: { createdAt: { gte: startOfWeek } }, select: { ip: true, sessionId: true, userEmail: true } }),
+            (prisma as any).pageView.findMany({ where: { createdAt: { gte: startOfMonth } }, select: { ip: true, sessionId: true, userEmail: true } }),
+            (prisma as any).pageView.findMany({ select: { ip: true, sessionId: true, userEmail: true } }),
+            (prisma as any).pageView.findMany({ where: { createdAt: { gte: sevenDaysAgo } }, select: { createdAt: true, ip: true, sessionId: true, userEmail: true } }),
+        ]);
+
+        const getRealUniqueCount = (records: any[]) => {
+            const uniqueSet = new Set();
+            records.forEach(r => {
+                 let id = r.userEmail || r.ip || r.sessionId;
+                 if (id === '::1' || id === '127.0.0.1') id = r.sessionId; // Avoid local dev collapsing
+                 uniqueSet.add(id);
+            });
+            return uniqueSet.size;
+        };
+
         // Group last 7 days by date — both views and unique visitors
         const dailyViewsMap: Record<string, number> = {};
         const dailySessionsMap: Record<string, Set<string>> = {};
+        const dailyRealUniqueMap: Record<string, Set<string>> = {};
+        
         for (let i = 6; i >= 0; i--) {
             const d = new Date(now);
             d.setDate(now.getDate() - i);
             const key = d.toISOString().split('T')[0];
             dailyViewsMap[key] = 0;
             dailySessionsMap[key] = new Set();
+            dailyRealUniqueMap[key] = new Set();
         }
+
         (last7DaysViews as any[]).forEach((v: any) => {
             const date = new Date(v.createdAt).toISOString().split('T')[0];
             if (date in dailyViewsMap) {
@@ -848,10 +871,20 @@ router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
             }
         });
 
+        (last7DaysRealUniqueRaw as any[]).forEach((v: any) => {
+            const date = new Date(v.createdAt).toISOString().split('T')[0];
+            if (date in dailyRealUniqueMap) {
+                 let id = v.userEmail || v.ip || v.sessionId;
+                 if (id === '::1' || id === '127.0.0.1') id = v.sessionId;
+                 dailyRealUniqueMap[date].add(id);
+            }
+        });
+
         const dailyVisitors = Object.entries(dailyViewsMap).map(([date, views]) => ({
             date,
             views,
-            visitors: dailySessionsMap[date]?.size || 0
+            visitors: dailySessionsMap[date]?.size || 0,
+            realVisitors: dailyRealUniqueMap[date]?.size || 0
         }));
 
         res.json({
@@ -860,11 +893,19 @@ router.get('/visitor-stats', async (req: AuthRequest, res: Response) => {
             weekViews,
             monthViews,
             totalViews,
+            
             // Unique visitors (distinct sessions)
             todayVisitors: todayUnique,
             weekVisitors: weekUnique,
             monthVisitors: monthUnique,
             totalVisitors: totalUnique,
+            
+            // Real Unique visitors (distinct IPs/Emails)
+            todayRealVisitors: getRealUniqueCount(todayRealUnique),
+            weekRealVisitors: getRealUniqueCount(weekRealUnique),
+            monthRealVisitors: getRealUniqueCount(monthRealUnique),
+            totalRealVisitors: getRealUniqueCount(totalRealUnique),
+            
             // Chart data
             dailyVisitors
         });

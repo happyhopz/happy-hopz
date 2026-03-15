@@ -89,6 +89,16 @@ const VisitorInsights = () => {
         refetchInterval: 30000,
     });
 
+    const { data: generalStats } = useQuery({
+        queryKey: ['admin-visitor-stats-general'],
+        queryFn: async () => {
+            const res = await adminAPI.getVisitorStats();
+            return res.data;
+        },
+        enabled: isAdmin && !loading,
+        refetchInterval: 60000,
+    });
+
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -164,8 +174,18 @@ const VisitorInsights = () => {
                         <Card className="bg-indigo-50/60 border-indigo-100">
                             <CardContent className="p-4 text-center">
                                 <Eye className="w-5 h-5 text-indigo-500 mx-auto mb-1" />
-                                <p className="text-3xl font-fredoka font-bold text-indigo-800">{pagination.totalCount}</p>
+                                <p className="text-3xl font-fredoka font-bold text-indigo-800">{generalStats?.totalViews || pagination.totalCount}</p>
                                 <p className="text-[10px] text-indigo-500 uppercase font-semibold">Total Page Views</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-green-50/60 border-green-100">
+                            <CardContent className="p-4 text-center">
+                                <UserCheck className="w-5 h-5 text-green-500 mx-auto mb-1" />
+                                <p className="text-3xl font-fredoka font-bold text-green-800">{generalStats?.totalRealVisitors || 0}</p>
+                                <p className="text-[10px] text-green-600 uppercase font-semibold text-center leading-tight">
+                                    Real Unique Visitors<br/>
+                                    <span className="text-[8px] opacity-70">(by IP/Email)</span>
+                                </p>
                             </CardContent>
                         </Card>
                         <Card className="bg-amber-50/60 border-amber-100">
@@ -197,7 +217,10 @@ const VisitorInsights = () => {
                                 <p className="text-3xl font-fredoka font-bold text-blue-800">
                                     {agg.visitorTypes?.new ? Math.round((agg.visitorTypes.new / (agg.visitorTypes.new + (agg.visitorTypes.returning || 0))) * 100) : 0}%
                                 </p>
-                                <p className="text-[10px] text-blue-500 uppercase font-semibold">New Visitors</p>
+                                <p className="text-[10px] text-blue-500 uppercase font-semibold text-center leading-tight">
+                                    New Visitors<br/>
+                                    <span className="text-[8px] opacity-70">(by cookies)</span>
+                                </p>
                             </CardContent>
                         </Card>
                     </div>
