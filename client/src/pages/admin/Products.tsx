@@ -16,6 +16,135 @@ import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { ALL_EU_SIZES } from '@/lib/constants';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
+
+const SortableProductItem = ({ product, isSelected, onToggleSelect, onEdit, onDelete }: any) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: product.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : 'auto',
+        opacity: isDragging ? 0.5 : 1
+    };
+
+    return (
+        <Card
+            ref={setNodeRef}
+            style={style}
+            className={`p-6 transition-all duration-200 border-2 ${isSelected ? 'border-primary bg-primary/5 shadow-md' : 'border-transparent'} ${isDragging ? 'shadow-2xl' : ''}`}
+        >
+            <div className="flex gap-6 items-start">
+                <div className="pt-2 flex flex-col gap-4 items-center">
+                    <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={onToggleSelect}
+                        className="h-5 w-5 rounded-md border-2"
+                    />
+                    <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <GripVertical className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                </div>
+                <div className="w-24 h-24 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0">
+                    {product.images?.[0] ? (
+                        <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className="w-full h-full object-contain rounded-lg p-1"
+                        />
+                    ) : (
+                        <Package className="w-12 h-12 text-muted-foreground" />
+                    )}
+                </div>
+                <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                        <div>
+                            <h3 className="text-xl font-fredoka font-bold">{product.name || 'Unnamed Product'}</h3>
+                            <p className="text-[10px] font-black text-primary/60 tracking-widest mb-1">{product.sku || 'NO SKU'}</p>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                                {product.description || 'No description available'}
+                            </p>
+                        </div>
+                        <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
+                            {product.status || 'ACTIVE'}
+                        </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                        <div>
+                            <p className="text-xs text-muted-foreground">Price</p>
+                            <p className="font-nunito font-bold text-primary flex items-center gap-1">
+                                <IndianRupee className="w-4 h-4" />
+                                {(product.discountPrice || product.price || 0)}
+                                {product.discountPrice && (
+                                    <span className="text-sm text-muted-foreground line-through ml-2 flex items-center gap-0.5">
+                                        <IndianRupee className="w-3 h-3" />
+                                        {product.price}
+                                    </span>
+                                )}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Category</p>
+                            <p className="font-nunito font-semibold">{product.category || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Age Group</p>
+                            <p className="font-nunito font-semibold">{product.ageGroup || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Stock</p>
+                            <p className={`font-nunito font-semibold ${(product.stock || 0) < 10 ? 'text-red-500' : ''}`}>
+                                {product.stock || 0}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onEdit(product)}
+                        >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => onDelete(product.id)}
+                        >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </Card>
+    );
+};
 const ProductForm = ({ product, onSubmit, isLoading }: any) => {
     const initialSizes = product?.sizes || [];
     const initialInventory = (Array.isArray(product?.inventory) ? product.inventory : []).filter((i: any) => initialSizes.includes(i.size));
@@ -582,6 +711,19 @@ const AdminProducts = () => {
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [inventoryFile, setInventoryFile] = useState<File | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isReorderMode, setIsReorderMode] = useState(false);
+    const [localProducts, setLocalProducts] = useState<any[]>([]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     const bulkStockMutation = useMutation({
         mutationFn: (updates: any[]) => adminAPI.bulkStockUpdate(updates),
@@ -600,10 +742,41 @@ const AdminProducts = () => {
         queryKey: ['admin-products'],
         queryFn: async () => {
             const response = await adminAPI.getProducts();
+            setLocalProducts(response.data);
             return response.data;
         },
         enabled: isAdmin
     });
+
+    const reorderMutation = useMutation({
+        mutationFn: (orders: { id: string; order: number }[]) => adminAPI.reorderProducts(orders),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            toast.success('New order saved! 🚀');
+            setIsReorderMode(false);
+        },
+        onError: () => toast.error('Failed to save reorder')
+    });
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setLocalProducts((items) => {
+                const oldIndex = items.findIndex((i) => i.id === active.id);
+                const newIndex = items.findIndex((i) => i.id === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
+
+    const handleSaveReorder = () => {
+        const orders = localProducts.map((p, index) => ({
+            id: p.id,
+            order: index
+        }));
+        reorderMutation.mutate(orders);
+    };
 
     const sortedProducts = products ? [...products].sort((a: any, b: any) => {
         if (sortBy === 'stock-low') return (a.stock || 0) - (b.stock || 0);
@@ -810,7 +983,7 @@ const AdminProducts = () => {
                         </DialogContent>
                     </Dialog>
 
-                    <Select value={sortBy} onValueChange={setSortBy}>
+                    <Select value={sortBy} onValueChange={setSortBy} disabled={isReorderMode}>
                         <SelectTrigger className="w-[180px] rounded-xl font-bold border-2">
                             <SelectValue placeholder="Sort By" />
                         </SelectTrigger>
@@ -822,6 +995,33 @@ const AdminProducts = () => {
                             <SelectItem value="price-high">Price: High to Low</SelectItem>
                         </SelectContent>
                     </Select>
+
+                    <Button
+                        variant={isReorderMode ? "hopz" : "outline"}
+                        className="rounded-xl font-bold border-2 gap-2"
+                        onClick={() => {
+                            if (isReorderMode) {
+                                handleSaveReorder();
+                            } else {
+                                setIsReorderMode(true);
+                                setSortBy('manual'); // Internal state for manual sort
+                                setLocalProducts(products || []);
+                            }
+                        }}
+                        disabled={reorderMutation.isPending}
+                    >
+                        {isReorderMode ? (
+                            <>
+                                <Check className="w-4 h-4" />
+                                Save Order
+                            </>
+                        ) : (
+                            <>
+                                <GripVertical className="w-4 h-4" />
+                                Reorder
+                            </>
+                        )}
+                    </Button>
 
                     {products && products.length > 0 && (
                         <Button
@@ -882,104 +1082,141 @@ const AdminProducts = () => {
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 gap-4 pb-24">
-                    {sortedProducts.filter(Boolean).map((product: any) => (
-                        <Card key={product.id} className={`p-6 transition-all duration-200 border-2 ${selectedIds.includes(product.id) ? 'border-primary bg-primary/5 shadow-md' : 'border-transparent'}`}>
-                            <div className="flex gap-6 items-start">
-                                <div className="pt-2">
-                                    <Checkbox
-                                        checked={selectedIds.includes(product.id)}
-                                        onCheckedChange={(checked) => {
+                    {isReorderMode ? (
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext
+                                items={localProducts.map(p => p.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {localProducts.map((product) => (
+                                    <SortableProductItem
+                                        key={product.id}
+                                        product={product}
+                                        isSelected={selectedIds.includes(product.id)}
+                                        onToggleSelect={(checked: boolean) => {
                                             if (checked) {
                                                 setSelectedIds(prev => [...prev, product.id]);
                                             } else {
                                                 setSelectedIds(prev => prev.filter(id => id !== product.id));
                                             }
                                         }}
-                                        className="h-5 w-5 rounded-md border-2"
+                                        onEdit={(p: any) => {
+                                            setEditingProduct(p);
+                                            setIsDialogOpen(true);
+                                        }}
+                                        onDelete={(id: string) => {
+                                            if (confirm('Are you sure you want to delete this product?')) {
+                                                deleteMutation.mutate(id);
+                                            }
+                                        }}
                                     />
-                                </div>
-                                <div className="w-24 h-24 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0">
-                                    {product.images?.[0] ? (
-                                        <img
-                                            src={product.images[0]}
-                                            alt={product.name}
-                                            className="w-full h-full object-contain rounded-lg p-1"
-                                        />
-                                    ) : (
-                                        <Package className="w-12 h-12 text-muted-foreground" />
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div>
-                                            <h3 className="text-xl font-fredoka font-bold">{product.name || 'Unnamed Product'}</h3>
-                                            <p className="text-[10px] font-black text-primary/60 tracking-widest mb-1">{product.sku || 'NO SKU'}</p>
-                                            <p className="text-sm text-muted-foreground line-clamp-2">
-                                                {product.description || 'No description available'}
-                                            </p>
-                                        </div>
-                                        <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
-                                            {product.status || 'ACTIVE'}
-                                        </Badge>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Price</p>
-                                            <p className="font-nunito font-bold text-primary flex items-center gap-1">
-                                                <IndianRupee className="w-4 h-4" />
-                                                {(product.discountPrice || product.price || 0)}
-                                                {product.discountPrice && (
-                                                    <span className="text-sm text-muted-foreground line-through ml-2 flex items-center gap-0.5">
-                                                        <IndianRupee className="w-3 h-3" />
-                                                        {product.price}
-                                                    </span>
-                                                )}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Category</p>
-                                            <p className="font-nunito font-semibold">{product.category || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Age Group</p>
-                                            <p className="font-nunito font-semibold">{product.ageGroup || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground">Stock</p>
-                                            <p className={`font-nunito font-semibold ${(product.stock || 0) < 10 ? 'text-red-500' : ''}`}>
-                                                {product.stock || 0}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2 mt-4">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => {
-                                                setEditingProduct(product);
-                                                setIsDialogOpen(true);
-                                            }}
-                                        >
-                                            <Edit className="w-4 h-4 mr-2" />
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() => {
-                                                if (confirm('Are you sure you want to delete this product?')) {
-                                                    deleteMutation.mutate(product.id);
+                                ))}
+                            </SortableContext>
+                        </DndContext>
+                    ) : (
+                        sortedProducts.filter(Boolean).map((product: any) => (
+                            <Card key={product.id} className={`p-6 transition-all duration-200 border-2 ${selectedIds.includes(product.id) ? 'border-primary bg-primary/5 shadow-md' : 'border-transparent'}`}>
+                                <div className="flex gap-6 items-start">
+                                    <div className="pt-2">
+                                        <Checkbox
+                                            checked={selectedIds.includes(product.id)}
+                                            onCheckedChange={(checked) => {
+                                                if (checked) {
+                                                    setSelectedIds(prev => [...prev, product.id]);
+                                                } else {
+                                                    setSelectedIds(prev => prev.filter(id => id !== product.id));
                                                 }
                                             }}
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-2" />
-                                            Delete
-                                        </Button>
+                                            className="h-5 w-5 rounded-md border-2"
+                                        />
+                                    </div>
+                                    <div className="w-24 h-24 bg-gradient-soft rounded-lg flex items-center justify-center flex-shrink-0">
+                                        {product.images?.[0] ? (
+                                            <img
+                                                src={product.images[0]}
+                                                alt={product.name}
+                                                className="w-full h-full object-contain rounded-lg p-1"
+                                            />
+                                        ) : (
+                                            <Package className="w-12 h-12 text-muted-foreground" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 className="text-xl font-fredoka font-bold">{product.name || 'Unnamed Product'}</h3>
+                                                <p className="text-[10px] font-black text-primary/60 tracking-widest mb-1">{product.sku || 'NO SKU'}</p>
+                                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                                    {product.description || 'No description available'}
+                                                </p>
+                                            </div>
+                                            <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
+                                                {product.status || 'ACTIVE'}
+                                            </Badge>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Price</p>
+                                                <p className="font-nunito font-bold text-primary flex items-center gap-1">
+                                                    <IndianRupee className="w-4 h-4" />
+                                                    {(product.discountPrice || product.price || 0)}
+                                                    {product.discountPrice && (
+                                                        <span className="text-sm text-muted-foreground line-through ml-2 flex items-center gap-0.5">
+                                                            <IndianRupee className="w-3 h-3" />
+                                                            {product.price}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Category</p>
+                                                <p className="font-nunito font-semibold">{product.category || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Age Group</p>
+                                                <p className="font-nunito font-semibold">{product.ageGroup || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Stock</p>
+                                                <p className={`font-nunito font-semibold ${(product.stock || 0) < 10 ? 'text-red-500' : ''}`}>
+                                                    {product.stock || 0}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 mt-4">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setEditingProduct(product);
+                                                    setIsDialogOpen(true);
+                                                }}
+                                            >
+                                                <Edit className="w-4 h-4 mr-2" />
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => {
+                                                    if (confirm('Are you sure you want to delete this product?')) {
+                                                        deleteMutation.mutate(product.id);
+                                                    }
+                                                }}
+                                            >
+                                                <Trash2 className="w-4 h-4 mr-2" />
+                                                Delete
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </Card>
-                    ))}
+                            </Card>
+                        ))
+                    )}
                 </div>
             )}
 

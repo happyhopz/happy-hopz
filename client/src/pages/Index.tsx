@@ -8,9 +8,39 @@ import FeaturedShoes from '@/components/FeaturedShoes';
 import HamperSection from '@/components/HamperSection';
 import WhyParentsLove from '@/components/WhyParentsLove';
 import Footer from '@/components/Footer';
+import { useQuery } from '@tanstack/react-query';
+import { contentAPI } from '@/lib/api';
 
 const Index = () => {
   const [showIntro, setShowIntro] = useState(true);
+
+  const { data: layout } = useQuery({
+    queryKey: ['homepage-layout'],
+    queryFn: async () => {
+      try {
+        const response = await contentAPI.get('homepage.layout');
+        return response.data || [];
+      } catch (e) {
+        return [];
+      }
+    }
+  });
+
+  const renderSection = (id: string) => {
+    switch (id) {
+      case 'holi-banner': return <HoliBanner key="holi-banner" />;
+      case 'hero-section': return <HeroSection key="hero-section" />;
+      case 'featured-shoes': return <FeaturedShoes key="featured-shoes" />;
+      case 'hamper-section': return <HamperSection key="hamper-section" />;
+      case 'why-parents-love': return <WhyParentsLove key="why-parents-love" />;
+      default: return null;
+    }
+  };
+
+  const defaultOrder = ['holi-banner', 'hero-section', 'featured-shoes', 'hamper-section', 'why-parents-love'];
+  const sectionOrder = layout && Array.isArray(layout) && layout.length > 0 
+    ? layout.map((s: any) => s.id) 
+    : defaultOrder;
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,12 +59,12 @@ const Index = () => {
       {/* Main Content - visible after intro */}
       <div className={`transition-opacity duration-500 ${showIntro ? 'opacity-0' : 'opacity-100'}`}>
         <Navbar />
-        <HoliBanner />
+        {sectionOrder.includes('holi-banner') && sectionOrder[0] === 'holi-banner' && renderSection('holi-banner')}
         <main>
-          <HeroSection />
-          <FeaturedShoes />
-          <HamperSection />
-          <WhyParentsLove />
+          {sectionOrder.map(id => {
+            if (id === 'holi-banner' && sectionOrder[0] === 'holi-banner') return null;
+            return renderSection(id);
+          })}
         </main>
         <Footer />
       </div>

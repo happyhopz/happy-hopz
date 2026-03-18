@@ -68,6 +68,7 @@ model Product {
   tags           String      @default("[]")
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+  order          Int         @default(0)
   costPrice      Float?
   isVariant      Boolean     @default(false)
   parentId       String?

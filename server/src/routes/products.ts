@@ -42,7 +42,10 @@ router.get('/', async (req: Request, res: Response) => {
 
         const products = await prisma.product.findMany({
             where,
-            orderBy: { createdAt: 'desc' },
+            orderBy: [
+                { order: 'asc' },
+                { createdAt: 'desc' }
+            ],
             take: limit,
             skip: skip
         });

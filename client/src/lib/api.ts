@@ -112,6 +112,7 @@ export const adminAPI = {
     bulkDeleteOrders: (orderIds: string[]) => api.delete('/admin/orders-bulk', { data: { orderIds } }),
     bulkCreateProducts: (products: any[]) => api.post('/admin/products/bulk', { products }),
     bulkDeleteProducts: (ids: string[]) => api.post('/admin/products/bulk-delete', { ids }),
+    reorderProducts: (orders: { id: string; order: number }[]) => api.put('/admin/products/reorder', { orders }),
     bulkStockUpdate: (updates: { sku: string; stock: number }[]) => api.put('/admin/inventory/bulk-stock', { updates }),
     generateSEO: (id: string) => api.post(`/admin/products/${id}/seo-generate`),
     search: (query: string) => api.get(`/admin/search?q=${query}`),

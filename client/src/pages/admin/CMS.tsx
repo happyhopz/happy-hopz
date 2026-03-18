@@ -9,6 +9,59 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Layout, Monitor, Image as ImageIcon, Star, Save, RefreshCw, AlertCircle } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, Check } from 'lucide-react';
+
+const SortableSectionItem = ({ section }: { section: any }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: section.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : 'auto',
+        opacity: isDragging ? 0.5 : 1
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm transition-all ${isDragging ? 'shadow-xl scale-[1.02] border-primary/20' : 'hover:border-primary/10'}`}
+        >
+            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                <GripVertical className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+                <h4 className="font-fredoka font-bold text-lg">{section.name}</h4>
+                <p className="text-xs text-muted-foreground">{section.description}</p>
+            </div>
+            <div className={`w-3 h-3 rounded-full ${section.enabled ? 'bg-green-400' : 'bg-gray-300'}`} title={section.enabled ? 'Section Active' : 'Section Hidden'} />
+        </div>
+    );
+};
 
 const AdminCMS = () => {
     const queryClient = useQueryClient();
@@ -25,6 +78,21 @@ const AdminCMS = () => {
         title: 'Featured Kids Shoes',
         subtitle: 'Comfort meets style in every step. Pick the perfect pair for your little adventurer!'
     });
+
+    const [homepageLayout, setHomepageLayout] = useState<any[]>([
+        { id: 'holi-banner', name: 'Holi Banner', description: 'Promotional announcement bar at the very top.', enabled: true },
+        { id: 'hero-section', name: 'Hero Section', description: 'Main banner with title, subtitle, and CTA buttons.', enabled: true },
+        { id: 'featured-shoes', name: 'Featured Shoes', description: 'Grid of best-selling or new arrival products.', enabled: true },
+        { id: 'hamper-section', name: 'Hamper Section', description: 'Curated gift bundles and hamper offerings.', enabled: true },
+        { id: 'why-parents-love', name: 'Why Parents Love', description: 'Trust signals and customer testimonials.', enabled: true }
+    ]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     const { data: remoteHero, isLoading: loadingHero } = useQuery({
         queryKey: ['cms-hero'],
@@ -50,6 +118,18 @@ const AdminCMS = () => {
         }
     });
 
+    const { data: remoteLayout, isLoading: loadingLayout } = useQuery({
+        queryKey: ['cms-layout'],
+        queryFn: async () => {
+            try {
+                const response = await contentAPI.get('homepage.layout');
+                return response.data;
+            } catch (e) {
+                return null;
+            }
+        }
+    });
+
     useEffect(() => {
         if (remoteHero) setHeroData(remoteHero);
     }, [remoteHero]);
@@ -57,6 +137,12 @@ const AdminCMS = () => {
     useEffect(() => {
         if (remoteFeatured) setFeaturedData(remoteFeatured);
     }, [remoteFeatured]);
+
+    useEffect(() => {
+        if (remoteLayout && Array.isArray(remoteLayout)) {
+            setHomepageLayout(remoteLayout);
+        }
+    }, [remoteLayout]);
 
     const updateMutation = useMutation({
         mutationFn: ({ key, content }: { key: string; content: any }) => contentAPI.update(key, content),
@@ -73,6 +159,22 @@ const AdminCMS = () => {
 
     const handleSaveFeatured = () => {
         updateMutation.mutate({ key: 'homepage.featured', content: featuredData });
+    };
+
+    const handleSaveLayout = () => {
+        updateMutation.mutate({ key: 'homepage.layout', content: homepageLayout });
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setHomepageLayout((items) => {
+                const oldIndex = items.findIndex((i) => i.id === active.id);
+                const newIndex = items.findIndex((i) => i.id === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
     };
 
     return (
@@ -224,6 +326,53 @@ const AdminCMS = () => {
                     </div>
                 </Card>
             </div>
+
+            {/* Homepage Layout Management */}
+            <Card className="p-8 border-2 border-indigo-500/10 shadow-xl rounded-[2.5rem]">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                            <Layout className="w-6 h-6 text-indigo-600" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black font-fredoka">Homepage Layout</h2>
+                            <p className="text-sm text-muted-foreground font-nunito">Drag sections to change their appearance order on the homepage.</p>
+                        </div>
+                    </div>
+                    <Button
+                        className="rounded-xl font-bold gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 h-12 shadow-lg shadow-indigo-200"
+                        onClick={handleSaveLayout}
+                        disabled={updateMutation.isPending}
+                    >
+                        {updateMutation.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Save Order
+                    </Button>
+                </div>
+
+                <div className="space-y-3">
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext
+                            items={homepageLayout.map(s => s.id)}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            {homepageLayout.map((section) => (
+                                <SortableSectionItem key={section.id} section={section} />
+                            ))}
+                        </SortableContext>
+                    </DndContext>
+                </div>
+
+                <div className="mt-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-indigo-600 shrink-0" />
+                    <p className="text-xs text-indigo-800 font-medium leading-relaxed">
+                        Notice: Changes made here will take effect immediately on the homepage. You can use this to prioritize seasonal sections like the Holi Banner or Feature collections.
+                    </p>
+                </div>
+            </Card>
 
             {/* Promo Banner Management */}
             <Card className="p-8 border-2 border-pink-500/10 shadow-xl rounded-[2.5rem]">
