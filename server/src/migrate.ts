@@ -28,7 +28,17 @@ async function migrate() {
             console.warn('[Migration] ⚠️ Notification table check skipped:', error.message);
         }
 
-        // 2. Check product columns exist
+        // 2. Ensure isHidden column exists on Coupon table
+        try {
+            await prisma.$executeRawUnsafe(`
+                ALTER TABLE "Coupon" ADD COLUMN IF NOT EXISTS "isHidden" BOOLEAN NOT NULL DEFAULT false
+            `);
+            console.log('[Migration] ✅ Coupon.isHidden column ready.');
+        } catch (error: any) {
+            console.warn('[Migration] ⚠️ Coupon.isHidden check skipped:', error.message);
+        }
+
+        // 3. Check product columns exist
         try {
             await prisma.product.findFirst({
                 select: { boxPrice: true, tagPrice: true, shippingCost: true, otherCosts: true }

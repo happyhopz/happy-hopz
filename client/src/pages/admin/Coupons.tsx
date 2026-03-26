@@ -120,7 +120,10 @@ const AdminCoupons = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {coupons.map((coupon: any) => (
                         <Card key={coupon.id} className="p-6 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-3">
+                            <div className="absolute top-0 right-0 p-3 flex gap-2">
+                                {coupon.isHidden && (
+                                    <Badge className="bg-purple-100 text-purple-700 border-purple-200">🔒 Secret</Badge>
+                                )}
                                 <Badge variant={coupon.isActive ? 'default' : 'outline'}>
                                     {coupon.isActive ? 'Active' : 'Inactive'}
                                 </Badge>
@@ -193,7 +196,8 @@ const CouponForm = ({ coupon, onSubmit, isLoading }: any) => {
         minOrderValue: coupon?.minOrderValue || '',
         maxUses: coupon?.maxUses || '',
         expiryDate: coupon?.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : '',
-        isActive: coupon?.isActive ?? true
+        isActive: coupon?.isActive ?? true,
+        isHidden: coupon?.isHidden ?? false
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -203,7 +207,8 @@ const CouponForm = ({ coupon, onSubmit, isLoading }: any) => {
             discountValue: parseFloat(formData.discountValue as string),
             minOrderValue: formData.minOrderValue ? parseFloat(formData.minOrderValue as string) : null,
             maxUses: formData.maxUses ? parseInt(formData.maxUses as string) : null,
-            expiryDate: formData.expiryDate || null
+            expiryDate: formData.expiryDate || null,
+            isHidden: formData.isHidden
         });
     };
 
@@ -280,6 +285,19 @@ const CouponForm = ({ coupon, onSubmit, isLoading }: any) => {
                     className="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
                 />
                 <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
+            </div>
+            <div className="flex items-center gap-2 py-2 bg-purple-50 px-3 rounded-lg border border-purple-200">
+                <input
+                    type="checkbox"
+                    id="isHidden"
+                    checked={formData.isHidden}
+                    onChange={(e) => setFormData({ ...formData, isHidden: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                />
+                <div>
+                    <Label htmlFor="isHidden" className="cursor-pointer font-bold text-purple-700">🔒 Hidden / Secret</Label>
+                    <p className="text-xs text-purple-500">Won't appear in public coupon list. Only works when typed manually.</p>
+                </div>
             </div>
             <Button type="submit" variant="hopz" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Saving...' : coupon ? 'Update Coupon' : 'Create Coupon'}

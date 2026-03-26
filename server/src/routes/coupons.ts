@@ -25,7 +25,8 @@ const couponSchema = z.object({
     minOrderValue: z.number().nonnegative().optional().nullable(),
     expiryDate: z.string().optional().nullable(),
     maxUses: z.number().int().positive().optional().nullable(),
-    isActive: z.boolean().default(true)
+    isActive: z.boolean().default(true),
+    isHidden: z.boolean().default(false)
 });
 
 router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
@@ -130,6 +131,7 @@ router.get('/active', async (req, res) => {
         const coupons = await prisma.coupon.findMany({
             where: {
                 isActive: true,
+                isHidden: false,
                 OR: [
                     { expiryDate: null },
                     { expiryDate: { gt: new Date() } }
