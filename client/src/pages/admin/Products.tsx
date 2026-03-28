@@ -1003,27 +1003,73 @@ const AdminProducts = () => {
                 row.height = 90; // Make row tall enough for image
                 row.alignment = { vertical: 'middle', wrapText: true };
 
-                // Fetch and embed image
+                // Fetch, resize, and embed image
                 if (images.length > 0 && images[0]) {
                     try {
                         const response = await fetch(images[0]);
                         const blob = await response.blob();
-                        const arrayBuffer = await blob.arrayBuffer();
                         
-                        const imageId = workbook.addImage({
-                            buffer: arrayBuffer,
-                            extension: images[0].toLowerCase().endsWith('.png') ? 'png' : 'jpeg',
+                        const processedBuffer = await new Promise<ArrayBuffer | null>((resolve) => {
+                            const img = new Image();
+                            const objectUrl = URL.createObjectURL(blob);
+                            img.onload = () => {
+                                URL.revokeObjectURL(objectUrl);
+                                const canvas = document.createElement('canvas');
+                                const SIZE = 120; // 120x120 square for perfect uniform alignment
+                                canvas.width = SIZE;
+                                canvas.height = SIZE;
+                                const ctx = canvas.getContext('2d');
+                                if (!ctx) return resolve(null);
+
+                                // White background
+                                ctx.fillStyle = '#FFFFFF';
+                                ctx.fillRect(0, 0, SIZE, SIZE);
+
+                                // Calculate padded object-fit: contain
+                                const PADDING = 10;
+                                const innerSize = SIZE - (PADDING * 2);
+                                const scale = Math.min(innerSize / img.width, innerSize / img.height);
+                                const w = img.width * scale;
+                                const h = img.height * scale;
+                                const x = (SIZE - w) / 2;
+                                const y = (SIZE - h) / 2;
+
+                                ctx.drawImage(img, x, y, w, h);
+
+                                // Export compressed jpeg
+                                canvas.toBlob((b) => {
+                                    if (b) {
+                                        b.arrayBuffer().then(resolve);
+                                    } else {
+                                        resolve(null);
+                                    }
+                                }, 'image/jpeg', 0.85);
+                            };
+                            img.onerror = () => {
+                                URL.revokeObjectURL(objectUrl);
+                                resolve(null);
+                            };
+                            img.src = objectUrl;
                         });
 
-                        // Add image to cell A{rowIndex}
-                        sheet.addImage(imageId, {
-                            tl: { col: 0.1, row: rowIndex - 1 + 0.1 }, // Top-left with slight padding
-                            br: { col: 0.9, row: rowIndex - 0.1 },     // Bottom-right with slight padding
-                            editAs: 'oneCell'
-                        });
+                        if (processedBuffer) {
+                            const imageId = workbook.addImage({
+                                buffer: processedBuffer,
+                                extension: 'jpeg',
+                            });
+
+                            // Add image to cell A{rowIndex} using exact pixel payload so it doesn't stretch
+                            sheet.addImage(imageId, {
+                                tl: { col: 0.1, row: rowIndex - 1 + 0.1 },
+                                ext: { width: 100, height: 100 },
+                                editAs: 'oneCell'
+                            });
+                        } else {
+                            sheet.getCell(`A${rowIndex}`).value = '(Image Failed)';
+                        }
                     } catch (imgError) {
-                        console.error(`Failed to load image for ${p.name}:`, imgError);
-                        sheet.getCell(`A${rowIndex}`).value = '(Image Failed)';
+                        console.error(`Failed to process image for ${p.name}:`, imgError);
+                        sheet.getCell(`A${rowIndex}`).value = '(Fetch Error)';
                     }
                 } else {
                     sheet.getCell(`A${rowIndex}`).value = '(No Image)';
