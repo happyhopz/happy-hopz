@@ -23,7 +23,8 @@ const Index = () => {
       } catch (e) {
         return [];
       }
-    }
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes — layout order rarely changes
   });
 
   const renderSection = (id: string) => {

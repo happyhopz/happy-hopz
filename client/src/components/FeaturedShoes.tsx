@@ -20,7 +20,8 @@ const FeaturedShoes = () => {
       } catch (e) {
         return null;
       }
-    }
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes — CMS content rarely changes
   });
 
   const content = featuredContent || {
@@ -57,7 +58,8 @@ const FeaturedShoes = () => {
     queryFn: async () => {
       const response = await productsAPI.getAll({ limit: 8 });
       return response.data;
-    }
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes — products change occasionally
   });
 
   const handleAddToCart = (product: any) => {

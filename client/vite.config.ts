@@ -17,4 +17,23 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React runtime — cached forever, changes only on React upgrades
+          "vendor-react": ["react", "react-dom"],
+          // Router — separate chunk, very stable
+          "vendor-router": ["react-router-dom"],
+          // Data fetching
+          "vendor-query": ["@tanstack/react-query"],
+          // HTTP client
+          "vendor-axios": ["axios"],
+          // Icon library — large, rarely changes
+          "vendor-icons": ["lucide-react"],
+        },
+      },
+    },
+  },
 }));

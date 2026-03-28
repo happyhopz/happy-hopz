@@ -15,7 +15,8 @@ const HeroSection = () => {
       } catch (e) {
         return null;
       }
-    }
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes — CMS content rarely changes
   });
 
   const content = heroData || {
@@ -56,6 +57,8 @@ const HeroSection = () => {
               <img
                 src={pandaLogo}
                 alt="Happy Hopz"
+                fetchPriority="high"
+                loading="eager"
                 className="relative w-[180px] h-[180px] object-contain animate-bounce-gentle drop-shadow-2xl z-10"
               />
 
@@ -168,6 +171,8 @@ const HeroSection = () => {
               <img
                 src={pandaLogo}
                 alt="Happy Hopz - Where Every Step Is a Happy Hopz"
+                fetchPriority="high"
+                loading="eager"
                 className="relative w-72 h-72 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] object-contain animate-bounce-gentle drop-shadow-2xl"
               />
 

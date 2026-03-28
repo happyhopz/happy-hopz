@@ -10,16 +10,16 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    // Start fade out after 2.5 seconds
+    // Start fade out after 1 second
     const fadeTimer = setTimeout(() => {
       setIsFading(true);
-    }, 2500);
+    }, 1000);
 
-    // Complete transition after 3 seconds
+    // Complete transition after 1.5 seconds
     const completeTimer = setTimeout(() => {
       setIsAnimating(false);
       onComplete();
-    }, 3200);
+    }, 1500);
 
     return () => {
       clearTimeout(fadeTimer);
