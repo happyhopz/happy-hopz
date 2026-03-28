@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminAPI } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle, Sparkles, Box, CheckSquare, Square, Check } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle, Sparkles, Box, CheckSquare, Square, Check, Download } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { ALL_EU_SIZES } from '@/lib/constants';
@@ -879,6 +881,137 @@ const AdminProducts = () => {
         reader.readAsText(file);
     };
 
+    // ─── Excel Export ─────────────────────────────────────────────────────────
+    const exportToExcel = () => {
+        if (!products || products.length === 0) {
+            toast.error('No products to export');
+            return;
+        }
+
+        const rows = products.map((p: any) => {
+            // Parse JSON-stored arrays
+            const inventory: { size: string; stock: number }[] =
+                Array.isArray(p.inventory) ? p.inventory :
+                    (() => { try { return JSON.parse(p.inventory || '[]'); } catch { return []; } })();
+
+            const images: string[] = Array.isArray(p.images) ? p.images :
+                (() => { try { return JSON.parse(p.images || '[]'); } catch { return []; } })();
+
+            const tags: string[] = Array.isArray(p.tags) ? p.tags :
+                (() => { try { return JSON.parse(p.tags || '[]'); } catch { return []; } })();
+
+            const colors: string[] = Array.isArray(p.colors) ? p.colors :
+                (typeof p.colors === 'string' ? p.colors.split(',').map((c: string) => c.trim()) : []);
+
+            const sizes: string[] = Array.isArray(p.sizes) ? p.sizes :
+                (typeof p.sizes === 'string' ? p.sizes.split(',').map((s: string) => s.trim()) : []);
+
+            // Cost calculations
+            const costPrice = p.costPrice || 0;
+            const boxPrice = p.boxPrice || 0;
+            const tagPrice = p.tagPrice || 0;
+            const shippingCost = p.shippingCost || 0;
+            const otherCosts = p.otherCosts || 0;
+            const totalCost = costPrice + boxPrice + tagPrice + shippingCost + otherCosts;
+            const sellingPrice = p.discountPrice || p.price || 0;
+            const profitPerPair = sellingPrice - totalCost;
+            const totalInventoryProfit = profitPerPair * (p.stock || 0);
+
+            // Per-size stock columns
+            const sizeStockCols: Record<string, any> = {};
+            ALL_EU_SIZES.forEach((sz) => {
+                const entry = inventory.find((i) => i.size === sz);
+                sizeStockCols[`Stock EU${sz}`] = entry ? entry.stock : '';
+            });
+            // Handle "One Size" hampers
+            const oneSizeEntry = inventory.find((i) => i.size === 'One Size');
+            if (oneSizeEntry) sizeStockCols['Stock One Size'] = oneSizeEntry.stock;
+
+            return {
+                // Identification
+                'Product Name': p.name || '',
+                'SKU': p.sku || '',
+                'Status': p.status || 'ACTIVE',
+
+                // Classification
+                'Category': p.category || '',
+                'Age Group': p.ageGroup || '',
+                'Tags': tags.join(', '),
+                'Colors': colors.join(', '),
+                'Sizes Available': sizes.join(', '),
+
+                // Pricing
+                'MRP (₹)': p.price || 0,
+                'Selling Price / Discount (₹)': p.discountPrice || '',
+                'Cost Price (₹)': costPrice || '',
+                'Box Price (₹)': boxPrice || '',
+                'Tag Price (₹)': tagPrice || '',
+                'Shipping Cost (₹)': shippingCost || '',
+                'Other Costs (₹)': otherCosts || '',
+                'Total Cost per Unit (₹)': totalCost > 0 ? totalCost.toFixed(2) : '',
+                'Profit per Pair (₹)': totalCost > 0 ? profitPerPair.toFixed(2) : '',
+                'Total Stock': p.stock || 0,
+                'Total Inventory Profit (₹)': totalCost > 0 ? totalInventoryProfit.toFixed(2) : '',
+
+                // Per-size stock
+                ...sizeStockCols,
+
+                // Images (up to 5 URLs)
+                'Image 1': images[0] || '',
+                'Image 2': images[1] || '',
+                'Image 3': images[2] || '',
+                'Image 4': images[3] || '',
+                'Image 5': images[4] || '',
+
+                // SEO
+                'SEO Title': p.seoTitle || '',
+                'SEO Description': p.seoDescription || '',
+
+                // Ratings
+                'Avg Rating': p.avgRating || '',
+                'Rating Count': p.ratingCount || 0,
+
+                // Description
+                'Description': p.description || '',
+
+                // Timestamps
+                'Created At': p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN') : '',
+                'Updated At': p.updatedAt ? new Date(p.updatedAt).toLocaleDateString('en-IN') : '',
+            };
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+
+        // Style header row bold
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+        for (let col = range.s.c; col <= range.e.c; col++) {
+            const cell = XLSX.utils.encode_cell({ r: 0, c: col });
+            if (worksheet[cell]) {
+                worksheet[cell].s = { font: { bold: true } };
+            }
+        }
+
+        // Auto column widths
+        const colWidths = rows.reduce((acc: any[], row: any) => {
+            Object.values(row).forEach((val, i) => {
+                const len = String(val ?? '').length;
+                acc[i] = Math.min(Math.max(acc[i] || 10, len + 2), 60);
+            });
+            return acc;
+        }, []);
+        worksheet['!cols'] = colWidths.map((w: number) => ({ wch: w }));
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory');
+
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+        const timestamp = new Date().toISOString().slice(0, 10);
+        saveAs(blob, `happyhopz-inventory-${timestamp}.xlsx`);
+        toast.success(`Exported ${products.length} products to Excel! 📊`);
+    };
+    // ─────────────────────────────────────────────────────────────────────────
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
@@ -1037,6 +1170,18 @@ const AdminProducts = () => {
                         >
                             {selectedIds.length === products?.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                             {selectedIds.length === products?.length ? 'Deselect All' : 'Select All'}
+                        </Button>
+                    )}
+
+                    {/* Export to Excel */}
+                    {products && products.length > 0 && (
+                        <Button
+                            variant="outline"
+                            className="rounded-xl font-bold border-2 gap-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400"
+                            onClick={exportToExcel}
+                        >
+                            <Download className="w-4 h-4" />
+                            Export Excel
                         </Button>
                     )}
 
