@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminAPI } from '@/lib/api';
@@ -881,134 +881,169 @@ const AdminProducts = () => {
         reader.readAsText(file);
     };
 
-    // ─── Excel Export ─────────────────────────────────────────────────────────
-    const exportToExcel = () => {
+    // ─── Excel Export with Images ─────────────────────────────────────────────
+    const exportToExcel = async () => {
         if (!products || products.length === 0) {
             toast.error('No products to export');
             return;
         }
 
-        const rows = products.map((p: any) => {
-            // Parse JSON-stored arrays
-            const inventory: { size: string; stock: number }[] =
-                Array.isArray(p.inventory) ? p.inventory :
-                    (() => { try { return JSON.parse(p.inventory || '[]'); } catch { return []; } })();
+        const toastId = toast.loading('Generating Excel file with images... This may take a moment. ⏳');
 
-            const images: string[] = Array.isArray(p.images) ? p.images :
-                (() => { try { return JSON.parse(p.images || '[]'); } catch { return []; } })();
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Happy Hopz Admin';
+            workbook.lastModifiedBy = 'Happy Hopz Admin';
+            workbook.created = new Date();
+            workbook.modified = new Date();
 
-            const tags: string[] = Array.isArray(p.tags) ? p.tags :
-                (() => { try { return JSON.parse(p.tags || '[]'); } catch { return []; } })();
-
-            const colors: string[] = Array.isArray(p.colors) ? p.colors :
-                (typeof p.colors === 'string' ? p.colors.split(',').map((c: string) => c.trim()) : []);
-
-            const sizes: string[] = Array.isArray(p.sizes) ? p.sizes :
-                (typeof p.sizes === 'string' ? p.sizes.split(',').map((s: string) => s.trim()) : []);
-
-            // Cost calculations
-            const costPrice = p.costPrice || 0;
-            const boxPrice = p.boxPrice || 0;
-            const tagPrice = p.tagPrice || 0;
-            const shippingCost = p.shippingCost || 0;
-            const otherCosts = p.otherCosts || 0;
-            const totalCost = costPrice + boxPrice + tagPrice + shippingCost + otherCosts;
-            const sellingPrice = p.discountPrice || p.price || 0;
-            const profitPerPair = sellingPrice - totalCost;
-            const totalInventoryProfit = profitPerPair * (p.stock || 0);
-
-            // Per-size stock columns
-            const sizeStockCols: Record<string, any> = {};
-            ALL_EU_SIZES.forEach((sz) => {
-                const entry = inventory.find((i) => i.size === sz);
-                sizeStockCols[`Stock EU${sz}`] = entry ? entry.stock : '';
+            const sheet = workbook.addWorksheet('Inventory', {
+                properties: { tabColor: { argb: 'FF06B6D4' } },
+                views: [{ state: 'frozen', ySplit: 1 }]
             });
-            // Handle "One Size" hampers
-            const oneSizeEntry = inventory.find((i) => i.size === 'One Size');
-            if (oneSizeEntry) sizeStockCols['Stock One Size'] = oneSizeEntry.stock;
 
-            return {
-                // Identification
-                'Product Name': p.name || '',
-                'SKU': p.sku || '',
-                'Status': p.status || 'ACTIVE',
+            // Define columns
+            const columns = [
+                { header: 'Image', key: 'image', width: 15 },
+                { header: 'Product Name', key: 'name', width: 35 },
+                { header: 'SKU', key: 'sku', width: 18 },
+                { header: 'Status', key: 'status', width: 12 },
+                { header: 'Category', key: 'category', width: 15 },
+                { header: 'Age Group', key: 'ageGroup', width: 15 },
+                { header: 'Tags', key: 'tags', width: 20 },
+                { header: 'Colors', key: 'colors', width: 20 },
+                { header: 'Sizes Available', key: 'sizes', width: 25 },
+                { header: 'Selling Price (₹)', key: 'sellingPrice', width: 18 },
+                { header: 'MRP (₹)', key: 'mrp', width: 12 },
+                { header: 'Cost Price (₹)', key: 'costPrice', width: 15 },
+                { header: 'Total Cost (₹)', key: 'totalCost', width: 15 },
+                { header: 'Profit/Pair (₹)', key: 'profit', width: 15 },
+                { header: 'Total Stock', key: 'stock', width: 12 },
+                { header: 'Total Profit (₹)', key: 'totalProfit', width: 18 },
+            ];
 
-                // Classification
-                'Category': p.category || '',
-                'Age Group': p.ageGroup || '',
-                'Tags': tags.join(', '),
-                'Colors': colors.join(', '),
-                'Sizes Available': sizes.join(', '),
+            // Add dynamic size columns
+            ALL_EU_SIZES.forEach((sz) => columns.push({ header: `Stock EU${sz}`, key: `size_${sz}`, width: 12 }));
+            columns.push({ header: 'Stock One Size', key: `size_One Size`, width: 15 });
 
-                // Pricing
-                'MRP (₹)': p.price || 0,
-                'Selling Price / Discount (₹)': p.discountPrice || '',
-                'Cost Price (₹)': costPrice || '',
-                'Box Price (₹)': boxPrice || '',
-                'Tag Price (₹)': tagPrice || '',
-                'Shipping Cost (₹)': shippingCost || '',
-                'Other Costs (₹)': otherCosts || '',
-                'Total Cost per Unit (₹)': totalCost > 0 ? totalCost.toFixed(2) : '',
-                'Profit per Pair (₹)': totalCost > 0 ? profitPerPair.toFixed(2) : '',
-                'Total Stock': p.stock || 0,
-                'Total Inventory Profit (₹)': totalCost > 0 ? totalInventoryProfit.toFixed(2) : '',
+            // Add remaining columns
+            columns.push(
+                { header: 'SEO Title', key: 'seoTitle', width: 30 },
+                { header: 'SEO Description', key: 'seoDesc', width: 40 },
+                { header: 'Avg Rating', key: 'rating', width: 12 },
+                { header: 'Rating Count', key: 'ratingCount', width: 15 },
+                { header: 'Created At', key: 'createdAt', width: 15 }
+            );
 
-                // Per-size stock
-                ...sizeStockCols,
+            sheet.columns = columns;
 
-                // Images (up to 5 URLs)
-                'Image 1': images[0] || '',
-                'Image 2': images[1] || '',
-                'Image 3': images[2] || '',
-                'Image 4': images[3] || '',
-                'Image 5': images[4] || '',
+            // Style header row
+            const headerRow = sheet.getRow(1);
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+            headerRow.height = 30;
+            headerRow.eachCell((cell) => {
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF0F172A' }
+                };
+            });
 
-                // SEO
-                'SEO Title': p.seoTitle || '',
-                'SEO Description': p.seoDescription || '',
+            // Process products
+            for (let i = 0; i < products.length; i++) {
+                const p = products[i];
+                const rowIndex = i + 2; // +1 for 1-based index, +1 for header
+                
+                // Parse arrays
+                const inventory: { size: string; stock: number }[] = Array.isArray(p.inventory) ? p.inventory : (() => { try { return JSON.parse(p.inventory || '[]'); } catch { return []; } })();
+                const images: string[] = Array.isArray(p.images) ? p.images : (() => { try { return JSON.parse(p.images || '[]'); } catch { return []; } })();
+                const tags: string[] = Array.isArray(p.tags) ? p.tags : (() => { try { return JSON.parse(p.tags || '[]'); } catch { return []; } })();
+                const colors: string[] = Array.isArray(p.colors) ? p.colors : (typeof p.colors === 'string' ? p.colors.split(',').map((c: string) => c.trim()) : []);
+                const sizes: string[] = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? p.sizes.split(',').map((s: string) => s.trim()) : []);
 
-                // Ratings
-                'Avg Rating': p.avgRating || '',
-                'Rating Count': p.ratingCount || 0,
+                // Cost calculations
+                const totalCost = (p.costPrice || 0) + (p.boxPrice || 0) + (p.tagPrice || 0) + (p.shippingCost || 0) + (p.otherCosts || 0);
+                const sellingPrice = p.discountPrice || p.price || 0;
+                const profitPerPair = sellingPrice - totalCost;
 
-                // Description
-                'Description': p.description || '',
+                // Build row data
+                const rowData: any = {
+                    name: p.name || '',
+                    sku: p.sku || '',
+                    status: p.status || 'ACTIVE',
+                    category: p.category || '',
+                    ageGroup: p.ageGroup || '',
+                    tags: tags.join(', '),
+                    colors: colors.join(', '),
+                    sizes: sizes.join(', '),
+                    sellingPrice: sellingPrice || '',
+                    mrp: p.price || '',
+                    costPrice: p.costPrice || '',
+                    totalCost: totalCost > 0 ? totalCost : '',
+                    profit: totalCost > 0 ? profitPerPair : '',
+                    stock: p.stock || 0,
+                    totalProfit: totalCost > 0 ? profitPerPair * (p.stock || 0) : '',
+                    seoTitle: p.seoTitle || '',
+                    seoDesc: p.seoDescription || '',
+                    rating: p.avgRating || '',
+                    ratingCount: p.ratingCount || 0,
+                    createdAt: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN') : ''
+                };
 
-                // Timestamps
-                'Created At': p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN') : '',
-                'Updated At': p.updatedAt ? new Date(p.updatedAt).toLocaleDateString('en-IN') : '',
-            };
-        });
+                // Add size stocks
+                ALL_EU_SIZES.forEach((sz) => {
+                    const entry = inventory.find((inv) => inv.size === sz);
+                    if (entry) rowData[`size_${sz}`] = entry.stock;
+                });
+                const oneSizeEntry = inventory.find((inv) => inv.size === 'One Size');
+                if (oneSizeEntry) rowData[`size_One Size`] = oneSizeEntry.stock;
 
-        const worksheet = XLSX.utils.json_to_sheet(rows);
+                const row = sheet.addRow(rowData);
+                row.height = 90; // Make row tall enough for image
+                row.alignment = { vertical: 'middle', wrapText: true };
 
-        // Style header row bold
-        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-        for (let col = range.s.c; col <= range.e.c; col++) {
-            const cell = XLSX.utils.encode_cell({ r: 0, c: col });
-            if (worksheet[cell]) {
-                worksheet[cell].s = { font: { bold: true } };
+                // Fetch and embed image
+                if (images.length > 0 && images[0]) {
+                    try {
+                        const response = await fetch(images[0]);
+                        const blob = await response.blob();
+                        const arrayBuffer = await blob.arrayBuffer();
+                        
+                        const imageId = workbook.addImage({
+                            buffer: arrayBuffer,
+                            extension: images[0].toLowerCase().endsWith('.png') ? 'png' : 'jpeg',
+                        });
+
+                        // Add image to cell A{rowIndex}
+                        sheet.addImage(imageId, {
+                            tl: { col: 0.1, row: rowIndex - 1 + 0.1 }, // Top-left with slight padding
+                            br: { col: 0.9, row: rowIndex - 0.1 },     // Bottom-right with slight padding
+                            editAs: 'oneCell'
+                        });
+                    } catch (imgError) {
+                        console.error(`Failed to load image for ${p.name}:`, imgError);
+                        sheet.getCell(`A${rowIndex}`).value = '(Image Failed)';
+                    }
+                } else {
+                    sheet.getCell(`A${rowIndex}`).value = '(No Image)';
+                }
             }
+
+            // Generate and save
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/octet-stream' });
+            const timestamp = new Date().toISOString().slice(0, 10);
+            saveAs(blob, `happyhopz-inventory-visual-${timestamp}.xlsx`);
+            
+            toast.dismiss(toastId);
+            toast.success(`Exported ${products.length} products with images! 🖼️📊`);
+            
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.dismiss(toastId);
+            toast.error('Failed to generate Excel file');
         }
-
-        // Auto column widths
-        const colWidths = rows.reduce((acc: any[], row: any) => {
-            Object.values(row).forEach((val, i) => {
-                const len = String(val ?? '').length;
-                acc[i] = Math.min(Math.max(acc[i] || 10, len + 2), 60);
-            });
-            return acc;
-        }, []);
-        worksheet['!cols'] = colWidths.map((w: number) => ({ wch: w }));
-
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory');
-
-        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-        const timestamp = new Date().toISOString().slice(0, 10);
-        saveAs(blob, `happyhopz-inventory-${timestamp}.xlsx`);
-        toast.success(`Exported ${products.length} products to Excel! 📊`);
     };
     // ─────────────────────────────────────────────────────────────────────────
 
