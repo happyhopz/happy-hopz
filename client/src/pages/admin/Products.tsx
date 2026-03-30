@@ -738,7 +738,7 @@ const AdminProducts = () => {
         onError: () => toast.error('Failed to update inventory')
     });
 
-    const [sortBy, setSortBy] = useState('newest');
+    const [sortBy, setSortBy] = useState('manual');
 
     const { data: products, isLoading } = useQuery({
         queryKey: ['admin-products'],
@@ -1202,6 +1202,7 @@ const AdminProducts = () => {
                             <SelectValue placeholder="Sort By" />
                         </SelectTrigger>
                         <SelectContent>
+                            <SelectItem value="manual">Custom Order</SelectItem>
                             <SelectItem value="newest">Newest First</SelectItem>
                             <SelectItem value="stock-low">Stock: Low to High</SelectItem>
                             <SelectItem value="stock-high">Stock: High to Low</SelectItem>

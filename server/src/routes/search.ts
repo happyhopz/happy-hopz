@@ -29,7 +29,6 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
                 name: true,
                 price: true,
                 discountPrice: true,
-                images: true,
                 category: true
             }
         });
@@ -71,7 +70,10 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
         });
 
         res.json({
-            products,
+            products: products.map(p => ({
+                ...p,
+                images: [`/api/products/${p.id}/image/0`]
+            })),
             orders,
             suggestions: suggestions.map(s => s.category)
         });

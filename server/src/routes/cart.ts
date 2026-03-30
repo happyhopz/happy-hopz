@@ -17,17 +17,30 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
         const itemsWithProducts = await Promise.all(
             cartItems.map(async (item) => {
                 const product = await prisma.product.findUnique({
-                    where: { id: item.productId }
+                    where: { id: item.productId },
+                    select: {
+                        id: true,
+                        name: true,
+                        price: true,
+                        discountPrice: true,
+                        category: true,
+                        sizes: true,
+                        colors: true,
+                        inventory: true,
+                        status: true,
+                        stock: true,
+                        tags: true
+                    }
                 });
 
                 return {
                     ...item,
                     product: product ? {
                         ...product,
-                        sizes: JSON.parse(product.sizes),
+                        sizes: product.sizes ? JSON.parse(product.sizes) : [],
                         inventory: (product as any).inventory ? JSON.parse((product as any).inventory) : [],
-                        colors: JSON.parse(product.colors),
-                        images: JSON.parse(product.images)
+                        colors: product.colors ? JSON.parse(product.colors) : [],
+                        images: [`/api/products/${product.id}/image/0`]
                     } : null
                 };
             })

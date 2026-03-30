@@ -42,6 +42,26 @@ router.get('/', async (req: Request, res: Response) => {
 
         const products = await prisma.product.findMany({
             where,
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                price: true,
+                discountPrice: true,
+                category: true,
+                ageGroup: true,
+                sizes: true,
+                colors: true,
+                stock: true,
+                inventory: true,
+                status: true,
+                tags: true,
+                createdAt: true,
+                updatedAt: true,
+                order: true,
+                avgRating: true,
+                ratingCount: true
+            },
             orderBy: [
                 { order: 'asc' },
                 { createdAt: 'desc' }
@@ -51,14 +71,20 @@ router.get('/', async (req: Request, res: Response) => {
         });
 
         // Parse JSON strings
-        const formattedProducts = products.map(p => ({
-            ...p,
-            sizes: JSON.parse(p.sizes),
-            inventory: (p as any).inventory ? JSON.parse((p as any).inventory) : [],
-            colors: JSON.parse(p.colors),
-            images: JSON.parse(p.images),
-            tags: p.tags ? JSON.parse(p.tags) : []
-        }));
+        const formattedProducts = products.map(p => {
+            // Since we exclude images from the DB payload to save 250MB+ transfer bandwidth per request,
+            // we hardcode the first image API url for the shop page thumbnail renderer to use.
+            const optimizedImages = [`/api/products/${p.id}/image/0`];
+
+            return {
+                ...p,
+                sizes: p.sizes ? JSON.parse(p.sizes) : [],
+                inventory: (p as any).inventory ? JSON.parse((p as any).inventory) : [],
+                colors: p.colors ? JSON.parse(p.colors) : [],
+                images: optimizedImages,
+                tags: p.tags ? JSON.parse(p.tags) : []
+            };
+        });
 
         res.json(formattedProducts);
     } catch (error) {
@@ -66,11 +92,32 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
+// Simple in-memory cache for images to prevent DB connection exhaustion
+const imageCache = new Map<string, { buffer: Buffer, mimeType: string, cachedAt: number }>();
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
 // Serve product image as HTTP resource (for SEO / Google crawling)
 router.get('/:id/image/:index', async (req: Request, res: Response) => {
     try {
         const { id, index } = req.params;
         const imageIndex = parseInt(index as string, 10);
+        const cacheKey = `${id}-${imageIndex}`;
+
+        if (imageCache.has(cacheKey)) {
+            const cached = imageCache.get(cacheKey)!;
+            // Optionally clear old items
+            if (Date.now() - cached.cachedAt > CACHE_TTL) {
+                imageCache.delete(cacheKey);
+            } else {
+                res.set({
+                    'Content-Type': `image/${cached.mimeType}`,
+                    'Content-Length': cached.buffer.length.toString(),
+                    'Cache-Control': 'public, max-age=2592000', // 30 days
+                    'Vary': 'Accept'
+                });
+                return res.send(cached.buffer);
+            }
+        }
 
         const product = await prisma.product.findUnique({
             where: { id: id as string },
@@ -99,6 +146,14 @@ router.get('/:id/image/:index', async (req: Request, res: Response) => {
             const mimeType = matches[1] === 'jpg' ? 'jpeg' : matches[1];
             const base64Data = matches[2];
             const buffer = Buffer.from(base64Data, 'base64');
+
+            // Save to cache
+            if (imageCache.size > 500) {
+                // Prevent memory leak by clearing cache if it gets too large
+                const firstKey = imageCache.keys().next().value;
+                if (firstKey) imageCache.delete(firstKey);
+            }
+            imageCache.set(cacheKey, { buffer, mimeType, cachedAt: Date.now() });
 
             res.set({
                 'Content-Type': `image/${mimeType}`,
@@ -132,12 +187,20 @@ router.get('/:id', async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Product not found' });
         }
 
+        const parsedImages = product.images ? JSON.parse(product.images) : [];
+        const optimizedImages = parsedImages.map((img: string, index: number) => {
+            if (img.startsWith('data:image')) {
+                return `/api/products/${product.id}/image/${index}`;
+            }
+            return img;
+        });
+
         res.json({
             ...product,
-            sizes: JSON.parse(product.sizes),
+            sizes: product.sizes ? JSON.parse(product.sizes) : [],
             inventory: (product as any).inventory ? JSON.parse((product as any).inventory) : [],
-            colors: JSON.parse(product.colors),
-            images: JSON.parse(product.images),
+            colors: product.colors ? JSON.parse(product.colors) : [],
+            images: optimizedImages,
             tags: product.tags ? JSON.parse(product.tags) : []
         });
     } catch (error) {
