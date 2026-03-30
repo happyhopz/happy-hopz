@@ -515,6 +515,40 @@ router.post('/products', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// Bulk Reorder Products
+router.put('/products/reorder', async (req: AuthRequest, res: Response) => {
+    try {
+        const { orders } = z.object({
+            orders: z.array(z.object({
+                id: z.string(),
+                order: z.number()
+            }))
+        }).parse(req.body);
+
+        // Update each product's order in a transaction
+        await prisma.$transaction(
+            orders.map(({ id, order }) =>
+                prisma.product.update({
+                    where: { id },
+                    data: { order }
+                })
+            )
+        );
+
+        await logActivity({
+            action: 'PRODUCTS_REORDERED',
+            entity: 'PRODUCT',
+            details: { count: orders.length },
+            adminId: req.user!.id
+        });
+
+        res.json({ message: 'Products reordered successfully' });
+    } catch (error) {
+        console.error('Reorder error:', error);
+        res.status(500).json({ error: 'Reordering failed' });
+    }
+});
+
 // Update product
 router.put('/products/:id', async (req: AuthRequest, res: Response) => {
     try {
@@ -704,40 +738,6 @@ router.post('/products/bulk-delete', async (req: AuthRequest, res: Response) => 
     } catch (error) {
         console.error('Bulk delete error:', error);
         res.status(500).json({ error: 'Bulk delete failed' });
-    }
-});
-
-// Bulk Reorder Products
-router.put('/products/reorder', async (req: AuthRequest, res: Response) => {
-    try {
-        const { orders } = z.object({
-            orders: z.array(z.object({
-                id: z.string(),
-                order: z.number()
-            }))
-        }).parse(req.body);
-
-        // Update each product's order in a transaction
-        await prisma.$transaction(
-            orders.map(({ id, order }) =>
-                prisma.product.update({
-                    where: { id },
-                    data: { order }
-                })
-            )
-        );
-
-        await logActivity({
-            action: 'PRODUCTS_REORDERED',
-            entity: 'PRODUCT',
-            details: { count: orders.length },
-            adminId: req.user!.id
-        });
-
-        res.json({ message: 'Products reordered successfully' });
-    } catch (error) {
-        console.error('Reorder error:', error);
-        res.status(500).json({ error: 'Reordering failed' });
     }
 });
 
