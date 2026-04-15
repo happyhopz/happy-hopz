@@ -416,11 +416,42 @@ router.post('/products/bulk', async (req: AuthRequest, res: Response) => {
 });
 
 // Get all products (admin view) - Filters out DELETED products
+// IMPORTANT: This must be registered BEFORE GET /products/:id to prevent
+// the list route being captured by the dynamic :id param.
 router.get('/products', async (req: AuthRequest, res: Response) => {
     try {
         const products = await prisma.product.findMany({
             where: {
                 NOT: { status: 'DELETED' }
+            },
+            select: {
+                id: true,
+                sku: true,
+                name: true,
+                description: true,
+                price: true,
+                discountPrice: true,
+                costPrice: true,
+                boxPrice: true,
+                tagPrice: true,
+                shippingCost: true,
+                otherCosts: true,
+                category: true,
+                ageGroup: true,
+                sizes: true,
+                colors: true,
+                stock: true,
+                inventory: true,
+                status: true,
+                tags: true,
+                seoTitle: true,
+                seoDescription: true,
+                createdAt: true,
+                updatedAt: true,
+                order: true,
+                avgRating: true,
+                ratingCount: true
+                // Note: images are NOT selected to greatly save memory/bandwidth
             },
             orderBy: [
                 { order: 'asc' },
@@ -433,13 +464,36 @@ router.get('/products', async (req: AuthRequest, res: Response) => {
             sizes: JSON.parse(p.sizes || '[]'),
             inventory: (p as any).inventory ? JSON.parse((p as any).inventory) : [],
             colors: JSON.parse(p.colors || '[]'),
-            images: JSON.parse(p.images || '[]'),
+            // Inject optimized images
+            images: [`/api/products/${p.id}/image/0`],
             tags: JSON.parse(p.tags || '[]')
         }));
 
         res.json(formattedProducts);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch products' });
+    }
+});
+
+// Get single product (with full images for editing)
+router.get('/products/:id', async (req: AuthRequest, res: Response) => {
+    try {
+        const product = await prisma.product.findUnique({
+            where: { id: req.params.id as string }
+        });
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        res.json({
+            ...product,
+            sizes: JSON.parse(product.sizes || '[]'),
+            inventory: (product as any).inventory ? JSON.parse((product as any).inventory) : [],
+            colors: JSON.parse(product.colors || '[]'),
+            images: JSON.parse(product.images || '[]'),
+            tags: JSON.parse(product.tags || '[]')
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch product' });
     }
 });
 

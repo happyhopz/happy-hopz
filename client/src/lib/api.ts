@@ -105,6 +105,7 @@ export const adminAPI = {
     getOrder: (id: string) => api.get(`/orders/${id}`),
     updateOrderStatus: (id: string, data: any) => api.put(`/orders/${id}/status`, data),
     getProducts: () => api.get('/admin/products'),
+    getProduct: (id: string) => api.get(`/admin/products/${id}`),
     createProduct: (data: any) => api.post('/admin/products', data),
     updateProduct: (id: string, data: any) => api.put(`/admin/products/${id}`, data),
     deleteProduct: (id: string) => api.delete(`/admin/products/${id}`),

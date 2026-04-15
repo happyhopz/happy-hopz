@@ -715,6 +715,22 @@ const AdminProducts = () => {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isReorderMode, setIsReorderMode] = useState(false);
     const [localProducts, setLocalProducts] = useState<any[]>([]);
+    const [isFetchingProduct, setIsFetchingProduct] = useState(false);
+
+    const handleEditClick = async (product: any) => {
+        setIsFetchingProduct(true);
+        // Do not open dialog here to prevent flashing empty form
+        try {
+            const res = await adminAPI.getProduct(product.id);
+            setEditingProduct(res.data);
+            setIsDialogOpen(true);
+        } catch (error) {
+            console.error('Failed to load full product', error);
+            toast.error('Failed to load product details');
+        } finally {
+            setIsFetchingProduct(false);
+        }
+    };
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -1332,8 +1348,7 @@ const AdminProducts = () => {
                                             }
                                         }}
                                         onEdit={(p: any) => {
-                                            setEditingProduct(p);
-                                            setIsDialogOpen(true);
+                                            handleEditClick(p);
                                         }}
                                         onDelete={(id: string) => {
                                             if (confirm('Are you sure you want to delete this product?')) {
@@ -1418,13 +1433,15 @@ const AdminProducts = () => {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => {
-                                                    setEditingProduct(product);
-                                                    setIsDialogOpen(true);
-                                                }}
+                                                onClick={() => handleEditClick(product)}
+                                                disabled={isFetchingProduct}
                                             >
-                                                <Edit className="w-4 h-4 mr-2" />
-                                                Edit
+                                                {isFetchingProduct && editingProduct?.id === product.id ? (
+                                                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                                                ) : (
+                                                    <Edit className="w-4 h-4 mr-2" />
+                                                )}
+                                                {isFetchingProduct && editingProduct?.id === product.id ? 'Loading...' : 'Edit'}
                                             </Button>
                                             <Button
                                                 variant="destructive"
