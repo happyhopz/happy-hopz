@@ -34,8 +34,10 @@ app.set('trust proxy', 1);
 
 // Request logging & Auto-fix for common route errors
 app.use((req, res, next) => {
-    // 1. Log the incoming request
-    console.log(`📡 [${req.method}] ${req.url} (Origin: ${req.headers.origin})`);
+    // 1. Log incoming requests — skip in production to avoid sync I/O overhead on every request
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`📡 [${req.method}] ${req.url} (Origin: ${req.headers.origin})`);
+    }
 
     // 2. Fix double slashes or doubled /api prefix
     if (req.url.includes('//')) req.url = req.url.replace(/\/\//g, '/');

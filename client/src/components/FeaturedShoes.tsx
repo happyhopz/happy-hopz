@@ -59,7 +59,8 @@ const FeaturedShoes = () => {
       const response = await productsAPI.getAll({ limit: 8 });
       return response.data;
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes — products change occasionally
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30,    // keep in cache for 30 min across navigations
   });
 
   const handleAddToCart = (product: any) => {
@@ -127,6 +128,7 @@ const FeaturedShoes = () => {
               product={product}
               tag={tags[index % tags.length]}
               delay={index * 100}
+              index={index}
               isAdmin={isAdmin}
               onAddToCart={() => handleAddToCart(product)}
               onBuyNow={() => handleBuyNow(product)}
@@ -176,6 +178,7 @@ const ShoeCard = ({
   product,
   tag,
   delay,
+  index,
   isAdmin,
   onAddToCart,
   onBuyNow
@@ -183,6 +186,7 @@ const ShoeCard = ({
   product: Product;
   tag: TagInfo;
   delay: number;
+  index: number;
   isAdmin: boolean;
   onAddToCart: () => void;
   onBuyNow: () => void;
@@ -211,7 +215,8 @@ const ShoeCard = ({
           <img
             src={product.images[0]}
             alt={product.name}
-            loading="lazy"
+            loading={index < 4 ? 'eager' : 'lazy'}
+            fetchPriority={index < 4 ? 'high' : 'auto'}
             className={`relative w-full h-full transition-transform duration-300 group-hover:scale-110 ${(product as any).category === 'Hampers' ? 'object-contain' : 'object-cover'}`}
           />
         </div>

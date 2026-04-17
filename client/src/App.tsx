@@ -12,6 +12,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import MarketingPopup from "./components/MarketingPopup";
 import ScrollToTop from "./components/ScrollToTop";
 import usePageTracking from "./hooks/usePageTracking";
+import { productsAPI, contentAPI } from "@/lib/api";
 
 // Lazy-loaded pages — only downloaded when the user navigates to that route
 const Index = lazy(() => import("./pages/Index"));
@@ -59,12 +60,36 @@ const VisitorInsights = lazy(() => import("./pages/admin/VisitorInsights"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,   // 5 minutes — don't refetch fresh data on every focus
+      staleTime: 1000 * 60 * 10,   // 10 minutes — don't refetch fresh data on every focus
+      gcTime: 1000 * 60 * 30,      // 30 minutes — keep data in cache across page navigations
       refetchOnWindowFocus: false,  // avoid surprise refetches when user switches tabs
       refetchOnReconnect: true,
       retry: 1,
     },
   },
+});
+
+// ── Homepage Prefetch ──────────────────────────────────────────────────────────────────
+// Fire all 3 homepage queries immediately when the JS bundle loads —
+// BEFORE any route renders. By the time the 1.5s intro finishes, data is ready.
+const PREFETCH_STALE = 1000 * 60 * 10; // 10 min — avoid re-fetching if already fresh
+
+queryClient.prefetchQuery({
+  queryKey: ['featured-products'],
+  queryFn: () => productsAPI.getAll({ limit: 8 }).then(r => r.data),
+  staleTime: PREFETCH_STALE,
+});
+
+queryClient.prefetchQuery({
+  queryKey: ['homepage-layout'],
+  queryFn: () => import('@/lib/api').then(m => m.contentAPI.get('homepage.layout')).then(r => r.data || []),
+  staleTime: PREFETCH_STALE,
+});
+
+queryClient.prefetchQuery({
+  queryKey: ['featured-content'],
+  queryFn: () => import('@/lib/api').then(m => m.contentAPI.get('homepage.featured')).then(r => r.data),
+  staleTime: PREFETCH_STALE,
 });
 
 // Minimal full-page spinner shown while a lazy chunk loads

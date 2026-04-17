@@ -6,6 +6,29 @@ import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+// ─── Product List Cache ───────────────────────────────────────────────────────
+// Prevents redundant DB queries within the same serverless instance lifecycle.
+// TTL = 2 minutes — matches the client-side staleTime.
+const productListCache = new Map<string, { data: any[]; cachedAt: number }>();
+const PRODUCT_CACHE_TTL = 1000 * 60 * 2; // 2 minutes
+
+function getProductCacheKey(query: any): string {
+    return JSON.stringify({
+        category: query.category || '',
+        ageGroup: query.ageGroup || '',
+        search: query.search || '',
+        minPrice: query.minPrice || '',
+        maxPrice: query.maxPrice || '',
+        status: query.status || '',
+        limit: query.limit || '50',
+        page: query.page || '1',
+    });
+}
+
+export function invalidateProductListCache() {
+    productListCache.clear();
+}
+
 // Get all products with filters
 router.get('/', async (req: Request, res: Response) => {
     try {
@@ -39,6 +62,17 @@ router.get('/', async (req: Request, res: Response) => {
         const limit = parseInt(req.query.limit as string) || 50;
         const page = parseInt(req.query.page as string) || 1;
         const skip = (page - 1) * limit;
+
+        // ── Check server-side cache first ──────────────────────────────────
+        const cacheKey = getProductCacheKey(req.query);
+        const cached = productListCache.get(cacheKey);
+        if (cached && Date.now() - cached.cachedAt < PRODUCT_CACHE_TTL) {
+            res.set({
+                'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300',
+                'X-Cache': 'HIT',
+            });
+            return res.json(cached.data);
+        }
 
         const products = await prisma.product.findMany({
             where,
@@ -86,6 +120,16 @@ router.get('/', async (req: Request, res: Response) => {
             };
         });
 
+        // ── Store in server-side cache ─────────────────────────────────────
+        if (productListCache.size > 50) productListCache.clear(); // Safety: prevent unbounded growth
+        productListCache.set(cacheKey, { data: formattedProducts, cachedAt: Date.now() });
+
+        // ── HTTP cache headers for Vercel CDN edge caching ─────────────────
+        // s-maxage=120: CDN caches for 2 min. stale-while-revalidate=300: serve stale for 5 min while refreshing.
+        res.set({
+            'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300',
+            'X-Cache': 'MISS',
+        });
         res.json(formattedProducts);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch products' });
@@ -257,6 +301,9 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
             }
         });
 
+        // Bust the product list cache so the next request reflects this new product
+        invalidateProductListCache();
+
         res.status(201).json({
             ...product,
             sizes: JSON.parse(product.sizes),
@@ -303,6 +350,12 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
                 adminId: req.user!.id
             }
         });
+
+        // Bust the product list cache + image cache for this product
+        invalidateProductListCache();
+        for (const key of imageCache.keys()) {
+            if (key.startsWith(`${req.params.id}-`)) imageCache.delete(key);
+        }
 
         res.json({
             ...product,
@@ -352,6 +405,9 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: 
                 adminId: req.user!.id
             }
         });
+
+        // Bust the product list cache so the deleted product is no longer served from cache
+        invalidateProductListCache();
 
         res.json({ message: 'Product deleted successfully' });
     } catch (error) {
