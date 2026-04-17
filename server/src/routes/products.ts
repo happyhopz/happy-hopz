@@ -68,7 +68,7 @@ router.get('/', async (req: Request, res: Response) => {
         const cached = productListCache.get(cacheKey);
         if (cached && Date.now() - cached.cachedAt < PRODUCT_CACHE_TTL) {
             res.set({
-                'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300',
+                'Cache-Control': 'public, max-age=120, s-maxage=120, stale-while-revalidate=300',
                 'X-Cache': 'HIT',
             });
             return res.json(cached.data);
@@ -124,10 +124,12 @@ router.get('/', async (req: Request, res: Response) => {
         if (productListCache.size > 50) productListCache.clear(); // Safety: prevent unbounded growth
         productListCache.set(cacheKey, { data: formattedProducts, cachedAt: Date.now() });
 
-        // ── HTTP cache headers for Vercel CDN edge caching ─────────────────
-        // s-maxage=120: CDN caches for 2 min. stale-while-revalidate=300: serve stale for 5 min while refreshing.
+        // ── HTTP cache headers for browser + Vercel CDN edge caching ────────
+        // max-age=120    : browser caches for 2 min (returning users = zero network request)
+        // s-maxage=120   : Vercel CDN caches for 2 min (new visitors = zero DB hit)
+        // stale-while-revalidate=300: serve stale while refreshing silently for 5 min
         res.set({
-            'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300',
+            'Cache-Control': 'public, max-age=120, s-maxage=120, stale-while-revalidate=300',
             'X-Cache': 'MISS',
         });
         res.json(formattedProducts);
