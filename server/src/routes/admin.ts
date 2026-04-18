@@ -1192,6 +1192,161 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// ── Product Engagement Stats ──────────────────────────────────────────────────
+// Extracts which products are getting the most views, add-to-carts, and time spent
+router.get('/product-engagement', async (req: AuthRequest, res: Response) => {
+    try {
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // last 30 days
+
+        // Fetch page views for product detail pages only
+        const productPageViews = await (prisma as any).pageView.findMany({
+            where: {
+                createdAt: { gte: since },
+                path: { startsWith: '/products/' }
+            },
+            select: { path: true, duration: true, sessionId: true }
+        });
+
+        // Fetch analytics events (ADD_TO_CART, SHARE, etc.)
+        const analyticsEvents = await (prisma as any).analyticsEvent.findMany({
+            where: {
+                createdAt: { gte: since },
+                type: { in: ['ADD_TO_CART', 'BUY_NOW', 'SHARE', 'QUICK_BUY'] }
+            },
+            select: { type: true, value: true, label: true, path: true }
+        });
+
+        // Aggregate page views by product ID
+        const viewMap: Record<string, { views: number; uniqueSessions: Set<string>; totalDuration: number }> = {};
+
+        for (const pv of productPageViews) {
+            // Extract product ID from path like /products/:id
+            const match = pv.path.match(/^\/products\/([^/?#]+)/);
+            if (!match) continue;
+            const productId = match[1];
+
+            if (!viewMap[productId]) {
+                viewMap[productId] = { views: 0, uniqueSessions: new Set(), totalDuration: 0 };
+            }
+            viewMap[productId].views++;
+            viewMap[productId].uniqueSessions.add(pv.sessionId);
+            viewMap[productId].totalDuration += pv.duration || 0;
+        }
+
+        // Aggregate events by product ID (value field = product ID, label = product name)
+        const cartMap: Record<string, number> = {};
+        const buyMap: Record<string, number> = {};
+        const shareMap: Record<string, number> = {};
+
+        for (const ev of analyticsEvents) {
+            // value can be product ID, path can have /products/:id
+            let productId: string | null = null;
+            if (ev.value) productId = ev.value;
+            else if (ev.path) {
+                const m = ev.path.match(/^\/products\/([^/?#]+)/);
+                if (m) productId = m[1];
+            }
+            if (!productId) continue;
+
+            if (ev.type === 'ADD_TO_CART' || ev.type === 'QUICK_BUY') {
+                cartMap[productId] = (cartMap[productId] || 0) + 1;
+            } else if (ev.type === 'BUY_NOW') {
+                buyMap[productId] = (buyMap[productId] || 0) + 1;
+            } else if (ev.type === 'SHARE') {
+                shareMap[productId] = (shareMap[productId] || 0) + 1;
+            }
+        }
+
+        // Also count actual order items (most reliable purchase signal)
+        const orderItems = await prisma.orderItem.groupBy({
+            by: ['productId'],
+            where: { order: { createdAt: { gte: since } } },
+            _sum: { quantity: true },
+            _count: { id: true }
+        });
+        const orderMap: Record<string, { orders: number; units: number }> = {};
+        for (const item of orderItems) {
+            orderMap[item.productId] = {
+                orders: item._count.id,
+                units: item._sum.quantity || 0
+            };
+        }
+
+        // Collect all product IDs that had any activity
+        const allProductIds = new Set([
+            ...Object.keys(viewMap),
+            ...Object.keys(cartMap),
+            ...Object.keys(orderMap)
+        ]);
+
+        if (allProductIds.size === 0) {
+            return res.json({ products: [] });
+        }
+
+        // Fetch product details
+        const products = await prisma.product.findMany({
+            where: { id: { in: [...allProductIds] } },
+            select: {
+                id: true, name: true, price: true, discountPrice: true,
+                category: true, status: true, images: true, avgRating: true, ratingCount: true
+            }
+        });
+
+        // Build enriched result — compute an engagement score
+        const enriched = products.map(p => {
+            const vm = viewMap[p.id] || { views: 0, uniqueSessions: new Set(), totalDuration: 0 };
+            const cartAdds = (cartMap[p.id] || 0) + (buyMap[p.id] || 0);
+            const orders = orderMap[p.id]?.orders || 0;
+            const units = orderMap[p.id]?.units || 0;
+            const shares = shareMap[p.id] || 0;
+            const avgDuration = vm.uniqueSessions.size > 0
+                ? Math.round(vm.totalDuration / vm.uniqueSessions.size)
+                : 0;
+
+            // Engagement score: weighted formula
+            // views×1 + uniqueVisits×2 + cartAdds×5 + orders×10 + shares×3 + durationBonus
+            const durationBonus = Math.min(avgDuration / 60, 5); // cap at 5 pts for 5+ min avg
+            const score = Math.round(
+                vm.views * 1 +
+                vm.uniqueSessions.size * 2 +
+                cartAdds * 5 +
+                orders * 10 +
+                shares * 3 +
+                durationBonus
+            );
+
+            return {
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                discountPrice: p.discountPrice,
+                category: p.category,
+                status: p.status,
+                imageUrl: `/api/products/${p.id}/image/0`,
+                avgRating: p.avgRating,
+                ratingCount: p.ratingCount,
+                // Metrics
+                views: vm.views,
+                uniqueVisitors: vm.uniqueSessions.size,
+                avgDuration,
+                cartAdds,
+                orders,
+                units,
+                shares,
+                score
+            };
+        });
+
+        // Sort by engagement score descending
+        enriched.sort((a, b) => b.score - a.score);
+
+        res.json({ products: enriched.slice(0, 20) }); // top 20
+    } catch (error: any) {
+        console.error('❌ [Product Engagement] Error:', error.message);
+        res.status(500).json({ error: 'Failed to load product engagement' });
+    }
+});
+
 // Export visitor data as Excel (with user + checkout data merged)
 router.get('/visitors/export', async (req: AuthRequest, res: Response) => {
     try {

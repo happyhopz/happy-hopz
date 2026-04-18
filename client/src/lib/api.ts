@@ -158,6 +158,7 @@ export const adminAPI = {
     getVisitorStats: () => api.get('/admin/visitor-stats'),
     getVisitors: (params?: any) => api.get('/admin/visitors', { params }),
     exportVisitors: (params?: any) => api.get('/admin/visitors/export', { params, responseType: 'blob' }),
+    getProductEngagement: () => api.get('/admin/product-engagement'),
 };
 
 export const analyticsAPI = {

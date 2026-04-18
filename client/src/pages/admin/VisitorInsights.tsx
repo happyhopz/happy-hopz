@@ -10,7 +10,7 @@ import {
     Eye, Monitor, Smartphone, Tablet, Globe, ArrowUpRight,
     ChevronLeft, ChevronRight, Filter, MapPin, Clock, Download, Loader2,
     Mail, Users, TrendingUp, MousePointer2, UserCheck, Fingerprint,
-    Phone, Activity, BarChart2, PieChartIcon, Layers
+    Phone, Activity, BarChart2, PieChartIcon, Layers, Star, ShoppingCart, Package, Trophy
 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import {
@@ -149,6 +149,16 @@ const VisitorInsights = () => {
         },
         enabled: isAdmin && !loading,
         refetchInterval: 60000,
+    });
+
+    const { data: productEngagement } = useQuery({
+        queryKey: ['admin-product-engagement'],
+        queryFn: async () => {
+            const res = await adminAPI.getProductEngagement();
+            return res.data;
+        },
+        enabled: isAdmin && !loading,
+        staleTime: 1000 * 60 * 5,
     });
 
     if (loading) {
@@ -639,6 +649,108 @@ const VisitorInsights = () => {
                             </CardContent>
                         </Card>
                     </div>
+
+                    {/* ── Top Products by Engagement ────────────────────────── */}
+                    <Card className="mb-6 border shadow-sm">
+                        <CardHeader className="pb-3 border-b">
+                            <div className="flex items-center justify-between">
+                                <SectionHeader icon={Trophy} title="Top Shoes by Engagement (Last 30 Days)" color="text-amber-500" />
+                                <span className="text-xs text-muted-foreground bg-amber-50 border border-amber-100 px-2 py-1 rounded-full">
+                                    Score = Views + Unique Visitors + Cart Adds + Orders + Shares
+                                </span>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {(productEngagement?.products || []).length > 0 ? (
+                                <div className="divide-y divide-gray-50">
+                                    {(productEngagement.products as any[]).map((product: any, i: number) => {
+                                        const maxScore = productEngagement.products[0]?.score || 1;
+                                        const scorePct = Math.round((product.score / maxScore) * 100);
+                                        const formatDur = (s: number) => s < 60 ? `${s}s` : `${Math.floor(s/60)}m ${s%60}s`;
+                                        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+
+                                        return (
+                                            <div key={product.id} className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50/60 transition-colors">
+                                                {/* Rank */}
+                                                <div className="w-8 text-center text-lg flex-shrink-0">{medal}</div>
+
+                                                {/* Product Image */}
+                                                <img
+                                                    src={product.imageUrl}
+                                                    alt={product.name}
+                                                    className="w-12 h-12 rounded-xl object-cover border border-gray-100 flex-shrink-0"
+                                                    onError={(e: any) => { e.target.style.display = 'none'; }}
+                                                />
+
+                                                {/* Name + Score Bar */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="font-semibold text-sm truncate">{product.name}</span>
+                                                        <Badge variant="outline" className="text-[9px] shrink-0 bg-gray-50">{product.category}</Badge>
+                                                        {product.status === 'ACTIVE' ? (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" title="Active" />
+                                                        ) : (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" title={product.status} />
+                                                        )}
+                                                    </div>
+                                                    {/* Score bar */}
+                                                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden w-full">
+                                                        <div
+                                                            className="h-full rounded-full transition-all duration-700"
+                                                            style={{
+                                                                width: `${scorePct}%`,
+                                                                background: i === 0 ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : i < 3 ? 'linear-gradient(90deg,#6366f1,#8b5cf6)' : '#c7d2fe'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Metrics grid */}
+                                                <div className="hidden md:grid grid-cols-5 gap-3 flex-shrink-0">
+                                                    <div className="text-center">
+                                                        <p className="text-xs font-bold text-indigo-600">{product.views}</p>
+                                                        <p className="text-[9px] text-muted-foreground uppercase">Views</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-xs font-bold text-violet-600">{product.uniqueVisitors}</p>
+                                                        <p className="text-[9px] text-muted-foreground uppercase">Unique</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-xs font-bold text-amber-600">{product.cartAdds}</p>
+                                                        <p className="text-[9px] text-muted-foreground uppercase">Cart</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-xs font-bold text-emerald-600">{product.orders}</p>
+                                                        <p className="text-[9px] text-muted-foreground uppercase">Orders</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-xs font-bold text-rose-600">{formatDur(product.avgDuration)}</p>
+                                                        <p className="text-[9px] text-muted-foreground uppercase">Avg Time</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Score badge */}
+                                                <div className="flex-shrink-0 text-right">
+                                                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100">
+                                                        <div>
+                                                            <p className="text-sm font-fredoka font-bold text-indigo-700 leading-none">{product.score}</p>
+                                                            <p className="text-[8px] text-indigo-400">score</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center text-muted-foreground">
+                                    <Trophy className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                    <p className="text-sm">No product engagement data yet.</p>
+                                    <p className="text-xs mt-1">Data builds up as visitors browse products.</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
 
                     {/* ── Filters ──────────────────────────────────────────────── */}
                     <Card className="mb-6 border shadow-sm">
