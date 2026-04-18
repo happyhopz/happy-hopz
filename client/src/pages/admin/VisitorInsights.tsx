@@ -8,13 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
     Eye, Monitor, Smartphone, Tablet, Globe, ArrowUpRight,
-    ChevronLeft, ChevronRight, Filter, MapPin, Clock, Download, Loader2, Mail, Users, TrendingUp, MousePointer2,
-    UserCheck, Fingerprint, Phone, Activity
+    ChevronLeft, ChevronRight, Filter, MapPin, Clock, Download, Loader2,
+    Mail, Users, TrendingUp, MousePointer2, UserCheck, Fingerprint,
+    Phone, Activity, BarChart2, PieChartIcon, Layers
 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
+    BarChart, Bar, XAxis, YAxis, CartesianGrid,
+    AreaChart, Area, RadialBarChart, RadialBar, LineChart, Line
 } from 'recharts';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -42,6 +44,56 @@ const maskIp = (ip: string | null) => {
     if (parts.length === 4) return `${parts[0]}.${parts[1]}.*.*`;
     return ip.slice(0, 10) + '…';
 };
+
+// Custom tooltip for charts
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white border border-gray-100 shadow-xl rounded-xl px-4 py-3 text-sm">
+                {label && <p className="font-semibold text-gray-700 mb-1">{label}</p>}
+                {payload.map((p: any, i: number) => (
+                    <p key={i} style={{ color: p.color || p.fill }} className="font-medium">
+                        {p.name}: <span className="text-gray-800">{p.value?.toLocaleString()}</span>
+                    </p>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
+
+// Section header component
+const SectionHeader = ({ icon: Icon, title, color = 'text-indigo-500' }: { icon: any; title: string; color?: string }) => (
+    <CardTitle className={`text-sm font-bold flex items-center gap-2 uppercase tracking-wide`}>
+        <Icon className={`w-4 h-4 ${color}`} />
+        {title}
+    </CardTitle>
+);
+
+// Horizontal bar row for top lists
+const HBarRow = ({ name, count, max, color }: { name: string; count: number; max: number; color: string }) => (
+    <div className="flex items-center gap-3 group">
+        <span className="text-xs text-muted-foreground w-28 truncate flex-shrink-0 font-medium">{name}</span>
+        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${max > 0 ? (count / max) * 100 : 0}%`, backgroundColor: color }}
+            />
+        </div>
+        <span className="text-xs font-bold text-gray-700 w-8 text-right">{count}</span>
+    </div>
+);
+
+const StatCard = ({ icon: Icon, label, value, color, subLabel }: any) => (
+    <Card className={`border shadow-sm hover:shadow-md transition-shadow ${color}`}>
+        <CardContent className="p-4 text-center">
+            <Icon className="w-5 h-5 mx-auto mb-1.5 opacity-70" />
+            <p className="text-2xl font-fredoka font-bold">{value}</p>
+            <p className="text-[10px] uppercase font-semibold leading-tight mt-0.5 opacity-75">{label}</p>
+            {subLabel && <p className="text-[9px] opacity-50 mt-0.5">{subLabel}</p>}
+        </CardContent>
+    </Card>
+);
 
 const VisitorInsights = () => {
     const { user, isAdmin, loading } = useAuth();
@@ -120,6 +172,7 @@ const VisitorInsights = () => {
         return `${mins}m ${secs}s`;
     };
 
+    // ── Derived chart data ──────────────────────────────────────────────────
     const visitorTypeData = [
         { name: 'New', value: agg.visitorTypes?.new || 0, color: '#6366f1' },
         { name: 'Returning', value: agg.visitorTypes?.returning || 0, color: '#ec4899' }
@@ -127,25 +180,64 @@ const VisitorInsights = () => {
 
     const funnelData = [
         { name: 'Visits', value: agg.funnel?.visits || 0, fill: '#6366f1' },
-        { name: 'Product', value: agg.funnel?.product_views || 0, fill: '#8b5cf6' },
+        { name: 'Products', value: agg.funnel?.product_views || 0, fill: '#8b5cf6' },
         { name: 'Cart', value: agg.funnel?.cart_views || 0, fill: '#d946ef' },
         { name: 'Checkout', value: agg.funnel?.checkout_starts || 0, fill: '#ec4899' },
         { name: 'Purchase', value: agg.funnel?.purchases || 0, fill: '#f43f5e' }
     ];
 
-    // Compute device summary for header cards
-    const totalDeviceViews = (agg.devices || []).reduce((s: number, d: any) => s + d.count, 0);
+    const deviceData = (agg.devices || []).map((d: any, i: number) => ({
+        ...d,
+        color: DEVICE_COLORS[d.name] || CHART_COLORS[i % CHART_COLORS.length]
+    }));
+
+    const totalDeviceViews = deviceData.reduce((s: number, d: any) => s + d.count, 0);
     const getDevicePercent = (name: string) => {
-        const found = (agg.devices || []).find((d: any) => d.name === name);
+        const found = deviceData.find((d: any) => d.name === name);
         return totalDeviceViews > 0 ? Math.round(((found?.count || 0) / totalDeviceViews) * 100) : 0;
     };
 
+    const browserData = (agg.browsers || []).slice(0, 6);
+    const maxBrowser = Math.max(...browserData.map((b: any) => b.count), 1);
+
+    const osData = (agg.operatingSystems || []).slice(0, 6);
+    const maxOs = Math.max(...osData.map((o: any) => o.count), 1);
+
+    const topPages = (agg.topPages || []).slice(0, 8);
+    const maxPage = Math.max(...topPages.map((p: any) => p.count), 1);
+
+    const topCountries = (agg.countries || []).slice(0, 8);
+    const maxCountry = Math.max(...topCountries.map((c: any) => c.count), 1);
+
+    const referrers = (agg.referrers || []).slice(0, 6);
+    const maxReferrer = Math.max(...referrers.map((r: any) => r.count), 1);
+
+    const utmSources = (agg.utmSources || []).slice(0, 6);
+
+    // Engagement score (0–100) based on avg duration
+    const avgDur = agg.avgDuration || 0;
+    const engagementScore = Math.min(100, Math.round((avgDur / 300) * 100)); // 5 min = 100
+
+    // Daily visitors — area chart data
+    const dailyData = (generalStats?.dailyVisitors || []).map((d: any) => ({
+        ...d,
+        date: (() => { try { return new Date(d.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); } catch { return d.date; } })()
+    }));
+
+    // Today stats
+    const todayViews = generalStats?.todayViews || 0;
+    const weekViews = generalStats?.weekViews || 0;
+    const monthViews = generalStats?.monthViews || 0;
+    const totalRealVisitors = generalStats?.totalRealVisitors || 0;
+    const newPct = agg.visitorTypes?.new
+        ? Math.round((agg.visitorTypes.new / ((agg.visitorTypes.new || 0) + (agg.visitorTypes.returning || 0))) * 100)
+        : 0;
+
     return (
         <>
+            {/* Page Header */}
             <div className="flex items-center justify-between mb-2">
-                <h1 className="text-4xl font-fredoka font-bold text-foreground">
-                    Visitor Insights
-                </h1>
+                <h1 className="text-4xl font-fredoka font-bold text-foreground">Visitor Insights</h1>
                 <Button
                     variant="outline"
                     size="sm"
@@ -158,7 +250,7 @@ const VisitorInsights = () => {
                 </Button>
             </div>
             <p className="text-muted-foreground mb-8 text-sm">
-                Detailed analytics about every visitor — device, location, browser, and more. Excel includes user contacts & addresses.
+                Detailed analytics — device, location, browser, behaviour, and traffic sources. Live data, refreshes every 30s.
             </p>
 
             {isLoading ? (
@@ -169,257 +261,387 @@ const VisitorInsights = () => {
                 <div className="text-center py-20 text-destructive">Failed to load visitor data.</div>
             ) : (
                 <>
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <Card className="bg-indigo-50/60 border-indigo-100">
-                            <CardContent className="p-4 text-center">
-                                <Eye className="w-5 h-5 text-indigo-500 mx-auto mb-1" />
-                                <p className="text-3xl font-fredoka font-bold text-indigo-800">{generalStats?.totalViews || pagination.totalCount}</p>
-                                <p className="text-[10px] text-indigo-500 uppercase font-semibold">Total Page Views</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-green-50/60 border-green-100">
-                            <CardContent className="p-4 text-center">
-                                <UserCheck className="w-5 h-5 text-green-500 mx-auto mb-1" />
-                                <p className="text-3xl font-fredoka font-bold text-green-800">{generalStats?.totalRealVisitors || 0}</p>
-                                <p className="text-[10px] text-green-600 uppercase font-semibold text-center leading-tight">
-                                    Real Unique Visitors<br/>
-                                    <span className="text-[8px] opacity-70">(by IP/Email)</span>
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-amber-50/60 border-amber-100">
-                            <CardContent className="p-4 text-center">
-                                <Smartphone className="w-5 h-5 text-amber-500 mx-auto mb-1" />
-                                <p className="text-3xl font-fredoka font-bold text-amber-800">{getDevicePercent('mobile')}%</p>
-                                <p className="text-[10px] text-amber-500 uppercase font-semibold">Mobile Users</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-indigo-50/40 border-indigo-100">
-                            <CardContent className="p-4 text-center">
-                                <Monitor className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
-                                <p className="text-3xl font-fredoka font-bold text-indigo-800">{getDevicePercent('desktop')}%</p>
-                                <p className="text-[10px] text-indigo-400 uppercase font-semibold">Desktop Users</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-emerald-50/60 border-emerald-100">
-                            <CardContent className="p-4 text-center">
-                                <Clock className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
-                                <p className="text-3xl font-fredoka font-bold text-emerald-800">
-                                    {formatDuration(agg.avgDuration || 0)}
-                                </p>
-                                <p className="text-[10px] text-emerald-500 uppercase font-semibold">Avg. Duration</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-blue-50/60 border-blue-100">
-                            <CardContent className="p-4 text-center">
-                                <Users className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-                                <p className="text-3xl font-fredoka font-bold text-blue-800">
-                                    {agg.visitorTypes?.new ? Math.round((agg.visitorTypes.new / (agg.visitorTypes.new + (agg.visitorTypes.returning || 0))) * 100) : 0}%
-                                </p>
-                                <p className="text-[10px] text-blue-500 uppercase font-semibold text-center leading-tight">
-                                    New Visitors<br/>
-                                    <span className="text-[8px] opacity-70">(by cookies)</span>
-                                </p>
-                            </CardContent>
-                        </Card>
+                    {/* ── KPI Summary Row ─────────────────────────────────────── */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+                        <StatCard icon={Eye} label="Total Views" value={(generalStats?.totalViews || pagination.totalCount).toLocaleString()} color="bg-indigo-50/60 border-indigo-100 text-indigo-700" />
+                        <StatCard icon={UserCheck} label="Real Visitors" value={totalRealVisitors.toLocaleString()} color="bg-emerald-50/60 border-emerald-100 text-emerald-700" subLabel="by IP / Email" />
+                        <StatCard icon={Activity} label="Today" value={todayViews.toLocaleString()} color="bg-blue-50/60 border-blue-100 text-blue-700" subLabel="page views" />
+                        <StatCard icon={TrendingUp} label="This Week" value={weekViews.toLocaleString()} color="bg-violet-50/60 border-violet-100 text-violet-700" subLabel="page views" />
+                        <StatCard icon={Clock} label="Avg. Duration" value={formatDuration(avgDur)} color="bg-amber-50/60 border-amber-100 text-amber-700" />
+                        <StatCard icon={Users} label="New Visitors" value={`${newPct}%`} color="bg-pink-50/60 border-pink-100 text-pink-700" subLabel="by cookies" />
                     </div>
 
-                    {/* Advanced Analytics Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Daily Visitors Chart */}
-                        <Card className="border-none shadow-sm lg:col-span-2">
+                    {/* ── Row 1: Daily Trend (Area) + Funnel ──────────────────── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        {/* Daily Trend — Area Chart */}
+                        <Card className="lg:col-span-2 border shadow-sm">
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                    <Activity className="w-4 h-4 text-blue-500" />
-                                    DAILY VISITOR TREND
-                                </CardTitle>
+                                <SectionHeader icon={Activity} title="Daily Visitor Trend (Last 7 Days)" color="text-indigo-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="h-[250px] w-full mt-4">
-                                    {Array.isArray(generalStats?.dailyVisitors) && generalStats.dailyVisitors.length > 0 ? (
+                                <div className="h-[240px]">
+                                    {dailyData.length > 0 ? (
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={generalStats.dailyVisitors} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                            <AreaChart data={dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="gradViews" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
+                                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                                    </linearGradient>
+                                                    <linearGradient id="gradReal" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
+                                                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                                    </linearGradient>
+                                                    <linearGradient id="gradSessions" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15} />
+                                                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                                <XAxis 
-                                                    dataKey="date" 
-                                                    axisLine={false} 
-                                                    tickLine={false} 
-                                                    tick={{ fontSize: 11, fontWeight: 600 }}
-                                                    tickFormatter={(str) => {
-                                                        try { return new Date(str).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); }
-                                                        catch { return str; }
-                                                    }}
-                                                />
+                                                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600 }} />
                                                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                                                <Tooltip
-                                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                                    cursor={{ fill: '#f8fafc' }}
-                                                    formatter={(value, name) => [`${value}`, name === 'realVisitors' ? 'Real Unique Vis.' : (name === 'visitors' ? 'Sessions' : 'Page Views')]}
-                                                    labelFormatter={(label) => {
-                                                        try { return new Date(label).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }); }
-                                                        catch { return label; }
-                                                    }}
-                                                />
-                                                <Bar dataKey="realVisitors" fill="#22c55e" radius={[4, 4, 0, 0]} name="realVisitors" />
-                                                <Bar dataKey="visitors" fill="#6366f1" radius={[4, 4, 0, 0]} name="visitors" />
-                                                <Bar dataKey="views" fill="#c7d2fe" radius={[4, 4, 0, 0]} name="views" />
-                                            </BarChart>
+                                                <Tooltip content={<CustomTooltip />} />
+                                                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+                                                <Area type="monotone" dataKey="views" name="Page Views" stroke="#6366f1" strokeWidth={2} fill="url(#gradViews)" dot={{ r: 3, fill: '#6366f1' }} />
+                                                <Area type="monotone" dataKey="visitors" name="Sessions" stroke="#f59e0b" strokeWidth={2} fill="url(#gradSessions)" dot={{ r: 3, fill: '#f59e0b' }} />
+                                                <Area type="monotone" dataKey="realVisitors" name="Real Visitors" stroke="#22c55e" strokeWidth={2} fill="url(#gradReal)" dot={{ r: 3, fill: '#22c55e' }} />
+                                            </AreaChart>
                                         </ResponsiveContainer>
                                     ) : (
-                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">No daily chart data available</div>
+                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">No chart data yet</div>
                                     )}
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Conversion Funnel */}
-                        <Card className="border-none shadow-sm">
+                        <Card className="border shadow-sm">
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                    <TrendingUp className="w-4 h-4 text-rose-500" />
-                                    CONVERSION FUNNEL
-                                </CardTitle>
+                                <SectionHeader icon={TrendingUp} title="Conversion Funnel" color="text-rose-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="h-[250px] w-full mt-4">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={funnelData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600 }} />
-                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                                            <Tooltip
-                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                                cursor={{ fill: '#f8fafc' }}
-                                            />
-                                            <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={40}>
-                                                {funnelData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                <div className="space-y-3 mt-2">
+                                    {funnelData.map((item, i) => {
+                                        const maxVal = funnelData[0]?.value || 1;
+                                        const pct = Math.round((item.value / maxVal) * 100);
+                                        const dropPct = i > 0 && funnelData[i - 1].value > 0
+                                            ? Math.round((1 - item.value / funnelData[i - 1].value) * 100)
+                                            : null;
+                                        return (
+                                            <div key={item.name}>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="text-xs font-semibold text-gray-600">{item.name}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        {dropPct !== null && dropPct > 0 && (
+                                                            <span className="text-[10px] text-rose-500 font-medium">-{dropPct}%</span>
+                                                        )}
+                                                        <span className="text-xs font-bold" style={{ color: item.fill }}>{item.value.toLocaleString()}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full transition-all duration-700"
+                                                        style={{ width: `${pct}%`, backgroundColor: item.fill }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+                                    <span className="text-xs text-muted-foreground">Conversion Rate</span>
+                                    <span className="text-sm font-bold text-emerald-600">
+                                        {funnelData[0]?.value > 0
+                                            ? `${((funnelData[4]?.value / funnelData[0]?.value) * 100).toFixed(1)}%`
+                                            : '0%'}
+                                    </span>
                                 </div>
                             </CardContent>
                         </Card>
-
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        {/* Visitor Type & Device Summary */}
-                        <div className="grid grid-cols-1 gap-6">
-                            <Card className="border-none shadow-sm">
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                        <Users className="w-4 h-4 text-indigo-500" />
-                                        VISITOR TYPES
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="flex items-center">
-                                    <div className="h-[180px] w-1/2">
+                    {/* ── Row 2: Devices (Donut) + Visitor Types + Engagement ── */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                        {/* Device Breakdown — Donut */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={Smartphone} title="Device Breakdown" color="text-amber-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center gap-4">
+                                    <div className="h-[160px] w-[160px] flex-shrink-0">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
-                                                <Pie
-                                                    data={visitorTypeData}
-                                                    innerRadius={50}
-                                                    outerRadius={70}
-                                                    paddingAngle={5}
-                                                    dataKey="value"
-                                                >
-                                                    {visitorTypeData.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                <Pie data={deviceData} dataKey="count" innerRadius={45} outerRadius={70} paddingAngle={3}>
+                                                    {deviceData.map((entry: any, i: number) => (
+                                                        <Cell key={i} fill={entry.color} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip formatter={(v: any) => [`${v} views`, '']} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
-                                    <div className="w-1/2 space-y-3">
-                                        {visitorTypeData.map((item) => (
-                                            <div key={item.name} className="flex items-center justify-between">
+                                    <div className="space-y-3 flex-1">
+                                        {deviceData.map((d: any) => (
+                                            <div key={d.name} className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                                                    <span className="text-sm font-medium">{item.name}</span>
+                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                                                    <span className="text-xs capitalize font-medium">{d.name}</span>
                                                 </div>
-                                                <span className="text-sm font-bold">{item.value}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-bold">{d.count}</span>
+                                                    <span className="text-[10px] text-muted-foreground">
+                                                        {totalDeviceViews > 0 ? `${Math.round((d.count / totalDeviceViews) * 100)}%` : ''}
+                                                    </span>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-
-                    {/* Charts Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Top Campaigns (UTM) */}
-                        <Card>
-                            <CardHeader><CardTitle className="text-sm font-semibold">Top Campaigns</CardTitle></CardHeader>
-                            <CardContent>
-                                <div className="h-[200px]">
-                                    {(agg.utmCampaigns || []).length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={(agg.utmCampaigns || []).slice(0, 6)} layout="vertical" margin={{ left: 0, right: 30, top: 0, bottom: 0 }}>
-                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} hide />
-                                                <YAxis
-                                                    type="category"
-                                                    dataKey="name"
-                                                    tick={{ fontSize: 10, fontWeight: 500 }}
-                                                    width={100}
-                                                    axisLine={false}
-                                                    tickLine={false}
-                                                    tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
-                                                />
-                                                <Tooltip formatter={(v: any) => [`${v} clicks`, '']} />
-                                                <Bar dataKey="count" fill="#f59e0b" radius={[0, 4, 4, 0]} barSize={14} />
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">No UTM campaign data yet</div>
-                                    )}
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Top Interaction Events */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                    <MousePointer2 className="w-4 h-4 text-amber-500" />
-                                    TOP EVENTS
-                                </CardTitle>
+                        {/* Visitor Retention — Donut */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={Users} title="Visitor Retention" color="text-indigo-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="h-[200px]">
-                                    {(agg.topEvents || []).length > 0 ? (
+                                <div className="flex items-center gap-4">
+                                    <div className="h-[160px] w-[160px] flex-shrink-0">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={(agg.topEvents || []).slice(0, 6)} layout="vertical" margin={{ left: 0, right: 30, top: 0, bottom: 0 }}>
-                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} hide />
-                                                <YAxis
-                                                    type="category"
-                                                    dataKey="name"
-                                                    tick={{ fontSize: 10, fontWeight: 500 }}
-                                                    width={120}
-                                                    axisLine={false}
-                                                    tickLine={false}
-                                                    tickFormatter={(value) => value.length > 18 ? `${value.substring(0, 18)}...` : value}
-                                                />
-                                                <Tooltip />
-                                                <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={14} />
-                                            </BarChart>
+                                            <PieChart>
+                                                <Pie data={visitorTypeData} dataKey="value" innerRadius={45} outerRadius={70} paddingAngle={4}>
+                                                    {visitorTypeData.map((entry, i) => (
+                                                        <Cell key={i} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip formatter={(v: any) => [`${v} sessions`, '']} />
+                                            </PieChart>
                                         </ResponsiveContainer>
-                                    ) : (
-                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">No event data recorded</div>
+                                    </div>
+                                    <div className="space-y-4 flex-1">
+                                        {visitorTypeData.map((item) => {
+                                            const total = (agg.visitorTypes?.new || 0) + (agg.visitorTypes?.returning || 0);
+                                            const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
+                                            return (
+                                                <div key={item.name}>
+                                                    <div className="flex justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                                                            <span className="text-xs font-medium">{item.name}</span>
+                                                        </div>
+                                                        <span className="text-xs font-bold">{item.value} <span className="text-muted-foreground font-normal">({pct}%)</span></span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        <div className="pt-2 border-t border-gray-100">
+                                            <p className="text-[10px] text-muted-foreground">Retention Rate</p>
+                                            <p className="text-lg font-fredoka font-bold text-pink-600">
+                                                {(() => {
+                                                    const total = (agg.visitorTypes?.new || 0) + (agg.visitorTypes?.returning || 0);
+                                                    return total > 0 ? `${Math.round(((agg.visitorTypes?.returning || 0) / total) * 100)}%` : '0%';
+                                                })()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Engagement Score */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={MousePointer2} title="Engagement Score" color="text-emerald-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[160px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <RadialBarChart cx="50%" cy="50%" innerRadius="55%" outerRadius="80%" data={[{ name: 'Engagement', value: engagementScore, fill: engagementScore > 70 ? '#22c55e' : engagementScore > 40 ? '#f59e0b' : '#ef4444' }]} startAngle={90} endAngle={-270}>
+                                            <RadialBar dataKey="value" cornerRadius={8} background={{ fill: '#f1f5f9' }} />
+                                            <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" className="fill-gray-800" style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Fredoka One' }}>
+                                                {engagementScore}
+                                            </text>
+                                            <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: 11, fill: '#64748b' }}>/ 100</text>
+                                        </RadialBarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 mt-1">
+                                    <div className="text-center bg-gray-50 rounded-xl p-2">
+                                        <p className="text-xs text-muted-foreground">Avg. Duration</p>
+                                        <p className="text-sm font-bold text-emerald-600">{formatDuration(avgDur)}</p>
+                                    </div>
+                                    <div className="text-center bg-gray-50 rounded-xl p-2">
+                                        <p className="text-xs text-muted-foreground">Month Views</p>
+                                        <p className="text-sm font-bold text-indigo-600">{monthViews.toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* ── Row 3: Top Pages + Top Countries ────────────────────── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        {/* Top Pages */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={Layers} title="Top Pages (Last 30 Days)" color="text-violet-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3 mt-2">
+                                    {topPages.length > 0 ? topPages.map((p: any, i: number) => (
+                                        <HBarRow key={p.name} name={p.name} count={p.count} max={maxPage} color={CHART_COLORS[i % CHART_COLORS.length]} />
+                                    )) : (
+                                        <p className="text-sm text-muted-foreground italic text-center py-6">No page data yet</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Top Countries */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={Globe} title="Top Countries" color="text-blue-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3 mt-2">
+                                    {topCountries.length > 0 ? topCountries.map((c: any, i: number) => (
+                                        <HBarRow key={c.name} name={c.name} count={c.count} max={maxCountry} color={CHART_COLORS[i % CHART_COLORS.length]} />
+                                    )) : (
+                                        <p className="text-sm text-muted-foreground italic text-center py-6">No country data yet</p>
                                     )}
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
 
-                    {/* Filters */}
-                    <Card className="mb-6">
+                    {/* ── Row 4: Browsers + OS + Traffic Sources ───────────────── */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                        {/* Browsers */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={Monitor} title="Browsers" color="text-sky-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3 mt-2">
+                                    {browserData.length > 0 ? browserData.map((b: any, i: number) => (
+                                        <HBarRow key={b.name} name={b.name} count={b.count} max={maxBrowser} color={CHART_COLORS[i % CHART_COLORS.length]} />
+                                    )) : (
+                                        <p className="text-sm text-muted-foreground italic text-center py-6">No browser data yet</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Operating Systems */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={BarChart2} title="Operating Systems" color="text-orange-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[220px] mt-2">
+                                    {osData.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={osData} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} hide />
+                                                <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fontWeight: 500 }} width={80} axisLine={false} tickLine={false} tickFormatter={(v) => v.length > 12 ? v.substring(0, 12) + '…' : v} />
+                                                <Tooltip content={<CustomTooltip />} />
+                                                <Bar dataKey="count" name="Visitors" radius={[0, 6, 6, 0]} barSize={16}>
+                                                    {osData.map((_: any, i: number) => (
+                                                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">No OS data yet</div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Traffic Sources */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={ArrowUpRight} title="Traffic Sources" color="text-pink-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3 mt-2">
+                                    {referrers.length > 0 ? referrers.map((r: any, i: number) => (
+                                        <HBarRow key={r.name} name={r.name} count={r.count} max={maxReferrer} color={CHART_COLORS[i % CHART_COLORS.length]} />
+                                    )) : (
+                                        <p className="text-sm text-muted-foreground italic text-center py-6">No referrer data yet</p>
+                                    )}
+                                    {referrers.length === 0 && (
+                                        <p className="text-xs text-muted-foreground text-center">Most traffic is Direct (no referrer)</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* ── Row 5: UTM Sources + Top Events ─────────────────────── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        {/* UTM Sources */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={PieChartIcon} title="UTM / Marketing Sources" color="text-amber-500" />
+                            </CardHeader>
+                            <CardContent>
+                                {utmSources.length > 0 ? (
+                                    <div className="h-[200px] mt-2">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={utmSources} margin={{ top: 0, right: 20, left: -20, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600 }} tickFormatter={(v) => v.length > 10 ? v.substring(0, 10) + '…' : v} />
+                                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                                                <Tooltip content={<CustomTooltip />} />
+                                                <Bar dataKey="count" name="Clicks" radius={[6, 6, 0, 0]} barSize={32}>
+                                                    {utmSources.map((_: any, i: number) => (
+                                                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+                                        <p className="text-sm text-muted-foreground italic">No UTM campaign data yet.</p>
+                                        <p className="text-xs text-muted-foreground">Add <code className="bg-gray-100 px-1 rounded">?utm_source=instagram</code> to your links.</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Top Events */}
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-2">
+                                <SectionHeader icon={MousePointer2} title="Top Interaction Events" color="text-violet-500" />
+                            </CardHeader>
+                            <CardContent>
+                                {(agg.topEvents || []).length > 0 ? (
+                                    <div className="h-[200px] mt-2">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={(agg.topEvents || []).slice(0, 7)} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                                <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} hide />
+                                                <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fontWeight: 500 }} width={130} axisLine={false} tickLine={false} tickFormatter={(v) => v.length > 20 ? v.substring(0, 20) + '…' : v} />
+                                                <Tooltip content={<CustomTooltip />} />
+                                                <Bar dataKey="count" name="Events" fill="#8b5cf6" radius={[0, 6, 6, 0]} barSize={14} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center py-8 text-sm text-muted-foreground italic">No event data recorded yet</div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* ── Filters ──────────────────────────────────────────────── */}
+                    <Card className="mb-6 border shadow-sm">
                         <CardContent className="p-4">
                             <div className="flex flex-wrap items-center gap-3">
                                 <Filter className="w-4 h-4 text-muted-foreground" />
@@ -433,53 +655,33 @@ const VisitorInsights = () => {
                                     <option value="mobile">Mobile</option>
                                     <option value="tablet">Tablet</option>
                                 </select>
-                                <Input
-                                    type="date"
-                                    className="w-[150px] text-sm"
-                                    value={startDate}
-                                    onChange={e => { setStartDate(e.target.value); setPage(1); }}
-                                    placeholder="Start Date"
-                                />
+                                <Input type="date" className="w-[150px] text-sm" value={startDate} onChange={e => { setStartDate(e.target.value); setPage(1); }} />
                                 <span className="text-muted-foreground text-xs">to</span>
-                                <Input
-                                    type="date"
-                                    className="w-[150px] text-sm"
-                                    value={endDate}
-                                    onChange={e => { setEndDate(e.target.value); setPage(1); }}
-                                    placeholder="End Date"
-                                />
+                                <Input type="date" className="w-[150px] text-sm" value={endDate} onChange={e => { setEndDate(e.target.value); setPage(1); }} />
                                 {(deviceFilter !== 'all' || startDate || endDate) && (
-                                    <Button
-                                        variant="ghost" size="sm"
-                                        className="text-xs text-muted-foreground"
-                                        onClick={() => { setDeviceFilter('all'); setStartDate(''); setEndDate(''); setPage(1); }}
-                                    >
+                                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground"
+                                        onClick={() => { setDeviceFilter('all'); setStartDate(''); setEndDate(''); setPage(1); }}>
                                         Clear filters
                                     </Button>
                                 )}
-                                <div className="ml-auto text-xs text-muted-foreground">
-                                    {pagination.totalCount} records
-                                </div>
+                                <div className="ml-auto text-xs text-muted-foreground">{pagination.totalCount} records</div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Visitor Table */}
-                    <Card className="mb-6">
+                    {/* ── Visitor Table ─────────────────────────────────────────── */}
+                    <Card className="mb-6 border shadow-sm">
+                        <CardHeader className="pb-2 border-b">
+                            <SectionHeader icon={Eye} title="Raw Visitor Log" color="text-slate-500" />
+                        </CardHeader>
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="border-b bg-gray-50/80">
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Time</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Type</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">User / Lead</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Location</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Source</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Device</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Browser / OS</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Page</th>
-                                            <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Referrer</th>
+                                            {['Time', 'Type', 'User / Lead', 'Location', 'Source', 'Device', 'Browser / OS', 'Page', 'Referrer'].map(h => (
+                                                <th key={h} className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
+                                            ))}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -493,13 +695,9 @@ const VisitorInsights = () => {
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     {v.isNewVisitor ? (
-                                                        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 font-bold uppercase py-0 px-1.5 h-5">
-                                                            New
-                                                        </Badge>
+                                                        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 font-bold uppercase py-0 px-1.5 h-5">New</Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-bold uppercase py-0 px-1.5 h-5">
-                                                            Returning
-                                                        </Badge>
+                                                        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-bold uppercase py-0 px-1.5 h-5">Return</Badge>
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -516,21 +714,16 @@ const VisitorInsights = () => {
                                                                 {maskIp(v.ip)}
                                                             </span>
                                                         )}
-
-                                                        {(v.userEmail || v.leadPhone) && (
-                                                            <div className="flex flex-col gap-0.5 mt-0.5">
-                                                                {v.userEmail && (
-                                                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                                                        <Mail className="w-2.5 h-2.5 text-blue-400" />
-                                                                        <span className="truncate max-w-[150px]">{v.userEmail}</span>
-                                                                    </div>
-                                                                )}
-                                                                {v.leadPhone && (
-                                                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                                                        <Phone className="w-2.5 h-2.5 text-emerald-400" />
-                                                                        <span>{v.leadPhone}</span>
-                                                                    </div>
-                                                                )}
+                                                        {v.userEmail && (
+                                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                                <Mail className="w-2.5 h-2.5 text-blue-400" />
+                                                                <span className="truncate max-w-[150px]">{v.userEmail}</span>
+                                                            </div>
+                                                        )}
+                                                        {v.leadPhone && (
+                                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                                <Phone className="w-2.5 h-2.5 text-emerald-400" />
+                                                                <span>{v.leadPhone}</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -541,20 +734,14 @@ const VisitorInsights = () => {
                                                             <MapPin className="w-3 h-3 text-rose-400" />
                                                             <span>{[v.city, v.region, v.country].filter(Boolean).join(', ')}</span>
                                                         </div>
-                                                    ) : (
-                                                        <span className="text-xs text-muted-foreground">—</span>
-                                                    )}
+                                                    ) : <span className="text-xs text-muted-foreground">—</span>}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     {v.utmSource ? (
-                                                        <Badge variant="outline" className="text-[10px] border-amber-200 bg-amber-50/50 text-amber-700 font-normal">
-                                                            {v.utmSource}
-                                                        </Badge>
+                                                        <Badge variant="outline" className="text-[10px] border-amber-200 bg-amber-50/50 text-amber-700 font-normal">{v.utmSource}</Badge>
                                                     ) : v.referrer ? (
                                                         <span className="text-[10px] text-muted-foreground truncate max-w-[80px] inline-block">
-                                                            {(() => {
-                                                                try { return new URL(v.referrer).hostname; } catch { return v.referrer; }
-                                                            })()}
+                                                            {(() => { try { return new URL(v.referrer).hostname; } catch { return v.referrer; } })()}
                                                         </span>
                                                     ) : (
                                                         <span className="text-[10px] text-muted-foreground">Direct</span>
@@ -573,9 +760,7 @@ const VisitorInsights = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <span className="text-xs font-mono bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded max-w-[150px] truncate inline-block">
-                                                        {v.path}
-                                                    </span>
+                                                    <span className="text-xs font-mono bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded max-w-[150px] truncate inline-block">{v.path}</span>
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     {v.referrer ? (
@@ -583,14 +768,7 @@ const VisitorInsights = () => {
                                                             <ArrowUpRight className="w-3 h-3 flex-shrink-0" />
                                                             <span className="truncate">{v.referrer}</span>
                                                         </div>
-                                                    ) : (
-                                                        <span className="text-xs text-muted-foreground">Direct</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <span className="text-[10px] text-muted-foreground">
-                                                        {v.screenWidth && v.screenHeight ? `${v.screenWidth}×${v.screenHeight}` : '—'}
-                                                    </span>
+                                                    ) : <span className="text-xs text-muted-foreground">Direct</span>}
                                                 </td>
                                             </tr>
                                         )) : (
@@ -606,24 +784,14 @@ const VisitorInsights = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Pagination */}
+                    {/* ── Pagination ────────────────────────────────────────────── */}
                     {pagination.totalPages > 1 && (
                         <div className="flex items-center justify-center gap-3">
-                            <Button
-                                variant="outline" size="sm"
-                                disabled={page <= 1}
-                                onClick={() => setPage(p => p - 1)}
-                            >
+                            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
                                 <ChevronLeft className="w-4 h-4 mr-1" /> Previous
                             </Button>
-                            <span className="text-sm text-muted-foreground">
-                                Page {page} of {pagination.totalPages}
-                            </span>
-                            <Button
-                                variant="outline" size="sm"
-                                disabled={page >= pagination.totalPages}
-                                onClick={() => setPage(p => p + 1)}
-                            >
+                            <span className="text-sm text-muted-foreground">Page {page} of {pagination.totalPages}</span>
+                            <Button variant="outline" size="sm" disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)}>
                                 Next <ChevronRight className="w-4 h-4 ml-1" />
                             </Button>
                         </div>
