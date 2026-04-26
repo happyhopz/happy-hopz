@@ -63,7 +63,10 @@ const ComingSoon = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
+                id="coming-soon-email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 placeholder="Enter your email"
                 className="flex-1 px-6 py-3 rounded-full bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary/50 font-nunito text-foreground placeholder:text-muted-foreground"
               />

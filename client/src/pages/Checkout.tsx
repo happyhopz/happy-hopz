@@ -765,6 +765,9 @@ const Checkout = () => {
                                                 <div className="space-y-1.5">
                                                     <Label className="text-xs font-bold text-gray-600 uppercase">Full Name *</Label>
                                                     <Input
+                                                        id="guest-name"
+                                                        name="name"
+                                                        autoComplete="name"
                                                         value={guestInfo.name}
                                                         onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
                                                         placeholder="John Doe"
@@ -774,7 +777,10 @@ const Checkout = () => {
                                                 <div className="space-y-1.5">
                                                     <Label className="text-xs font-bold text-gray-600 uppercase">Email Address *</Label>
                                                     <Input
+                                                        id="guest-email"
+                                                        name="email"
                                                         type="email"
+                                                        autoComplete="email"
                                                         value={guestInfo.email}
                                                         onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
                                                         placeholder="john@example.com"
@@ -784,6 +790,10 @@ const Checkout = () => {
                                                 <div className="space-y-1.5">
                                                     <Label className="text-xs font-bold text-gray-600 uppercase">Phone Number *</Label>
                                                     <Input
+                                                        id="guest-phone"
+                                                        name="phone"
+                                                        type="tel"
+                                                        autoComplete="tel"
                                                         value={guestInfo.phone}
                                                         onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
                                                         placeholder="98765 43210"
@@ -835,9 +845,9 @@ const Checkout = () => {
                                                 {savedAddresses.length > 0 && <Button variant="ghost" size="sm" className="font-bold text-gray-600" onClick={() => setShowAddForm(false)}>Back to saved</Button>}
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Name *</Label><Input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} className="bg-white border-pink-100" /></div>
-                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Mobile *</Label><Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} className="bg-white border-pink-100" /></div>
-                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Pincode *</Label><Input value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value })} maxLength={6} className="bg-white border-pink-100" /></div>
+                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Name *</Label><Input id="shipping-name" name="shipping-name" autoComplete="name" value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} className="bg-white border-pink-100" /></div>
+                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Mobile *</Label><Input id="shipping-phone" name="shipping-phone" type="tel" autoComplete="tel" value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} className="bg-white border-pink-100" /></div>
+                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Pincode *</Label><Input id="shipping-pincode" name="shipping-pincode" autoComplete="postal-code" inputMode="numeric" value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value })} maxLength={6} className="bg-white border-pink-100" /></div>
                                                 <div className="space-y-1.5 font-bold">
                                                     <Label className="text-xs font-bold text-gray-600 uppercase">State *</Label>
                                                     <Select
@@ -856,8 +866,8 @@ const Checkout = () => {
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
-                                                <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Address *</Label><Input value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} className="bg-white border-pink-100" /></div>
-                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">City *</Label><Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} className="bg-white border-pink-100" /></div>
+                                                <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">Address *</Label><Input id="shipping-address" name="shipping-address" autoComplete="street-address" value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} className="bg-white border-pink-100" /></div>
+                                                <div className="space-y-1.5"><Label className="text-xs font-bold text-gray-600 uppercase">City *</Label><Input id="shipping-city" name="shipping-city" autoComplete="address-level2" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} className="bg-white border-pink-100" /></div>
                                             </div>
                                         </div>
                                     ) : (
@@ -1085,6 +1095,8 @@ const Checkout = () => {
                                     <div className="space-y-4">
                                         <div className="relative">
                                             <Input
+                                                id="coupon-code"
+                                                name="couponCode"
                                                 placeholder="Enter Coupon Code"
                                                 value={couponCode}
                                                 onChange={(e) => setCouponCode(e.target.value.toUpperCase())}

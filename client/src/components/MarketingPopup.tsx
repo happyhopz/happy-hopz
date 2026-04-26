@@ -147,7 +147,10 @@ const MarketingPopup = () => {
                                             <div className="relative group">
                                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-pink-500 transition-colors" />
                                                 <input
+                                                    id="popup-subscribe-email"
+                                                    name="email"
                                                     type="email"
+                                                    autoComplete="email"
                                                     required
                                                     placeholder="your@email.com"
                                                     value={email}
@@ -173,7 +176,11 @@ const MarketingPopup = () => {
                                         <form onSubmit={handleVerify} className="space-y-4 max-w-[280px] mx-auto">
                                             <div className="relative group">
                                                 <input
+                                                    id="popup-verify-otp"
+                                                    name="otp"
                                                     type="text"
+                                                    autoComplete="one-time-code"
+                                                    inputMode="numeric"
                                                     required
                                                     maxLength={6}
                                                     placeholder="0 0 0 0 0 0"

@@ -162,6 +162,8 @@ const Reviews = ({ productId }: { productId: string }) => {
                                     <div>
                                         <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Your Feedback</p>
                                         <textarea
+                                            id="review-comment"
+                                            name="comment"
                                             value={comment}
                                             onChange={(e) => setComment(e.target.value)}
                                             placeholder="What did your little one think of these?"
@@ -174,7 +176,9 @@ const Reviews = ({ productId }: { productId: string }) => {
                                         <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Add Photos (URL)</p>
                                         <div className="flex gap-2 mb-4">
                                             <input
-                                                type="text"
+                                                id="review-image-url"
+                                                name="imageUrl"
+                                                type="url"
                                                 value={newImageUrl}
                                                 onChange={(e) => setNewImageUrl(e.target.value)}
                                                 placeholder="Paste image URL here..."

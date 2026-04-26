@@ -584,7 +584,11 @@ const ProductDetail = () => {
                             </h3>
                             <div className="flex gap-2">
                                 <input
+                                    id="delivery-pincode"
+                                    name="pincode"
                                     type="text"
+                                    inputMode="numeric"
+                                    autoComplete="postal-code"
                                     placeholder="Enter pincode"
                                     value={pincode}
                                     onChange={(e) => setPincode(e.target.value)}
@@ -979,6 +983,8 @@ const SizeGuider = ({ isOpen, onClose, onSelectSize }: { isOpen: boolean, onClos
                                 <label className="block text-sm font-bold text-gray-700">Foot Length (in CM)</label>
                                 <div className="relative">
                                     <input
+                                        id="foot-length"
+                                        name="footLength"
                                         type="number"
                                         placeholder="e.g. 14.5"
                                         className="w-full h-14 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none text-lg font-bold"

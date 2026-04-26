@@ -159,7 +159,10 @@ const NewsletterSignup = () => {
     <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
       <div className="relative group">
         <input
+          id="footer-newsletter-email"
+          name="email"
           type="email"
+          autoComplete="email"
           placeholder="your@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
