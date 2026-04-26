@@ -84,6 +84,11 @@ model Product {
   avgRating      Float       @default(4.5)
   ratingCount    Int         @default(0)
   reviews        Review[]
+
+  @@index([status])
+  @@index([category])
+  @@index([ageGroup])
+  @@index([createdAt])
 }
 
 model CartItem {
@@ -162,6 +167,9 @@ model OrderItem {
   color     String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([orderId])
 }
 
 model Address {
@@ -236,6 +244,7 @@ model Review {
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([productId])
   @@unique([productId, userId])
 }
 

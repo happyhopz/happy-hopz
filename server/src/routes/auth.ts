@@ -77,15 +77,15 @@ router.post('/signup', async (req: Request, res: Response) => {
             { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
         );
 
-        // Create Admin Notification
-        await NotificationService.create({
+        // Create Admin Notification — fire-and-forget, don't block the user response
+        NotificationService.create({
             isAdmin: true,
             title: 'New User Signup! 🎉',
             message: `A new user ${user.email} has just joined Happy Hopz.`,
             type: 'SECURITY',
             priority: 'NORMAL',
             metadata: { userId: user.id, email: user.email }
-        });
+        }).catch(err => console.error('Signup notification failed:', err));
 
         res.status(201).json({ user, token });
     } catch (error) {
@@ -131,13 +131,13 @@ router.post('/login', async (req: Request, res: Response) => {
             { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
         );
 
-        // Notify admin of login
-        await NotificationService.notifySecurityEvent(
+        // Notify admin of login — fire-and-forget, don't block the user response
+        NotificationService.notifySecurityEvent(
             'User Login',
             `${user.name || user.email} logged in.`,
             user.id,
             { role: user.role, email: user.email }
-        );
+        ).catch(err => console.error('Login notification failed:', err));
 
         res.json({
             user: {
@@ -507,15 +507,15 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
         // Send reset email
         await sendPasswordResetEmail(email, resetToken);
 
-        // Notify admin
-        await NotificationService.create({
+        // Notify admin — fire-and-forget
+        NotificationService.create({
             isAdmin: true,
             title: 'Password Reset Requested',
             message: `User ${email} requested a password reset.`,
             type: 'SECURITY',
             priority: 'LOW',
             metadata: { userId: user.id, email }
-        });
+        }).catch(err => console.error('Password reset notification failed:', err));
 
         res.json({ message: 'If an account exists with this email, a reset link has been sent.' });
     } catch (error) {

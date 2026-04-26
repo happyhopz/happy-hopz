@@ -11,7 +11,10 @@ router.get('/:key', async (req, res) => {
             where: { key: req.params.key as string }
         });
         if (!content) {
-            return res.status(404).json({ error: 'Content not found' });
+            // Return empty defaults instead of 404 for CMS content that hasn't been configured yet.
+            // The frontend components already have their own hardcoded fallback defaults,
+            // so returning null here simply prevents noisy 404 errors in the console.
+            return res.json(null);
         }
         res.json(JSON.parse(content.content));
     } catch (error) {

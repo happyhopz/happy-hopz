@@ -1043,7 +1043,7 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
             }),
             (prisma as any).analyticsEvent.findMany({
                 where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
-                select: { type: true, label: true, path: true }
+                select: { sessionId: true, type: true, label: true, path: true }
             })
         ]);
 
@@ -1096,7 +1096,7 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
         let totalDuration = 0;
         const sessionVisitorTypeMap = new Map<string, boolean>(); // sessionId -> isNew
         const funnel = { visits: 0, product_views: 0, cart_views: 0, checkout_starts: 0, purchases: 0 };
-        const sessionsSeen = new Set<string>();
+        const sessionFunnelProgression = new Map<string, { product_views: boolean; cart_views: boolean; checkout_starts: boolean; purchases: boolean }>();
 
         for (const rec of allRecords) {
             const d = rec.device || 'unknown';
@@ -1138,24 +1138,48 @@ router.get('/visitors', async (req: AuthRequest, res: Response) => {
                 sessionVisitorTypeMap.set(rec.sessionId, true);
             }
 
-            // Simple Funnel Mapping
-            if (!sessionsSeen.has(rec.sessionId)) {
-                sessionsSeen.add(rec.sessionId);
-                const p = rec.path.toLowerCase();
-                if (p === '/' || p === '/index') funnel.visits++;
-                else if (p.startsWith('/products/')) funnel.product_views++;
-                else if (p.startsWith('/cart')) funnel.cart_views++;
-                else if (p.startsWith('/checkout')) funnel.checkout_starts++;
-                else if (p.includes('order-success')) funnel.purchases++;
+            // Advanced Funnel Mapping
+            let prog = sessionFunnelProgression.get(rec.sessionId);
+            if (!prog) {
+                prog = { product_views: false, cart_views: false, checkout_starts: false, purchases: false };
+                sessionFunnelProgression.set(rec.sessionId, prog);
             }
+            
+            const p = rec.path.toLowerCase();
+            if (p.startsWith('/products/')) prog.product_views = true;
+            else if (p.startsWith('/cart')) prog.cart_views = true;
+            else if (p.startsWith('/checkout')) prog.checkout_starts = true;
+            else if (p.includes('order-success')) prog.purchases = true;
         }
 
-        // Aggregate Events
+        // Aggregate Events and map to Funnel
         const eventCounts: Record<string, number> = {};
         for (const ev of allEvents) {
             const key = `${ev.type}${ev.label ? ': ' + ev.label : ''}`;
             eventCounts[key] = (eventCounts[key] || 0) + 1;
+
+            if (ev.sessionId) {
+                let prog = sessionFunnelProgression.get(ev.sessionId);
+                if (!prog) {
+                    prog = { product_views: false, cart_views: false, checkout_starts: false, purchases: false };
+                    sessionFunnelProgression.set(ev.sessionId, prog);
+                }
+                
+                if (ev.type === 'ADD_TO_CART' || ev.type === 'VIEW_CART') prog.cart_views = true;
+                else if (ev.type === 'START_CHECKOUT') prog.checkout_starts = true;
+                else if (ev.type === 'ORDER_SUCCESS') prog.purchases = true;
+                else if (ev.type === 'VIEW_PRODUCT') prog.product_views = true;
+            }
         }
+
+        // Aggregate Funnel Data
+        sessionFunnelProgression.forEach((prog) => {
+            funnel.visits++; // Every unique session is a visit
+            if (prog.product_views) funnel.product_views++;
+            if (prog.cart_views) funnel.cart_views++;
+            if (prog.checkout_starts) funnel.checkout_starts++;
+            if (prog.purchases) funnel.purchases++;
+        });
 
         const sortDesc = (obj: Record<string, number>, limit = 10) =>
             Object.entries(obj)
