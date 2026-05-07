@@ -1,52 +1,37 @@
-export const SIZE_LABELS = {
-    XS: '1-9 months',
-    S: '10 months - 2 years',
-    M: '2-4 years',
-    L: '4-5 years',
-    XL: '5-6 years',
-    XXL: '7-8 years',
+export const SIZE_LABELS: Record<string, string> = {
+    'Infant': '0 - 12 months',
+    'Toddler': '2 - 5 years',
+    'Children': '5 - 12 years',
 };
 
 export const SIZE_GUIDE_DATA = [
-    // XS Group
-    { ourSize: 'XS', age: '1-3 Months', eu: '13', inch: '3.5"', cm: '8.9' },
-    { ourSize: 'XS', age: '1-3 Months', eu: '14', inch: '3.625"', cm: '9.2' },
-    { ourSize: 'XS', age: '3-6 Months', eu: '15', inch: '3.75"', cm: '9.5' },
-    { ourSize: 'XS', age: '3-6 Months', eu: '16', inch: '3.875"', cm: '9.8' },
-    { ourSize: 'XS', age: '6-9 Months', eu: '17', inch: '4.125"', cm: '10.5' },
-    { ourSize: 'XS', age: '6-9 Months', eu: '18', inch: '4.25"', cm: '10.8' },
+    // Infant Group
+    { ageGroup: 'Infant', age: '0 - 4 mos',    usSize: '0',   ukSize: '0.5', euSize: '16', insoleLength: '4.21' },
+    { ageGroup: 'Infant', age: '6 mos',         usSize: '1',   ukSize: '1.5', euSize: '17', insoleLength: '4.49' },
+    { ageGroup: 'Infant', age: '8 mos',         usSize: '2',   ukSize: '2.5', euSize: '18', insoleLength: '4.72' },
+    { ageGroup: 'Infant', age: '10 - 12 mos',   usSize: '3',   ukSize: '3.5', euSize: '19', insoleLength: '5.00' },
+    { ageGroup: 'Infant', age: '1',             usSize: '3.5', ukSize: '4',   euSize: '20', insoleLength: '5.28' },
+    { ageGroup: 'Infant', age: '1.5',           usSize: '4',   ukSize: '4.5', euSize: '21', insoleLength: '5.51' },
+    { ageGroup: 'Infant', age: '2',             usSize: '4.5', ukSize: '5',   euSize: '22', insoleLength: '5.83' },
 
-    // S Group
-    { ourSize: 'S', age: '10-12 Months', eu: '19', inch: '4.5"', cm: '11.4' },
-    { ourSize: 'S', age: '12-15 Months', eu: '20', inch: '4.75"', cm: '12.1' },
-    { ourSize: 'S', age: '15-18 Months', eu: '21', inch: '4.875"', cm: '12.4' },
-    { ourSize: 'S', age: '1.5-2 Years', eu: '22', inch: '5.125"', cm: '13' },
+    // Toddler Group
+    { ageGroup: 'Toddler', age: '2',    usSize: '5',  ukSize: '5.5', euSize: '23', insoleLength: '6.02' },
+    { ageGroup: 'Toddler', age: '2.5',  usSize: '6',  ukSize: '6',   euSize: '24', insoleLength: '6.30' },
+    { ageGroup: 'Toddler', age: '3',    usSize: '7',  ukSize: '6.5', euSize: '25', insoleLength: '6.57' },
+    { ageGroup: 'Toddler', age: '3.5',  usSize: '8',  ukSize: '7.5', euSize: '26', insoleLength: '6.85' },
+    { ageGroup: 'Toddler', age: '4',    usSize: '9',  ukSize: '8.5', euSize: '27', insoleLength: '7.13' },
+    { ageGroup: 'Toddler', age: '5',    usSize: '10', ukSize: '9.5', euSize: '28', insoleLength: '7.40' },
 
-    // M Group
-    { ourSize: 'M', age: '2-2.5 Years', eu: '23', inch: '5.5"', cm: '14' },
-    { ourSize: 'M', age: '2.5-3 Years', eu: '24', inch: '5.75"', cm: '14.6' },
-    { ourSize: 'M', age: '3-4 Years', eu: '25', inch: '6.125"', cm: '15.6' },
-
-    // L Group
-    { ourSize: 'L', age: '4-4.5 Years', eu: '26', inch: '6.25"', cm: '15.9' },
-    { ourSize: 'L', age: '4.5-5 Years', eu: '27', inch: '6.5"', cm: '16.5' },
-    { ourSize: 'L', age: '5 Years', eu: '28', inch: '6.75"', cm: '17.1' },
-
-    // XL Group
-    { ourSize: 'XL', age: '5-5.5 Years', eu: '29', inch: '6.875"', cm: '17.5' },
-    { ourSize: 'XL', age: '5.5-6 Years', eu: '30', inch: '7.125"', cm: '18.1' },
-    { ourSize: 'XL', age: '6 Years', eu: '31', inch: '7.5"', cm: '19.1' },
-
-    // XXL Group
-    { ourSize: 'XXL', age: '7 Years', eu: '32', inch: '7.75"', cm: '19.7' },
-    { ourSize: 'XXL', age: '8 Years', eu: '33', inch: '8.125"', cm: '20.6' },
-
-    // Teen / Large Group
-    { ourSize: 'XXL', age: '8-9 Years', eu: '34', inch: '8.375"', cm: '21.3' },
-    { ourSize: 'XXL', age: '9-10 Years', eu: '35', inch: '8.625"', cm: '22.0' },
-    { ourSize: 'XXL', age: '10-11 Years', eu: '36', inch: '8.875"', cm: '22.7' },
-    { ourSize: 'XXL', age: '11-12 Years', eu: '37', inch: '9.125"', cm: '23.3' },
-    { ourSize: 'XXL', age: '12+ Years', eu: '38', inch: '9.45"', cm: '24.0' },
+    // Children Group
+    { ageGroup: 'Children', age: '5',        usSize: '11', ukSize: '10.5', euSize: '29', insoleLength: '7.64' },
+    { ageGroup: 'Children', age: '5.5',      usSize: '12', ukSize: '11.5', euSize: '30', insoleLength: '7.91' },
+    { ageGroup: 'Children', age: '6',        usSize: '13', ukSize: '12.5', euSize: '31', insoleLength: '8.15' },
+    { ageGroup: 'Children', age: '6.5',      usSize: '1',  ukSize: '13',   euSize: '32', insoleLength: '8.43' },
+    { ageGroup: 'Children', age: '7',        usSize: '2',  ukSize: '1',    euSize: '33', insoleLength: '8.66' },
+    { ageGroup: 'Children', age: '7.5',      usSize: '3',  ukSize: '2',    euSize: '34', insoleLength: '8.94' },
+    { ageGroup: 'Children', age: '8',        usSize: '4',  ukSize: '3',    euSize: '35', insoleLength: '9.17' },
+    { ageGroup: 'Children', age: '9 to 10',  usSize: '5',  ukSize: '4',    euSize: '36', insoleLength: '9.45' },
+    { ageGroup: 'Children', age: '11 to 12', usSize: '6',  ukSize: '5',    euSize: '37', insoleLength: '9.72' },
 ];
 
 export const INDIAN_STATES = [
@@ -88,4 +73,4 @@ export const INDIAN_STATES = [
     'Puducherry'
 ];
 
-export const ALL_EU_SIZES = Array.from({ length: 26 }, (_, i) => (i + 13).toString());
+export const ALL_EU_SIZES = Array.from({ length: 22 }, (_, i) => (i + 16).toString());

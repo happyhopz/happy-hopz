@@ -66,41 +66,53 @@ const SizeGuide = () => {
 
                         {/* Size Chart */}
                         <div className="mb-12">
-                            <h2 className="text-2xl font-fredoka font-bold mb-6">Kids Shoe Size Chart</h2>
+                            <h2 className="text-2xl font-fredoka font-bold mb-6">Kid's Footwear Size Chart</h2>
                             <div className="overflow-x-auto">
                                 <table className="w-full border-collapse text-sm">
                                     <thead>
                                         <tr className="bg-primary text-white">
-                                            <th className="px-3 py-3 text-left font-nunito font-bold">Our Size</th>
                                             <th className="px-3 py-3 text-left font-nunito font-bold">Age Group</th>
-                                            <th className="px-3 py-3 text-left font-nunito font-bold">EU Size</th>
-                                            <th className="px-3 py-3 text-left font-nunito font-bold">Inch</th>
-                                            <th className="px-3 py-3 text-left font-nunito font-bold">CM</th>
+                                            <th className="px-3 py-3 text-left font-nunito font-bold">Age (Approx.)</th>
+                                            <th className="px-3 py-3 text-center font-nunito font-bold">US Size</th>
+                                            <th className="px-3 py-3 text-center font-nunito font-bold">UK Size</th>
+                                            <th className="px-3 py-3 text-center font-nunito font-bold">EU Size</th>
+                                            <th className="px-3 py-3 text-center font-nunito font-bold">Insole Length (Inches)</th>
                                         </tr>
                                     </thead>
                                     <tbody className="font-nunito">
-                                        {SIZE_GUIDE_DATA.map((row, idx) => (
-                                            <tr key={row.ourSize} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white border-y border-gray-100'}>
-                                                <td className="px-3 py-4 font-bold text-primary text-base">{row.ourSize}</td>
-                                                <td className="px-3 py-4 font-medium">{row.age}</td>
-                                                <td className="px-3 py-4 font-bold text-slate-700">{row.eu}</td>
-                                                <td className="px-3 py-4 text-slate-500">{row.inch}</td>
-                                                <td className="px-3 py-4 text-slate-500">{row.cm}</td>
-                                            </tr>
-                                        ))}
+                                        {(['Infant', 'Toddler', 'Children'] as const).map((group) => {
+                                            const groupRows = SIZE_GUIDE_DATA.filter(r => r.ageGroup === group);
+                                            return groupRows.map((row, idx) => (
+                                                <tr key={`${row.ageGroup}-${row.euSize}`} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white border-y border-gray-100'}>
+                                                    {idx === 0 ? (
+                                                        <td
+                                                            rowSpan={groupRows.length}
+                                                            className="px-3 py-4 font-bold text-primary text-base align-middle border-r border-gray-200"
+                                                        >
+                                                            {row.ageGroup}
+                                                        </td>
+                                                    ) : null}
+                                                    <td className="px-3 py-3 font-medium">{row.age}</td>
+                                                    <td className="px-3 py-3 text-center font-bold text-slate-700">{row.usSize}</td>
+                                                    <td className="px-3 py-3 text-center font-bold text-slate-700">{row.ukSize}</td>
+                                                    <td className="px-3 py-3 text-center font-bold text-slate-700">{row.euSize}</td>
+                                                    <td className="px-3 py-3 text-center text-slate-500">{row.insoleLength}</td>
+                                                </tr>
+                                            ));
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
                             <div className="mt-4 p-4 bg-primary/5 rounded-lg">
-                                <h3 className="font-bold text-sm mb-2">Quick Size Reference:</h3>
+                                <h3 className="font-bold text-sm mb-2">Age Group Reference:</h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm font-nunito">
-                                    {Object.entries(SIZE_LABELS).map(([size, label]) => (
-                                        <span key={size}><strong className="text-primary">{size}</strong> = {label}</span>
+                                    {Object.entries(SIZE_LABELS).map(([group, label]) => (
+                                        <span key={group}><strong className="text-primary">{group}</strong> = {label}</span>
                                     ))}
                                 </div>
                             </div>
                             <p className="text-xs text-muted-foreground mt-3 font-nunito">
-                                * Measurements are approximate. When in doubt, size up for growing feet.
+                                💗 Tip: If between sizes, we recommend sizing up for growing feet!
                             </p>
                         </div>
 

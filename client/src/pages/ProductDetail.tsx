@@ -873,33 +873,52 @@ const ProductDetail = () => {
                                 <table className="w-full text-sm border-collapse">
                                     <thead>
                                         <tr className="bg-primary text-white">
-                                            <th className="px-2 py-2 text-left font-bold">Size</th>
                                             <th className="px-2 py-2 text-left font-bold">Age Group</th>
-                                            <th className="px-2 py-2 text-left font-bold">EU</th>
-                                            <th className="px-2 py-2 text-left font-bold">Inch</th>
-                                            <th className="px-2 py-2 text-left font-bold">CM</th>
+                                            <th className="px-2 py-2 text-left font-bold">Age (Approx.)</th>
+                                            <th className="px-2 py-2 text-center font-bold">US Size</th>
+                                            <th className="px-2 py-2 text-center font-bold">UK Size</th>
+                                            <th className="px-2 py-2 text-center font-bold">EU Size</th>
+                                            <th className="px-2 py-2 text-center font-bold">Insole (in)</th>
                                         </tr>
                                     </thead>
                                     <tbody className="font-nunito">
-                                        {SIZE_GUIDE_DATA.map((row, idx) => (
-                                            <tr key={`${row.ourSize}-${row.age}`} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                                                <td className="px-2 py-1.5 font-bold text-primary">{row.ourSize}</td>
-                                                <td className="px-2 py-1.5">{row.age}</td>
-                                                <td className="px-2 py-1.5">{row.eu}</td>
-                                                <td className="px-2 py-1.5">{row.inch}</td>
-                                                <td className="px-2 py-1.5">{row.cm}</td>
-                                            </tr>
-                                        ))}
+                                        {(['Infant', 'Toddler', 'Children'] as const).map((group) => {
+                                            const groupRows = SIZE_GUIDE_DATA.filter(r => r.ageGroup === group);
+                                            return groupRows.map((row, idx) => (
+                                                <tr key={`${row.ageGroup}-${row.euSize}`} className={idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                                    {idx === 0 ? (
+                                                        <td
+                                                            rowSpan={groupRows.length}
+                                                            className="px-2 py-1.5 font-bold text-primary align-middle border-r border-gray-200"
+                                                        >
+                                                            {row.ageGroup}
+                                                        </td>
+                                                    ) : null}
+                                                    <td className="px-2 py-1.5">{row.age}</td>
+                                                    <td className="px-2 py-1.5 text-center">{row.usSize}</td>
+                                                    <td className="px-2 py-1.5 text-center">{row.ukSize}</td>
+                                                    <td className="px-2 py-1.5 text-center font-bold">{row.euSize}</td>
+                                                    <td className="px-2 py-1.5 text-center">{row.insoleLength}</td>
+                                                </tr>
+                                            ));
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
 
+                            {/* Tip */}
+                            <div className="mt-4 p-3 bg-pink-50 rounded-lg text-center">
+                                <p className="text-sm font-nunito text-pink-700 font-medium">
+                                    💗 Tip: If between sizes, we recommend sizing up for growing feet!
+                                </p>
+                            </div>
+
                             {/* Quick Reference */}
                             <div className="mt-4 p-3 bg-secondary/10 rounded-lg">
-                                <h4 className="font-bold text-xs mb-2">Quick Size Reference:</h4>
+                                <h4 className="font-bold text-xs mb-2">Age Group Reference:</h4>
                                 <div className="grid grid-cols-3 gap-1 text-xs font-nunito">
-                                    {Object.entries(SIZE_LABELS).map(([size, label]) => (
-                                        <span key={size}><strong className="text-primary">{size}</strong> = {label}</span>
+                                    {Object.entries(SIZE_LABELS).map(([group, label]) => (
+                                        <span key={group}><strong className="text-primary">{group}</strong> = {label}</span>
                                     ))}
                                 </div>
                             </div>
