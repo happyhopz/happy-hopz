@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import upiQr from '@/assets/upi-qr.jpg';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -334,8 +334,47 @@ const Checkout = () => {
 
     const tax = Math.round(subtotal * gstRate);
     const shipping = subtotal >= freeThreshold ? 0 : deliveryCharge;
-    const couponDiscount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-    const total = subtotal + tax + shipping - couponDiscount;
+
+    const couponDiscount = useMemo(() => {
+        if (!appliedCoupon) return 0;
+        if (appliedCoupon.appliesTo === 'SPECIFIC') {
+            const productIds = Array.isArray(appliedCoupon.productIds) ? appliedCoupon.productIds : [];
+            const eligibleSubtotal = cartItems?.reduce((sum: number, item: any) => {
+                const pid = item.productId || item.product?.id;
+                if (productIds.includes(pid)) {
+                    const price = item.product?.discountPrice || item.product?.price || 0;
+                    return sum + (price * item.quantity);
+                }
+                return sum;
+            }, 0) || 0;
+
+            if (eligibleSubtotal === 0) return 0;
+            if (appliedCoupon.discountType === 'PERCENTAGE') {
+                return Math.min(Math.round(((eligibleSubtotal * appliedCoupon.discountValue) / 100) * 100) / 100, eligibleSubtotal);
+            }
+            return Math.min(appliedCoupon.discountValue, eligibleSubtotal);
+        } else if (appliedCoupon.discountType === 'PERCENTAGE') {
+            return Math.min(Math.round(((subtotal * appliedCoupon.discountValue) / 100) * 100) / 100, subtotal);
+        }
+        return Math.min(appliedCoupon.discountAmount ?? appliedCoupon.discountValue ?? 0, subtotal);
+    }, [appliedCoupon, cartItems, subtotal]);
+
+    // Automatically invalidate specific-product coupon if all eligible items are removed
+    useEffect(() => {
+        if (!appliedCoupon) return;
+        if (appliedCoupon.appliesTo === 'SPECIFIC' && Array.isArray(appliedCoupon.productIds)) {
+            const hasEligible = cartItems?.some((item: any) =>
+                appliedCoupon.productIds.includes(item.productId || item.product?.id)
+            );
+            if (!hasEligible && cartItems && cartItems.length > 0) {
+                toast.error(`Coupon "${appliedCoupon.code}" removed: eligible products were removed from bag.`);
+                setAppliedCoupon(null);
+                localStorage.removeItem('appliedCoupon');
+            }
+        }
+    }, [cartItems, appliedCoupon]);
+
+    const total = Math.max(0, subtotal + tax + shipping - couponDiscount);
 
     useEffect(() => {
         if (cartItems && cartItems.length > 0) {
@@ -428,6 +467,12 @@ const Checkout = () => {
             return;
         }
 
+        const formattedItems = cartItems?.map((item: any) => ({
+            productId: item.productId || item.product?.id,
+            price: Number(item.product?.discountPrice || item.product?.price || 0),
+            quantity: item.quantity || 1
+        })) || [];
+
         setCouponCode(codeToApply);
         setCouponLoading(true);
         try {
@@ -441,7 +486,8 @@ const Checkout = () => {
                 body: JSON.stringify({
                     code: codeToApply,
                     cartTotal: subtotal,
-                    guestEmail: userEmail
+                    guestEmail: userEmail,
+                    items: formattedItems
                 })
             });
 
@@ -521,7 +567,8 @@ const Checkout = () => {
                 guestPhone: isGuest ? guestInfo.phone : null,
                 address: isGuest ? address : null,
                 paymentMethod: paymentMethod,
-                couponCode: appliedCoupon ? appliedCoupon.code : undefined
+                couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+                couponDiscount: couponDiscount
             };
 
             // Step 1: Always create the order first (Safety First Flow)
@@ -1128,25 +1175,45 @@ const Checkout = () => {
 
                                                 {showAvailableCoupons && (
                                                     <div className="p-2 space-y-2 border-t bg-white">
-                                                        {availableCoupons.map((coupon: any) => (
-                                                            <div key={coupon.id} className="p-3 border rounded-lg hover:border-pink-200 transition-all group">
-                                                                <div className="flex items-center justify-between mb-1">
-                                                                    <span className="text-xs font-black text-pink-600 tracking-widest">{coupon.code}</span>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        onClick={() => handleApplyCoupon(coupon.code)}
-                                                                        className="h-7 text-[10px] font-black text-blue-600 hover:bg-blue-50"
-                                                                    >
-                                                                        APPLY
-                                                                    </Button>
+                                                        {availableCoupons.map((coupon: any) => {
+                                                            const isSpecific = coupon.appliesTo === 'SPECIFIC';
+                                                            const hasEligible = !isSpecific || cartItems?.some((item: any) =>
+                                                                coupon.productIds?.includes(item.productId || item.product?.id)
+                                                            );
+
+                                                            return (
+                                                                <div key={coupon.id} className={`p-3 border rounded-lg transition-all group ${hasEligible ? 'hover:border-pink-200' : 'opacity-70 bg-slate-50'}`}>
+                                                                    <div className="flex items-center justify-between mb-1">
+                                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                                            <span className="text-xs font-black text-pink-600 tracking-widest">{coupon.code}</span>
+                                                                            {isSpecific && (
+                                                                                <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">
+                                                                                    Selected Items Only
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            disabled={!hasEligible}
+                                                                            onClick={() => handleApplyCoupon(coupon.code)}
+                                                                            className="h-7 text-[10px] font-black text-blue-600 hover:bg-blue-50 disabled:text-gray-400"
+                                                                        >
+                                                                            APPLY
+                                                                        </Button>
+                                                                    </div>
+                                                                    <p className="text-[10px] text-gray-500 font-medium">
+                                                                        {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
+                                                                        {coupon.minOrderValue > 0 && ` on orders above ₹${coupon.minOrderValue}`}
+                                                                    </p>
+                                                                    {isSpecific && !hasEligible && (
+                                                                        <p className="text-[9px] text-amber-700 mt-1 font-semibold">
+                                                                            ⚠️ Not applicable to items in your bag
+                                                                        </p>
+                                                                    )}
                                                                 </div>
-                                                                <p className="text-[10px] text-gray-500 font-medium">
-                                                                    {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
-                                                                    {coupon.minOrderValue > 0 && ` on orders above ₹${coupon.minOrderValue}`}
-                                                                </p>
-                                                            </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>

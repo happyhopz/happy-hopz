@@ -219,7 +219,8 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
             paymentStatus: z.string().optional().nullable(),
             paymentMethod: z.string().optional().nullable(),
             source: z.string().optional().nullable(),
-            couponCode: z.string().optional().nullable()
+            couponCode: z.string().optional().nullable(),
+            couponDiscount: z.number().optional().nullable()
         });
 
         const validation = orderSchema.safeParse(req.body);
@@ -266,6 +267,7 @@ router.post('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =
                     shipping: data.shipping,
                     total: data.total,
                     couponCode: data.couponCode,
+                    couponDiscount: data.couponDiscount || 0,
                     status: initialStatus,
                     paymentStatus: data.paymentStatus || 'PENDING',
                     paymentMethod: data.paymentMethod || 'ONLINE',

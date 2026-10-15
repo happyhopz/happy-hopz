@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle, Sparkles, Box, CheckSquare, Square, Check, Download } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, IndianRupee, Upload, FileText, AlertCircle, Sparkles, Box, CheckSquare, Square, Check, Download, Ticket, Globe, Search, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { ALL_EU_SIZES } from '@/lib/constants';
@@ -37,7 +37,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 
-const SortableProductItem = ({ product, isSelected, onToggleSelect, onEdit, onDelete }: any) => {
+const SortableProductItem = ({ product, isSelected, onToggleSelect, onEdit, onDelete, applicableCoupons, onCouponClick }: any) => {
     const {
         attributes,
         listeners,
@@ -91,9 +91,30 @@ const SortableProductItem = ({ product, isSelected, onToggleSelect, onEdit, onDe
                                 {product.description || 'No description available'}
                             </p>
                         </div>
-                        <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
-                            {product.status || 'ACTIVE'}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1.5">
+                            <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
+                                {product.status || 'ACTIVE'}
+                            </Badge>
+                            {applicableCoupons && applicableCoupons.length > 0 && (
+                                <div className="flex flex-wrap gap-1 justify-end max-w-[220px]">
+                                    {applicableCoupons.map((code: string) => (
+                                        <Badge
+                                            key={code}
+                                            variant="outline"
+                                            className="text-[10px] bg-purple-50 text-purple-700 border-purple-200 font-bold gap-1 cursor-pointer hover:bg-purple-100 transition-colors"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onCouponClick?.(code);
+                                            }}
+                                            title={`Click to manage coupon ${code}`}
+                                        >
+                                            <Ticket className="w-3 h-3 text-purple-600" />
+                                            {code}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                         <div>
@@ -705,6 +726,432 @@ const ProductForm = ({ product, onSubmit, isLoading }: any) => {
     );
 };
 
+interface CouponProductManagerDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    coupons: any[];
+    products: any[];
+    pageSelectedIds: string[];
+    selectedCouponId: string;
+    onSelectCouponId: (id: string) => void;
+    onSave: (couponId: string, data: { appliesTo: string; productIds: string[] }) => void;
+    isLoading: boolean;
+}
+
+const CouponProductManagerDialog = ({
+    open,
+    onOpenChange,
+    coupons,
+    products,
+    pageSelectedIds,
+    selectedCouponId,
+    onSelectCouponId,
+    onSave,
+    isLoading
+}: CouponProductManagerDialogProps) => {
+    const [appliesTo, setAppliesTo] = useState<'ALL' | 'SPECIFIC'>('ALL');
+    const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Ensure there is always an active coupon selected when dialog is open
+    useEffect(() => {
+        if (!open) return;
+        const validId = selectedCouponId || (coupons.length > 0 ? coupons[0].id : '');
+        if (validId && validId !== selectedCouponId) {
+            onSelectCouponId(validId);
+        }
+    }, [open, selectedCouponId, coupons, onSelectCouponId]);
+
+    const activeCoupon = useMemo(() => {
+        return coupons.find((c: any) => c.id === selectedCouponId) || coupons[0];
+    }, [coupons, selectedCouponId]);
+
+    // Whenever active coupon changes or dialog opens, initialize form state
+    useEffect(() => {
+        if (!open || !activeCoupon) return;
+        if (pageSelectedIds.length > 0) {
+            setAppliesTo('SPECIFIC');
+            setSelectedProductIds(pageSelectedIds);
+        } else {
+            setAppliesTo((activeCoupon.appliesTo as any) || 'ALL');
+            setSelectedProductIds(Array.isArray(activeCoupon.productIds) ? activeCoupon.productIds : []);
+        }
+    }, [open, activeCoupon, pageSelectedIds]);
+
+    const handleCouponChange = (couponId: string) => {
+        onSelectCouponId(couponId);
+        const c = coupons.find((item: any) => item.id === couponId);
+        if (c) {
+            setAppliesTo((c.appliesTo as any) || 'ALL');
+            setSelectedProductIds(Array.isArray(c.productIds) ? c.productIds : []);
+        }
+    };
+
+    const filteredProducts = useMemo(() => {
+        if (!searchQuery.trim()) return products;
+        const q = searchQuery.toLowerCase();
+        return products.filter((p: any) =>
+            p.name?.toLowerCase().includes(q) ||
+            p.category?.toLowerCase().includes(q) ||
+            p.sku?.toLowerCase().includes(q)
+        );
+    }, [products, searchQuery]);
+
+    const toggleProduct = (productId: string) => {
+        setSelectedProductIds(prev =>
+            prev.includes(productId)
+                ? prev.filter(id => id !== productId)
+                : [...prev, productId]
+        );
+    };
+
+    const handleSelectAll = () => {
+        const allIds = products.map((p: any) => p.id);
+        setSelectedProductIds(allIds);
+        toast.info(`Selected all ${products.length} products`);
+    };
+
+    const handleClearAll = () => {
+        setSelectedProductIds([]);
+    };
+
+    const handleUsePageSelected = () => {
+        setAppliesTo('SPECIFIC');
+        setSelectedProductIds(pageSelectedIds);
+        toast.info(`Applied ${pageSelectedIds.length} products selected on page`);
+    };
+
+    const handleSave = () => {
+        if (!activeCoupon) {
+            toast.error('Please select a coupon');
+            return;
+        }
+
+        if (appliesTo === 'SPECIFIC' && selectedProductIds.length === 0) {
+            toast.error('Please select at least one product for this specific coupon');
+            return;
+        }
+
+        onSave(activeCoupon.id, {
+            appliesTo,
+            productIds: appliesTo === 'SPECIFIC' ? selectedProductIds : []
+        });
+    };
+
+    if (coupons.length === 0) {
+        return (
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="sm:max-w-[480px] rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-fredoka font-bold flex items-center gap-2">
+                            <Ticket className="w-5 h-5 text-purple-600" />
+                            Coupon Product Management
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-8 text-center space-y-3">
+                        <Ticket className="w-12 h-12 mx-auto text-muted-foreground/40" />
+                        <h4 className="font-bold text-base">No Coupons Found</h4>
+                        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                            Please create at least one coupon first from the Coupon Management page before assigning products.
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-fredoka font-bold flex items-center gap-2 text-foreground">
+                        <div className="p-2 bg-purple-100 text-purple-700 rounded-xl">
+                            <Ticket className="w-5 h-5" />
+                        </div>
+                        Coupon Product Management
+                    </DialogTitle>
+                    <p className="text-xs text-muted-foreground">
+                        Select an existing coupon and choose whether it applies storewide or to specific shoes.
+                    </p>
+                </DialogHeader>
+
+                <div className="space-y-5 pt-3">
+                    {/* Step 1: Select Coupon */}
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            1. Select Existing Coupon
+                        </Label>
+                        <Select
+                            value={activeCoupon?.id || ''}
+                            onValueChange={handleCouponChange}
+                        >
+                            <SelectTrigger className="h-12 rounded-xl font-bold border-2">
+                                <SelectValue placeholder="Select a coupon..." />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                                {coupons.map((c: any) => (
+                                    <SelectItem key={c.id} value={c.id} className="py-2.5">
+                                        <div className="flex items-center justify-between w-full gap-4">
+                                            <span className="font-black uppercase tracking-wider text-purple-700">
+                                                {c.code}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {c.discountType === 'PERCENTAGE' ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
+                                                {c.appliesTo === 'SPECIFIC' ? ` • ${c.productIds?.length || 0} Products` : ' • All Products'}
+                                            </span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        {/* Selected coupon preview card */}
+                        {activeCoupon && (
+                            <div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-purple-600 text-white flex items-center justify-center font-black text-sm">
+                                        %
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-extrabold text-sm text-purple-950 uppercase tracking-wider">
+                                                {activeCoupon.code}
+                                            </p>
+                                            <Badge className="bg-purple-200 text-purple-800 text-[10px] font-bold border-none hover:bg-purple-200">
+                                                {activeCoupon.discountType === 'PERCENTAGE'
+                                                    ? `${activeCoupon.discountValue}% OFF`
+                                                    : `₹${activeCoupon.discountValue} OFF`}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-[11px] text-purple-700 mt-0.5">
+                                            Currently applies to: <strong className="font-semibold">{activeCoupon.appliesTo === 'SPECIFIC' ? `${activeCoupon.productIds?.length || 0} specific items` : 'All products'}</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                                <Badge variant={activeCoupon.isActive ? 'default' : 'outline'} className="text-[10px]">
+                                    {activeCoupon.isActive ? 'Active' : 'Inactive'}
+                                </Badge>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Step 2: Choose Product Applicability */}
+                    <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                2. Target Products
+                            </Label>
+                            {pageSelectedIds.length > 0 && appliesTo === 'SPECIFIC' && (
+                                <button
+                                    type="button"
+                                    onClick={handleUsePageSelected}
+                                    className="text-xs font-bold text-purple-700 hover:text-purple-800 underline flex items-center gap-1"
+                                >
+                                    Use {pageSelectedIds.length} checked from page
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setAppliesTo('ALL')}
+                                className={`flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all ${
+                                    appliesTo === 'ALL'
+                                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20 text-foreground'
+                                        : 'border-gray-200 hover:border-gray-300 bg-white text-muted-foreground'
+                                }`}
+                            >
+                                <div className={`p-2 rounded-lg ${appliesTo === 'ALL' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                    <Globe className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm text-foreground">Select All Products</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        Applies coupon to every product in the store
+                                    </p>
+                                </div>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setAppliesTo('SPECIFIC')}
+                                className={`flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all ${
+                                    appliesTo === 'SPECIFIC'
+                                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20 text-foreground'
+                                        : 'border-gray-200 hover:border-gray-300 bg-white text-muted-foreground'
+                                }`}
+                            >
+                                <div className={`p-2 rounded-lg ${appliesTo === 'SPECIFIC' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                    <Package className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm text-foreground">Select Specific Products</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        Choose individual products for this coupon
+                                    </p>
+                                </div>
+                            </button>
+                        </div>
+
+                        {/* Specific Products Selector */}
+                        {appliesTo === 'SPECIFIC' && (
+                            <div className="mt-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 animate-fade-in">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                                        <span>Selected:</span>
+                                        <Badge variant="secondary" className="bg-primary/10 text-primary font-bold">
+                                            {selectedProductIds.length} of {products.length} products
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-xs bg-white"
+                                            onClick={handleSelectAll}
+                                        >
+                                            Select All ({products.length})
+                                        </Button>
+                                        {selectedProductIds.length > 0 && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                onClick={handleClearAll}
+                                            >
+                                                Clear
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Search Bar */}
+                                <div className="relative">
+                                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                                    <Input
+                                        placeholder="Search products by name, category, or SKU..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-9 pr-8 bg-white h-9 text-xs"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSearchQuery('')}
+                                            className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Product Checklist */}
+                                <div className="max-h-60 overflow-y-auto space-y-1 pr-1 border rounded-xl bg-white p-1.5 divide-y divide-slate-100">
+                                    {filteredProducts.length === 0 ? (
+                                        <p className="text-center py-6 text-xs text-muted-foreground">
+                                            No products found matching "{searchQuery}"
+                                        </p>
+                                    ) : (
+                                        filteredProducts.map((p: any) => {
+                                            const isSelected = selectedProductIds.includes(p.id);
+                                            return (
+                                                <div
+                                                    key={p.id}
+                                                    onClick={() => toggleProduct(p.id)}
+                                                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
+                                                        isSelected ? 'bg-primary/5 text-foreground' : 'hover:bg-slate-50 text-slate-700'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                        <Checkbox
+                                                            checked={isSelected}
+                                                            onCheckedChange={() => toggleProduct(p.id)}
+                                                            className="h-4 w-4 rounded pointer-events-none"
+                                                        />
+                                                        {p.images?.[0] ? (
+                                                            <img
+                                                                src={p.images[0]}
+                                                                alt=""
+                                                                className="w-8 h-8 rounded object-cover border bg-gray-50 shrink-0"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center shrink-0">
+                                                                <Package className="w-4 h-4 text-slate-400" />
+                                                            </div>
+                                                        )}
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-bold truncate">{p.name}</p>
+                                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                                                <span className="capitalize">{p.category}</span>
+                                                                {p.sku && <span>• SKU: {p.sku}</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right shrink-0 ml-2">
+                                                        <p className="text-xs font-black text-foreground">
+                                                            ₹{p.discountPrice || p.price}
+                                                        </p>
+                                                        {p.discountPrice && (
+                                                            <p className="text-[10px] text-muted-foreground line-through">
+                                                                ₹{p.price}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+
+                                {selectedProductIds.length === 0 && (
+                                    <p className="text-xs font-semibold text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                                        ⚠️ Please select at least one product for this coupon to apply.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Dialog Footer Actions */}
+                    <div className="flex gap-3 pt-4 border-t">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="flex-1 rounded-xl font-bold"
+                            onClick={() => onOpenChange(false)}
+                            disabled={isLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="hopz"
+                            className="flex-1 rounded-xl font-bold gap-2"
+                            onClick={handleSave}
+                            disabled={isLoading || (appliesTo === 'SPECIFIC' && selectedProductIds.length === 0)}
+                        >
+                            {isLoading ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Check className="w-4 h-4" />
+                                    Apply to {appliesTo === 'ALL' ? 'All Products' : `${selectedProductIds.length} Products`}
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 const AdminProducts = () => {
     const { user, isAdmin, loading } = useAuth();
     const queryClient = useQueryClient();
@@ -716,6 +1163,51 @@ const AdminProducts = () => {
     const [isReorderMode, setIsReorderMode] = useState(false);
     const [localProducts, setLocalProducts] = useState<any[]>([]);
     const [isFetchingProduct, setIsFetchingProduct] = useState(false);
+    const [isCouponDialogOpen, setIsCouponDialogOpen] = useState(false);
+    const [selectedCouponId, setSelectedCouponId] = useState<string>('');
+
+    const { data: coupons = [] } = useQuery({
+        queryKey: ['admin-coupons'],
+        queryFn: async () => {
+            const response = await adminAPI.getCoupons();
+            return response.data || [];
+        },
+        enabled: isAdmin
+    });
+
+    const updateCouponMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: any }) => adminAPI.updateCoupon(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
+            toast.success('Coupon product assignment updated successfully! 🎫');
+            setIsCouponDialogOpen(false);
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error || 'Failed to update coupon');
+        }
+    });
+
+    const productCouponMap = useMemo(() => {
+        const map = new Map<string, string[]>();
+        coupons.forEach((coupon: any) => {
+            if (coupon.isActive && coupon.appliesTo === 'SPECIFIC' && Array.isArray(coupon.productIds)) {
+                coupon.productIds.forEach((pid: string) => {
+                    const list = map.get(pid) || [];
+                    list.push(coupon.code);
+                    map.set(pid, list);
+                });
+            }
+        });
+        return map;
+    }, [coupons]);
+
+    const handleCouponBadgeClick = (code: string) => {
+        const target = coupons.find((c: any) => c.code === code);
+        if (target) {
+            setSelectedCouponId(target.id);
+            setIsCouponDialogOpen(true);
+        }
+    };
 
     const handleEditClick = async (product: any) => {
         setIsFetchingProduct(true);
@@ -1283,6 +1775,21 @@ const AdminProducts = () => {
                         </Button>
                     )}
 
+                    {/* Assign Coupon */}
+                    <Button
+                        variant="outline"
+                        className="rounded-xl font-bold border-2 gap-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300"
+                        onClick={() => {
+                            if (coupons.length > 0 && !selectedCouponId) {
+                                setSelectedCouponId(coupons[0].id);
+                            }
+                            setIsCouponDialogOpen(true);
+                        }}
+                    >
+                        <Ticket className="w-4 h-4 text-purple-600" />
+                        Assign Coupon
+                    </Button>
+
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button className="rounded-xl px-6 font-bold shadow-lg shadow-primary/20 gap-2" onClick={() => setEditingProduct(null)}>
@@ -1355,6 +1862,8 @@ const AdminProducts = () => {
                                                 deleteMutation.mutate(id);
                                             }
                                         }}
+                                        applicableCoupons={productCouponMap.get(product.id) || []}
+                                        onCouponClick={handleCouponBadgeClick}
                                     />
                                 ))}
                             </SortableContext>
@@ -1396,9 +1905,30 @@ const AdminProducts = () => {
                                                     {product.description || 'No description available'}
                                                 </p>
                                             </div>
-                                            <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
-                                                {product.status || 'ACTIVE'}
-                                            </Badge>
+                                            <div className="flex flex-col items-end gap-1.5">
+                                                <Badge className={(product.status || 'ACTIVE') === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-500'}>
+                                                    {product.status || 'ACTIVE'}
+                                                </Badge>
+                                                {productCouponMap.get(product.id) && productCouponMap.get(product.id)!.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1 justify-end max-w-[220px]">
+                                                        {productCouponMap.get(product.id)!.map((code: string) => (
+                                                            <Badge
+                                                                key={code}
+                                                                variant="outline"
+                                                                className="text-[10px] bg-purple-50 text-purple-700 border-purple-200 font-bold gap-1 cursor-pointer hover:bg-purple-100 transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleCouponBadgeClick(code);
+                                                                }}
+                                                                title={`Click to manage coupon ${code}`}
+                                                            >
+                                                                <Ticket className="w-3 h-3 text-purple-600" />
+                                                                {code}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                                             <div>
@@ -1477,6 +2007,20 @@ const AdminProducts = () => {
 
                         <div className="flex gap-3">
                             <Button
+                                variant="outline"
+                                className="rounded-xl font-bold gap-2 px-5 h-11 bg-purple-600 hover:bg-purple-700 text-white border-0 shadow-lg shadow-purple-500/25"
+                                onClick={() => {
+                                    if (coupons.length > 0 && !selectedCouponId) {
+                                        setSelectedCouponId(coupons[0].id);
+                                    }
+                                    setIsCouponDialogOpen(true);
+                                }}
+                            >
+                                <Ticket className="w-4 h-4" />
+                                Assign Coupon ({selectedIds.length})
+                            </Button>
+
+                            <Button
                                 variant="destructive"
                                 className="rounded-xl font-bold gap-2 px-6 h-11 shadow-lg shadow-red-500/20"
                                 onClick={() => {
@@ -1501,6 +2045,19 @@ const AdminProducts = () => {
                     </Card>
                 </div>
             )}
+
+            {/* Coupon Product Manager Dialog */}
+            <CouponProductManagerDialog
+                open={isCouponDialogOpen}
+                onOpenChange={setIsCouponDialogOpen}
+                coupons={coupons}
+                products={products || []}
+                pageSelectedIds={selectedIds}
+                selectedCouponId={selectedCouponId}
+                onSelectCouponId={setSelectedCouponId}
+                onSave={(couponId, data) => updateCouponMutation.mutate({ id: couponId, data })}
+                isLoading={updateCouponMutation.isPending}
+            />
         </>
     );
 };

@@ -70,7 +70,12 @@ export const cartAPI = {
     remove: (id: string) => api.delete(`/cart/${id}`),
     clear: () => api.delete('/cart'),
     getActiveCoupons: () => api.get('/coupons/active'),
-    validateCoupon: (data: { code: string; cartTotal: number }) => api.post('/coupons/validate', data),
+    validateCoupon: (data: { code: string; cartTotal: number; items?: any[]; guestEmail?: string | null }) =>
+        api.post('/coupons/validate', data),
+    applyCoupon: (data: { code: string; cartTotal: number; items?: any[]; guestEmail?: string | null }) =>
+        api.post('/coupons/apply', data),
+    removeCoupon: (data: { code: string; guestEmail?: string | null }) =>
+        api.post('/coupons/remove', data),
     getReviews: (productId: string) => api.get(`/reviews/${productId}`),
     postReview: (data: any) => api.post('/reviews', data)
 };

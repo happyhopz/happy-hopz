@@ -5,13 +5,104 @@ import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+// Helper to safely parse stored product IDs
+function parseProductIds(productIdsStr?: string | null): string[] {
+    if (!productIdsStr) return [];
+    try {
+        const parsed = JSON.parse(productIdsStr);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+interface CartItemInput {
+    productId: string;
+    price: number;
+    quantity?: number;
+}
+
+function calculateCouponDiscount(
+    coupon: {
+        discountType: string;
+        discountValue: number;
+        appliesTo?: string | null;
+        productIds?: string | null;
+        minOrderValue?: number | null;
+    },
+    cartTotal: number,
+    items?: CartItemInput[]
+): {
+    discountAmount: number;
+    eligibleSubtotal: number;
+    isEligible: boolean;
+    error?: string;
+} {
+    const isSpecific = coupon.appliesTo === 'SPECIFIC';
+    const productIds = parseProductIds(coupon.productIds);
+
+    let eligibleSubtotal = cartTotal;
+
+    if (isSpecific) {
+        if (items && items.length > 0) {
+            const eligibleItems = items.filter(item => productIds.includes(item.productId));
+            if (eligibleItems.length === 0) {
+                return {
+                    discountAmount: 0,
+                    eligibleSubtotal: 0,
+                    isEligible: false,
+                    error: 'This coupon is only valid for specific products not currently in your bag.'
+                };
+            }
+            eligibleSubtotal = eligibleItems.reduce(
+                (sum, item) => sum + (Number(item.price) * (item.quantity || 1)),
+                0
+            );
+        }
+    }
+
+    if (coupon.minOrderValue && cartTotal < coupon.minOrderValue) {
+        return {
+            discountAmount: 0,
+            eligibleSubtotal,
+            isEligible: false,
+            error: `Minimum order value of ₹${coupon.minOrderValue} required`
+        };
+    }
+
+    let discount = 0;
+    if (coupon.discountType === 'PERCENTAGE') {
+        discount = (eligibleSubtotal * coupon.discountValue) / 100;
+    } else {
+        discount = coupon.discountValue;
+    }
+
+    const discountAmount = Math.min(Math.round(discount * 100) / 100, eligibleSubtotal, cartTotal);
+
+    return {
+        discountAmount,
+        eligibleSubtotal,
+        isEligible: true
+    };
+}
+
+const cartItemSchema = z.object({
+    productId: z.string(),
+    price: z.number(),
+    quantity: z.number().int().positive().optional().default(1)
+});
+
 // Get all coupons (Admin only)
 router.get('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const coupons = await prisma.coupon.findMany({
             orderBy: { createdAt: 'desc' }
         });
-        res.json(coupons);
+        const formatted = coupons.map(c => ({
+            ...c,
+            productIds: parseProductIds(c.productIds)
+        }));
+        res.json(formatted);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch coupons' });
     }
@@ -26,7 +117,18 @@ const couponSchema = z.object({
     expiryDate: z.string().optional().nullable(),
     maxUses: z.number().int().positive().optional().nullable(),
     isActive: z.boolean().default(true),
-    isHidden: z.boolean().default(false)
+    isHidden: z.boolean().default(false),
+    firstTimeOnly: z.boolean().optional().default(false),
+    appliesTo: z.enum(['ALL', 'SPECIFIC']).default('ALL'),
+    productIds: z.array(z.string()).optional().default([])
+}).refine(data => {
+    if (data.appliesTo === 'SPECIFIC' && (!data.productIds || data.productIds.length === 0)) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'Please select at least one product for product-specific coupon',
+    path: ['productIds']
 });
 
 router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
@@ -43,7 +145,16 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
 
         const coupon = await prisma.coupon.create({
             data: {
-                ...data,
+                code: data.code,
+                discountType: data.discountType,
+                discountValue: data.discountValue,
+                minOrderValue: data.minOrderValue,
+                maxUses: data.maxUses,
+                isActive: data.isActive,
+                isHidden: data.isHidden,
+                firstTimeOnly: data.firstTimeOnly,
+                appliesTo: data.appliesTo,
+                productIds: JSON.stringify(data.appliesTo === 'SPECIFIC' ? (data.productIds || []) : []),
                 expiryDate: data.expiryDate ? new Date(data.expiryDate) : null
             }
         });
@@ -54,12 +165,15 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
                 action: 'CREATE_COUPON',
                 entity: 'COUPON',
                 entityId: coupon.id,
-                details: `Coupon "${coupon.code}" created`,
+                details: `Coupon "${coupon.code}" created (${coupon.appliesTo === 'SPECIFIC' ? 'Specific Products' : 'All Products'})`,
                 adminId: req.user!.id
             }
         });
 
-        res.status(201).json(coupon);
+        res.status(201).json({
+            ...coupon,
+            productIds: parseProductIds(coupon.productIds)
+        });
     } catch (error) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Validation failed', details: error.errors });
@@ -69,16 +183,49 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respo
 });
 
 // Update coupon (Admin only)
+const couponUpdateSchema = z.object({
+    code: z.string().min(3).max(20).transform(v => v.toUpperCase()).optional(),
+    discountType: z.enum(['PERCENTAGE', 'FLAT']).optional(),
+    discountValue: z.number().positive().optional(),
+    minOrderValue: z.number().nonnegative().optional().nullable(),
+    expiryDate: z.string().optional().nullable(),
+    maxUses: z.number().int().positive().optional().nullable(),
+    isActive: z.boolean().optional(),
+    isHidden: z.boolean().optional(),
+    firstTimeOnly: z.boolean().optional(),
+    appliesTo: z.enum(['ALL', 'SPECIFIC']).optional(),
+    productIds: z.array(z.string()).optional()
+}).refine(data => {
+    if (data.appliesTo === 'SPECIFIC' && data.productIds !== undefined && data.productIds.length === 0) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'Please select at least one product for product-specific coupon',
+    path: ['productIds']
+});
+
 router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const data = couponSchema.partial().parse(req.body);
+        const data = couponUpdateSchema.parse(req.body);
+
+        const updateData: any = { ...data };
+        if (data.expiryDate !== undefined) {
+            updateData.expiryDate = data.expiryDate ? new Date(data.expiryDate) : null;
+        }
+        if (data.appliesTo !== undefined) {
+            updateData.appliesTo = data.appliesTo;
+            if (data.appliesTo === 'ALL') {
+                updateData.productIds = '[]';
+            }
+        }
+        if (data.productIds !== undefined && data.appliesTo !== 'ALL') {
+            updateData.productIds = JSON.stringify(data.productIds);
+        }
 
         const coupon = await prisma.coupon.update({
             where: { id: req.params.id as string },
-            data: {
-                ...data,
-                expiryDate: data.expiryDate ? new Date(data.expiryDate) : data.expiryDate === null ? null : undefined
-            }
+            data: updateData
         });
 
         // Create Audit Log
@@ -92,7 +239,10 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Res
             }
         });
 
-        res.json(coupon);
+        res.json({
+            ...coupon,
+            productIds: parseProductIds(coupon.productIds)
+        });
     } catch (error) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Validation failed', details: error.errors });
@@ -143,10 +293,16 @@ router.get('/active', async (req, res) => {
                 discountType: true,
                 discountValue: true,
                 minOrderValue: true,
-                firstTimeOnly: true
+                firstTimeOnly: true,
+                appliesTo: true,
+                productIds: true
             }
         });
-        res.json(coupons);
+        const formatted = coupons.map(c => ({
+            ...c,
+            productIds: parseProductIds(c.productIds)
+        }));
+        res.json(formatted);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch active coupons' });
     }
@@ -155,9 +311,10 @@ router.get('/active', async (req, res) => {
 // Validate coupon (Public - for checkout)
 router.post('/validate', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { code, cartTotal } = z.object({
+        const { code, cartTotal, items } = z.object({
             code: z.string().transform(v => v.toUpperCase()),
-            cartTotal: z.number()
+            cartTotal: z.number(),
+            items: z.array(cartItemSchema).optional()
         }).parse(req.body);
 
         const coupon = await prisma.coupon.findUnique({
@@ -174,10 +331,6 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
 
         if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
             return res.status(400).json({ error: 'Coupon usage limit reached' });
-        }
-
-        if (coupon.minOrderValue && cartTotal < coupon.minOrderValue) {
-            return res.status(400).json({ error: `Minimum order value of ₹${coupon.minOrderValue} required` });
         }
 
         // Check if first-time only coupon
@@ -194,11 +347,9 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
             }
         }
 
-        let discount = 0;
-        if (coupon.discountType === 'PERCENTAGE') {
-            discount = (cartTotal * coupon.discountValue) / 100;
-        } else {
-            discount = coupon.discountValue;
+        const calc = calculateCouponDiscount(coupon, cartTotal, items);
+        if (!calc.isEligible) {
+            return res.status(400).json({ error: calc.error });
         }
 
         res.json({
@@ -206,7 +357,9 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
             code: coupon.code,
             discountType: coupon.discountType,
             discountValue: coupon.discountValue,
-            discountAmount: Math.min(discount, cartTotal)
+            discountAmount: calc.discountAmount,
+            appliesTo: coupon.appliesTo,
+            productIds: parseProductIds(coupon.productIds)
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -219,10 +372,11 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
 // Apply coupon (creates reservation with 10-min timer)
 router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { code, cartTotal, guestEmail } = z.object({
+        const { code, cartTotal, guestEmail, items } = z.object({
             code: z.string().transform(v => v.toUpperCase()),
             cartTotal: z.number(),
-            guestEmail: z.string().email().optional()
+            guestEmail: z.string().email().optional().nullable(),
+            items: z.array(cartItemSchema).optional()
         }).parse(req.body);
 
         const coupon = await prisma.coupon.findUnique({
@@ -239,10 +393,6 @@ router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
 
         if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
             return res.status(400).json({ error: 'Coupon usage limit reached' });
-        }
-
-        if (coupon.minOrderValue && cartTotal < coupon.minOrderValue) {
-            return res.status(400).json({ error: `Minimum order value of ₹${coupon.minOrderValue} required` });
         }
 
         // Check if first-time only coupon
@@ -282,6 +432,11 @@ router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
             }
         }
 
+        const calc = calculateCouponDiscount(coupon, cartTotal, items);
+        if (!calc.isEligible) {
+            return res.status(400).json({ error: calc.error });
+        }
+
         // Clean up expired reservations
         await prisma.couponReservation.deleteMany({
             where: {
@@ -304,19 +459,14 @@ router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
 
         if (existingReservation) {
             // Reservation already exists, return existing expiry
-            let discount = 0;
-            if (coupon.discountType === 'PERCENTAGE') {
-                discount = (cartTotal * coupon.discountValue) / 100;
-            } else {
-                discount = coupon.discountValue;
-            }
-
             return res.json({
                 id: coupon.id,
                 code: coupon.code,
                 discountType: coupon.discountType,
                 discountValue: coupon.discountValue,
-                discountAmount: Math.min(discount, cartTotal),
+                discountAmount: calc.discountAmount,
+                appliesTo: coupon.appliesTo,
+                productIds: parseProductIds(coupon.productIds),
                 expiresAt: existingReservation.expiresAt.toISOString()
             });
         }
@@ -332,19 +482,14 @@ router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
             }
         });
 
-        let discount = 0;
-        if (coupon.discountType === 'PERCENTAGE') {
-            discount = (cartTotal * coupon.discountValue) / 100;
-        } else {
-            discount = coupon.discountValue;
-        }
-
         res.json({
             id: coupon.id,
             code: coupon.code,
             discountType: coupon.discountType,
             discountValue: coupon.discountValue,
-            discountAmount: Math.min(discount, cartTotal),
+            discountAmount: calc.discountAmount,
+            appliesTo: coupon.appliesTo,
+            productIds: parseProductIds(coupon.productIds),
             expiresAt: expiresAt.toISOString()
         });
     } catch (error) {
