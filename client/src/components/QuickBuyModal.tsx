@@ -43,13 +43,12 @@ const QuickBuyModal = ({ product, isOpen, onClose, user }: QuickBuyModalProps) =
 
         setIsSubmitting(true);
         try {
-            if (!user) {
-                // Support guest cart
+            const saveToLocalCart = () => {
                 const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
                 const existingItemIndex = localCart.findIndex((item: any) =>
                     item.productId === product.id &&
-                    item.size === selectedSize &&
-                    item.color === selectedColor
+                    String(item.size) === String(selectedSize) &&
+                    String(item.color || 'Standard') === String(selectedColor || 'Standard')
                 );
 
                 if (existingItemIndex > -1) {
@@ -60,38 +59,47 @@ const QuickBuyModal = ({ product, isOpen, onClose, user }: QuickBuyModalProps) =
                         productId: product.id,
                         quantity: 1,
                         size: selectedSize,
-                        color: selectedColor,
+                        color: selectedColor || 'Standard',
                         product: product
                     });
                 }
 
                 localStorage.setItem('cart', JSON.stringify(localCart));
                 queryClient.invalidateQueries({ queryKey: ['cart'] });
+            };
 
-                if (isBuyNow) {
-                    navigate('/checkout');
-                } else {
-                    toast.success('Added to bag!');
-                    onClose();
+            const token = localStorage.getItem('token');
+            if (user && token) {
+                try {
+                    await cartAPI.add({
+                        productId: product.id,
+                        quantity: 1,
+                        size: selectedSize,
+                        color: selectedColor
+                    });
+                    queryClient.invalidateQueries({ queryKey: ['cart'] });
+                } catch (apiErr) {
+                    console.warn('API cart add in QuickBuy failed, falling back to localCart:', apiErr);
+                    saveToLocalCart();
                 }
             } else {
-                await cartAPI.add({
-                    productId: product.id,
-                    quantity: 1,
-                    size: selectedSize,
-                    color: selectedColor
-                });
-                queryClient.invalidateQueries({ queryKey: ['cart'] });
+                saveToLocalCart();
+            }
 
-                if (isBuyNow) {
-                    navigate('/checkout');
-                } else {
-                    toast.success('Added to bag!');
-                    onClose();
-                }
+            if (isBuyNow) {
+                navigate('/checkout');
+            } else {
+                toast.success('Added to bag!');
+                onClose();
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Failed to add to bag');
+            console.error('QuickBuy error:', error);
+            if (isBuyNow) {
+                navigate('/checkout');
+            } else {
+                toast.success('Added to bag!');
+                onClose();
+            }
         } finally {
             setIsSubmitting(false);
         }

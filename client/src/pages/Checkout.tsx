@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import upiQr from '@/assets/upi-qr.jpg';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { cartAPI, ordersAPI, addressAPI, paymentAPI, settingsAPI } from '@/lib/api';
+import { cartAPI, ordersAPI, addressAPI, paymentAPI, settingsAPI, API_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useEventTracking } from '@/hooks/useEventTracking';
 import Navbar from '@/components/Navbar';
@@ -79,7 +79,7 @@ const Checkout = () => {
         pincode: ''
     });
     const [paymentMethod, setPaymentMethod] = useState('COD');
-    const [isGuest, setIsGuest] = useState(false);
+    const [isGuest, setIsGuest] = useState(() => !localStorage.getItem('token'));
     const [guestInfo, setGuestInfo] = useState({
         email: '',
         name: '',
@@ -100,7 +100,7 @@ const Checkout = () => {
         const fetchSettings = async () => {
             try {
                 // Use public content API so guests can also see available methods
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/content/payment_methods`);
+                const res = await fetch(`${API_URL}/content/payment_methods`);
                 if (res.ok) {
                     const data = await res.json();
                     setPaymentSettings(data);
@@ -189,20 +189,31 @@ const Checkout = () => {
 
     // Check authentication and set step
     useEffect(() => {
-        if (!loading && !user && !isGuest) {
-            setCurrentStep('login' as any);
+        if (!loading && !user) {
+            setIsGuest(true);
         }
-    }, [user, loading, isGuest]);
+    }, [user, loading]);
 
     const { data: cartItems, isLoading: cartLoading } = useQuery({
         queryKey: ['cart', user?.id, isGuest],
         queryFn: async () => {
-            if (isGuest) {
+            const token = localStorage.getItem('token');
+            if (user && token && !isGuest) {
+                try {
+                    const response = await cartAPI.get();
+                    if (Array.isArray(response.data) && response.data.length > 0) {
+                        return response.data;
+                    }
+                } catch (e) {
+                    console.warn('Failed to fetch user cart, falling back to localCart:', e);
+                }
+            }
+            try {
                 const localCart = localStorage.getItem('cart');
                 return localCart ? JSON.parse(localCart) : [];
+            } catch {
+                return [];
             }
-            const response = await cartAPI.get();
-            return response.data;
         },
         enabled: !loading
     });

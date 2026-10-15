@@ -21,12 +21,23 @@ const Cart = () => {
     const { data: cartItems, isLoading } = useQuery({
         queryKey: ['cart', user?.id],
         queryFn: async () => {
-            if (!user) {
+            const token = localStorage.getItem('token');
+            if (user && token) {
+                try {
+                    const response = await cartAPI.get();
+                    if (Array.isArray(response.data) && response.data.length > 0) {
+                        return response.data;
+                    }
+                } catch (e) {
+                    console.warn('cartAPI.get failed in Cart, falling back to localCart:', e);
+                }
+            }
+            try {
                 const localCart = localStorage.getItem('cart');
                 return localCart ? JSON.parse(localCart) : [];
+            } catch {
+                return [];
             }
-            const response = await cartAPI.get();
-            return response.data;
         },
         enabled: !loading
     });

@@ -44,13 +44,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setUser(response.data);
                     setToken(storedToken);
                 } catch (error: any) {
-                    // Only remove token if it's explicitly an auth error (401)
+                    // Remove token and user if auth fails
                     if (error.response?.status === 401) {
                         localStorage.removeItem('token');
+                        localStorage.removeItem('user');
                         setToken(null);
+                        setUser(null);
                     }
                     console.error('Auth check failed:', error.message);
                 }
+            } else {
+                localStorage.removeItem('user');
+                setUser(null);
+                setToken(null);
             }
             setLoading(false);
         };

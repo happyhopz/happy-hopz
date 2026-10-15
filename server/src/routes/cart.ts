@@ -100,6 +100,14 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Product not found' });
         }
 
+        // Verify user exists in DB before attempting CartItem insert/query to prevent FK error P2003
+        const userExists = await prisma.user.findUnique({
+            where: { id: req.user.id }
+        });
+        if (!userExists) {
+            return res.status(401).json({ error: 'User account not found, please log in again' });
+        }
+
         // Check if item already exists
         const existing = await prisma.cartItem.findFirst({
             where: {

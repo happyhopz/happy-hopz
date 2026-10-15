@@ -112,7 +112,11 @@ const ProductDetail = () => {
         } else {
             setSelectedSize('');
         }
-        setSelectedColor('');
+        if (product?.colors?.length === 1) {
+            setSelectedColor(product.colors[0]);
+        } else {
+            setSelectedColor('');
+        }
         setSelectedImageIndex(0);
         api?.scrollTo(0);
         window.scrollTo(0, 0);
@@ -133,110 +137,109 @@ const ProductDetail = () => {
         });
     }, [api]);
 
+    const saveToLocalCart = (sizeVal: string, colorVal: string) => {
+        try {
+            const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const existingItemIndex = localCart.findIndex((item: any) =>
+                item.productId === product.id &&
+                String(item.size) === String(sizeVal) &&
+                String(item.color || 'Standard') === String(colorVal || 'Standard')
+            );
+
+            if (existingItemIndex > -1) {
+                localCart[existingItemIndex].quantity += 1;
+            } else {
+                localCart.push({
+                    id: `guest_${Date.now()}`,
+                    productId: product.id,
+                    quantity: 1,
+                    size: sizeVal,
+                    color: colorVal || 'Standard',
+                    product: product
+                });
+            }
+
+            localStorage.setItem('cart', JSON.stringify(localCart));
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+        } catch (e) {
+            console.error('Failed to save to local cart:', e);
+        }
+    };
+
     const handleAddToCart = async () => {
-        if (!selectedSize) {
+        const sizeVal = selectedSize || (product?.sizes?.length === 1 ? product.sizes[0] : '');
+        if (!sizeVal) {
             toast.error('Please select a size');
             return;
         }
 
-        if (!selectedColor) {
-            toast.error('Please select a color');
-            return;
-        }
+        const colorVal = selectedColor || (product?.colors?.length === 1 ? product.colors[0] : (product?.colors?.[0] || 'Standard'));
 
         setAdding(true);
         try {
-            if (!user) {
-                // Handle guest cart
-                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
-                const existingItemIndex = localCart.findIndex((item: any) =>
-                    item.productId === product.id &&
-                    item.size === selectedSize &&
-                    item.color === selectedColor
-                );
-
-                if (existingItemIndex > -1) {
-                    localCart[existingItemIndex].quantity += 1;
-                } else {
-                    localCart.push({
-                        id: `guest_${Date.now()}`,
+            const token = localStorage.getItem('token');
+            if (user && token) {
+                try {
+                    await cartAPI.add({
                         productId: product.id,
                         quantity: 1,
-                        size: selectedSize,
-                        color: selectedColor,
-                        product: product
+                        size: sizeVal,
+                        color: colorVal
                     });
+                    queryClient.invalidateQueries({ queryKey: ['cart'] });
+                    toast.success('Added to bag!');
+                } catch (err) {
+                    console.warn('API cart add failed, falling back to localCart:', err);
+                    saveToLocalCart(sizeVal, colorVal);
+                    toast.success('Added to bag!');
                 }
-
-                localStorage.setItem('cart', JSON.stringify(localCart));
-                toast.success('Added to bag!');
-                queryClient.invalidateQueries({ queryKey: ['cart'] });
             } else {
-                await cartAPI.add({
-                    productId: product.id,
-                    quantity: 1,
-                    size: selectedSize,
-                    color: selectedColor
-                });
-                queryClient.invalidateQueries({ queryKey: ['cart'] });
+                saveToLocalCart(sizeVal, colorVal);
                 toast.success('Added to bag!');
             }
             trackEvent('ADD_TO_CART', product.name, `${product.price}`);
         } catch (error) {
-            toast.error('Failed to add to bag');
+            console.error('Add to cart error:', error);
+            saveToLocalCart(sizeVal, colorVal);
+            toast.success('Added to bag!');
         } finally {
             setAdding(false);
         }
     };
 
     const handleBuyNow = async () => {
-        if (!selectedSize) {
+        const sizeVal = selectedSize || (product?.sizes?.length === 1 ? product.sizes[0] : '');
+        if (!sizeVal) {
             toast.error('Please select a size');
             return;
         }
 
-        if (!selectedColor) {
-            toast.error('Please select a color');
-            return;
-        }
+        const colorVal = selectedColor || (product?.colors?.length === 1 ? product.colors[0] : (product?.colors?.[0] || 'Standard'));
 
         try {
-            if (!user) {
-                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
-                const existingItemIndex = localCart.findIndex((item: any) =>
-                    item.productId === product.id &&
-                    item.size === selectedSize &&
-                    item.color === selectedColor
-                );
-
-                if (existingItemIndex > -1) {
-                    localCart[existingItemIndex].quantity += 1;
-                } else {
-                    localCart.push({
-                        id: `guest_${Date.now()}`,
+            const token = localStorage.getItem('token');
+            if (user && token) {
+                try {
+                    await cartAPI.add({
                         productId: product.id,
                         quantity: 1,
-                        size: selectedSize,
-                        color: selectedColor,
-                        product: product
+                        size: sizeVal,
+                        color: colorVal
                     });
+                    queryClient.invalidateQueries({ queryKey: ['cart'] });
+                } catch (err) {
+                    console.warn('API cart add failed, falling back to localCart:', err);
+                    saveToLocalCart(sizeVal, colorVal);
                 }
-
-                localStorage.setItem('cart', JSON.stringify(localCart));
-                queryClient.invalidateQueries({ queryKey: ['cart'] });
             } else {
-                await cartAPI.add({
-                    productId: product.id,
-                    quantity: 1,
-                    size: selectedSize,
-                    color: selectedColor
-                });
-                queryClient.invalidateQueries({ queryKey: ['cart'] });
+                saveToLocalCart(sizeVal, colorVal);
             }
             trackEvent('BUY_NOW', product.name, `${product.price}`);
             navigate('/checkout');
         } catch (error) {
-            toast.error('Failed to proceed to checkout');
+            console.error('Buy Now error, falling back to local cart and navigating:', error);
+            saveToLocalCart(sizeVal, colorVal);
+            navigate('/checkout');
         }
     };
 

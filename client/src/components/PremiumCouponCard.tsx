@@ -1,5 +1,6 @@
 import { Tag, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { cartAPI } from '@/lib/api';
 
 interface PremiumCouponCardProps {
     code: string;
@@ -30,29 +31,17 @@ export const PremiumCouponCard = ({
         setLoading(true);
         try {
             const userEmail = user?.email || (isGuest ? guestEmail : null);
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/apply`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(user ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
-                },
-                body: JSON.stringify({
-                    code: code,
-                    cartTotal: subtotal,
-                    guestEmail: userEmail
-                })
+            const response = await cartAPI.applyCoupon({
+                code: code,
+                cartTotal: subtotal,
+                guestEmail: userEmail
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to apply coupon');
-            }
-
-            const data = await response.json();
+            const data = response.data;
             onApply(data);
             toast.success(`Coupon applied! You saved ₹${data.discountAmount}`);
         } catch (error: any) {
-            toast.error(error.message || 'Failed to apply coupon');
+            toast.error(error.response?.data?.error || error.message || 'Failed to apply coupon');
         } finally {
             setLoading(false);
         }
