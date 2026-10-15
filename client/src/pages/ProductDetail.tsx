@@ -190,12 +190,6 @@ const ProductDetail = () => {
     };
 
     const handleBuyNow = async () => {
-        if (!user) {
-            toast.info('Please login to continue');
-            navigate('/login?redirect=/checkout');
-            return;
-        }
-
         if (!selectedSize) {
             toast.error('Please select a size');
             return;
@@ -207,13 +201,38 @@ const ProductDetail = () => {
         }
 
         try {
-            await cartAPI.add({
-                productId: product.id,
-                quantity: 1,
-                size: selectedSize,
-                color: selectedColor
-            });
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            if (!user) {
+                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const existingItemIndex = localCart.findIndex((item: any) =>
+                    item.productId === product.id &&
+                    item.size === selectedSize &&
+                    item.color === selectedColor
+                );
+
+                if (existingItemIndex > -1) {
+                    localCart[existingItemIndex].quantity += 1;
+                } else {
+                    localCart.push({
+                        id: `guest_${Date.now()}`,
+                        productId: product.id,
+                        quantity: 1,
+                        size: selectedSize,
+                        color: selectedColor,
+                        product: product
+                    });
+                }
+
+                localStorage.setItem('cart', JSON.stringify(localCart));
+                queryClient.invalidateQueries({ queryKey: ['cart'] });
+            } else {
+                await cartAPI.add({
+                    productId: product.id,
+                    quantity: 1,
+                    size: selectedSize,
+                    color: selectedColor
+                });
+                queryClient.invalidateQueries({ queryKey: ['cart'] });
+            }
             trackEvent('BUY_NOW', product.name, `${product.price}`);
             navigate('/checkout');
         } catch (error) {

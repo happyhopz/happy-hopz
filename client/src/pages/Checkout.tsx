@@ -477,26 +477,14 @@ const Checkout = () => {
         setCouponLoading(true);
         try {
             const userEmail = user?.email || (isGuest ? guestInfo.email : null);
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/apply`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(user ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
-                },
-                body: JSON.stringify({
-                    code: codeToApply,
-                    cartTotal: subtotal,
-                    guestEmail: userEmail,
-                    items: formattedItems
-                })
+            const response = await cartAPI.applyCoupon({
+                code: codeToApply,
+                cartTotal: subtotal,
+                guestEmail: userEmail,
+                items: formattedItems
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to apply coupon');
-            }
-
-            const data = await response.json();
+            const data = response.data;
             setAppliedCoupon(data);
             setCouponExpiry(new Date(data.expiresAt));
             localStorage.setItem('appliedCoupon', JSON.stringify(data));
@@ -504,7 +492,7 @@ const Checkout = () => {
             trackEvent('APPLY_COUPON', codeToApply, `${data.discountAmount}`);
             setCouponCode('');
         } catch (error: any) {
-            toast.error(error.message || 'Failed to apply coupon');
+            toast.error(error.response?.data?.error || error.message || 'Failed to apply coupon');
         } finally {
             setCouponLoading(false);
         }
@@ -515,24 +503,17 @@ const Checkout = () => {
 
         try {
             const userEmail = user?.email || (isGuest ? guestInfo.email : null);
-            await fetch(`${import.meta.env.VITE_API_URL}/coupons/remove`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(user ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {})
-                },
-                body: JSON.stringify({
-                    code: appliedCoupon.code,
-                    guestEmail: userEmail
-                })
+            await cartAPI.removeCoupon({
+                code: appliedCoupon.code,
+                guestEmail: userEmail
             });
 
             setAppliedCoupon(null);
             setCouponExpiry(null);
             localStorage.removeItem('appliedCoupon');
             toast.success('Coupon removed');
-        } catch (error) {
-            toast.error('Failed to remove coupon');
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || 'Failed to remove coupon');
         }
     };
 
@@ -545,14 +526,23 @@ const Checkout = () => {
 
         setIsProcessing(true);
         try {
-            const orderItems = cartItems.map((item: any) => ({
-                productId: item.productId,
-                name: item.product.name,
-                price: item.product.discountPrice || item.product.price,
-                quantity: item.quantity,
-                size: item.size,
-                color: item.color
-            }));
+            const orderItems = (cartItems || []).map((item: any) => {
+                const pid = item.productId || item.product?.id || item.id;
+                const name = item.product?.name || item.name || 'Product';
+                const price = Number(item.product?.discountPrice || item.product?.price || item.price || 0);
+                const quantity = Number(item.quantity || 1);
+                const size = String(item.size || 'Standard');
+                const color = String(item.color || 'Standard');
+
+                return {
+                    productId: pid,
+                    name,
+                    price,
+                    quantity,
+                    size,
+                    color
+                };
+            });
 
             const baseOrderData = {
                 items: orderItems,

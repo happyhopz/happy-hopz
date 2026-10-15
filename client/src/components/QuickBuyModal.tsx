@@ -31,12 +31,6 @@ const QuickBuyModal = ({ product, isOpen, onClose, user }: QuickBuyModalProps) =
     if (!product) return null;
 
     const handleFinish = async (isBuyNow: boolean) => {
-        if (!user) {
-            toast.info('Please login to continue');
-            navigate('/login');
-            return;
-        }
-
         if (!selectedSize) {
             toast.error('Please select a size');
             return;
@@ -49,22 +43,55 @@ const QuickBuyModal = ({ product, isOpen, onClose, user }: QuickBuyModalProps) =
 
         setIsSubmitting(true);
         try {
-            await cartAPI.add({
-                productId: product.id,
-                quantity: 1,
-                size: selectedSize,
-                color: selectedColor
-            });
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            if (!user) {
+                // Support guest cart
+                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const existingItemIndex = localCart.findIndex((item: any) =>
+                    item.productId === product.id &&
+                    item.size === selectedSize &&
+                    item.color === selectedColor
+                );
 
-            if (isBuyNow) {
-                navigate('/checkout');
+                if (existingItemIndex > -1) {
+                    localCart[existingItemIndex].quantity += 1;
+                } else {
+                    localCart.push({
+                        id: `guest_${Date.now()}`,
+                        productId: product.id,
+                        quantity: 1,
+                        size: selectedSize,
+                        color: selectedColor,
+                        product: product
+                    });
+                }
+
+                localStorage.setItem('cart', JSON.stringify(localCart));
+                queryClient.invalidateQueries({ queryKey: ['cart'] });
+
+                if (isBuyNow) {
+                    navigate('/checkout');
+                } else {
+                    toast.success('Added to bag!');
+                    onClose();
+                }
             } else {
-                toast.success('Added to bag!');
-                onClose();
+                await cartAPI.add({
+                    productId: product.id,
+                    quantity: 1,
+                    size: selectedSize,
+                    color: selectedColor
+                });
+                queryClient.invalidateQueries({ queryKey: ['cart'] });
+
+                if (isBuyNow) {
+                    navigate('/checkout');
+                } else {
+                    toast.success('Added to bag!');
+                    onClose();
+                }
             }
-        } catch (error) {
-            toast.error('Failed to update cart');
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || 'Failed to add to bag');
         } finally {
             setIsSubmitting(false);
         }
