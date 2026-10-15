@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { authAPI } from '@/lib/api';
 
 interface User {
@@ -28,6 +29,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+    const queryClient = useQueryClient();
     const [user, setUser] = useState<User | null>(() => {
         const storedUser = localStorage.getItem('user');
         return storedUser ? JSON.parse(storedUser) : null;
@@ -50,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         localStorage.removeItem('user');
                         setToken(null);
                         setUser(null);
+                        queryClient.clear();
                     }
                     console.error('Auth check failed:', error.message);
                 }
@@ -92,10 +95,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = () => {
-        setUser(null);
-        setToken(null);
+        // Complete clear of tokens, user identity, and session caches
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('cart');
+        localStorage.removeItem('appliedCoupon');
+        sessionStorage.clear();
+
+        setUser(null);
+        setToken(null);
+
+        // Wipe React Query cache so no user info / cart / orders stay in memory
+        queryClient.clear();
+
+        // Navigate cleanly to home page
+        window.location.href = '/';
     };
 
     const onLoginSuccess = (userData: User, userToken: string) => {

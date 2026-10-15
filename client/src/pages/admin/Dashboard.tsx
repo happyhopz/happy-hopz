@@ -132,11 +132,14 @@ const AdminDashboard = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
                                 <Users className="w-4 h-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-3xl font-fredoka font-bold">{stats?.totalUsers || 0}</div>
+                                <div className="text-[11px] text-muted-foreground mt-1 font-nunito font-semibold flex items-center gap-1.5">
+                                    <span className="text-emerald-600 font-bold">{stats?.registeredUsers ?? stats?.totalUsers ?? 0}</span> registered • <span className="text-amber-600 font-bold">{stats?.guestUsers ?? 0}</span> guest
+                                </div>
                             </CardContent>
                         </Card>
 

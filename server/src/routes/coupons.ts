@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
-import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
+import { authenticate, optionalAuthenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -370,11 +370,12 @@ router.get('/active', async (req, res) => {
 });
 
 // Validate coupon (Public - for checkout)
-router.post('/validate', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/validate', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { code, cartTotal, items } = z.object({
+        const { code, cartTotal, items, guestEmail } = z.object({
             code: z.string().transform(v => v.toUpperCase()),
             cartTotal: z.number(),
+            guestEmail: z.string().email().optional().nullable().or(z.literal('')),
             items: z.array(cartItemSchema).optional()
         }).parse(req.body);
 
@@ -396,15 +397,20 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
 
         // Check if first-time only coupon
         if (coupon.firstTimeOnly) {
-            const userIdentifier = req.user?.id || req.body.guestEmail;
-            const existingOrders = await prisma.order.findMany({
-                where: req.user?.id
-                    ? { userId: req.user.id }
-                    : { guestEmail: req.body.guestEmail }
-            });
+            const userEmail = req.user?.email || (guestEmail && guestEmail.trim() ? guestEmail.trim() : null);
+            if (userEmail) {
+                const existingOrders = await prisma.order.findMany({
+                    where: {
+                        OR: [
+                            req.user?.id ? { userId: req.user.id } : {},
+                            { guestEmail: userEmail }
+                        ].filter(obj => Object.keys(obj).length > 0)
+                    }
+                });
 
-            if (existingOrders.length > 0) {
-                return res.status(400).json({ error: 'This coupon is only valid for first-time purchases' });
+                if (existingOrders.length > 0) {
+                    return res.status(400).json({ error: 'This coupon is only valid for first-time purchases' });
+                }
             }
         }
 
@@ -431,12 +437,12 @@ router.post('/validate', authenticate, async (req: AuthRequest, res: Response) =
 });
 
 // Apply coupon (creates reservation with 10-min timer)
-router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/apply', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { code, cartTotal, guestEmail, items } = z.object({
             code: z.string().transform(v => v.toUpperCase()),
             cartTotal: z.number(),
-            guestEmail: z.string().email().optional().nullable(),
+            guestEmail: z.string().email().optional().nullable().or(z.literal('')),
             items: z.array(cartItemSchema).optional()
         }).parse(req.body);
 
@@ -506,17 +512,18 @@ router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
         });
 
         // Check for existing active reservation
-        const userIdentifier = req.user?.id || guestEmail;
-        const existingReservation = await prisma.couponReservation.findFirst({
+        const cleanEmail = guestEmail && guestEmail.trim() ? guestEmail.trim() : null;
+        const reservationFilter: any[] = [];
+        if (req.user?.id) reservationFilter.push({ userId: req.user.id });
+        if (cleanEmail) reservationFilter.push({ userEmail: cleanEmail });
+
+        const existingReservation = reservationFilter.length > 0 ? await prisma.couponReservation.findFirst({
             where: {
                 couponCode: code,
-                OR: [
-                    req.user?.id ? { userId: req.user.id } : {},
-                    guestEmail ? { userEmail: guestEmail } : {}
-                ].filter(obj => Object.keys(obj).length > 0),
+                OR: reservationFilter,
                 expiresAt: { gt: new Date() }
             }
-        });
+        }) : null;
 
         if (existingReservation) {
             // Reservation already exists, return existing expiry
@@ -538,7 +545,7 @@ router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
             data: {
                 couponCode: code,
                 userId: req.user?.id || null,
-                userEmail: guestEmail || null,
+                userEmail: cleanEmail,
                 expiresAt
             }
         });
@@ -563,19 +570,20 @@ router.post('/apply', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // Remove coupon (deletes reservation)
-router.post('/remove', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/remove', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { code, guestEmail } = z.object({
             code: z.string().transform(v => v.toUpperCase()),
-            guestEmail: z.string().email().optional()
+            guestEmail: z.string().email().optional().nullable().or(z.literal(''))
         }).parse(req.body);
 
+        const cleanEmail = guestEmail && guestEmail.trim() ? guestEmail.trim() : null;
         await prisma.couponReservation.deleteMany({
             where: {
                 couponCode: code,
                 OR: [
                     req.user?.id ? { userId: req.user.id } : {},
-                    guestEmail ? { userEmail: guestEmail } : {}
+                    cleanEmail ? { userEmail: cleanEmail } : {}
                 ].filter(obj => Object.keys(obj).length > 0)
             }
         });

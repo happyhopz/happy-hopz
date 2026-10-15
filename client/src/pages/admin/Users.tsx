@@ -57,9 +57,16 @@ const AdminUsers = () => {
                 <h1 className="text-4xl font-fredoka font-bold text-foreground">
                     User Management
                 </h1>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                    <UsersIcon className="w-5 h-5" />
-                    <span className="font-nunito font-semibold">{users?.length || 0} Total Users</span>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="font-nunito font-bold bg-slate-100 px-3 py-1 rounded-full text-slate-700">
+                        {users?.length || 0} Total
+                    </span>
+                    <span className="font-nunito font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs">
+                        {users?.filter((u: any) => !u.isGuest && u.role !== 'GUEST').length || 0} Registered
+                    </span>
+                    <span className="font-nunito font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full text-xs">
+                        {users?.filter((u: any) => u.isGuest || u.role === 'GUEST').length || 0} Guests
+                    </span>
                 </div>
             </div>
 
@@ -95,26 +102,37 @@ const AdminUsers = () => {
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-3">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${u.role === 'ADMIN' ? 'bg-red-100 text-red-600' : u.role === 'STAFF' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${u.role === 'ADMIN' ? 'bg-red-100 text-red-600' : u.role === 'STAFF' ? 'bg-blue-100 text-blue-600' : (u.isGuest || u.role === 'GUEST') ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-600'}`}>
                                             {u.role === 'ADMIN' ? <Shield className="w-6 h-6" /> : <UserIcon className="w-6 h-6" />}
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-fredoka font-bold">{u.name || 'No Name'}</h3>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-lg font-fredoka font-bold">{u.name || 'No Name'}</h3>
+                                                {(u.isGuest || u.role === 'GUEST') && (
+                                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] uppercase font-bold py-0.5">
+                                                        Guest Checkout
+                                                    </Badge>
+                                                )}
+                                            </div>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <Select
-                                                    value={u.role || 'USER'}
-                                                    onValueChange={(newRole) => updateRoleMutation.mutate({ id: u.id, role: newRole })}
-                                                    disabled={u.id === user.id} // Don't let admin demote themselves
-                                                >
-                                                    <SelectTrigger className="h-7 w-28 text-[10px] font-bold uppercase tracking-wider">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="USER">Customer</SelectItem>
-                                                        <SelectItem value="STAFF">Staff</SelectItem>
-                                                        <SelectItem value="ADMIN">Admin</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
+                                                {(u.isGuest || u.role === 'GUEST') ? (
+                                                    <span className="text-xs text-muted-foreground font-semibold">Guest Shopper</span>
+                                                ) : (
+                                                    <Select
+                                                        value={u.role || 'USER'}
+                                                        onValueChange={(newRole) => updateRoleMutation.mutate({ id: u.id, role: newRole })}
+                                                        disabled={u.id === user.id} // Don't let admin demote themselves
+                                                    >
+                                                        <SelectTrigger className="h-7 w-28 text-[10px] font-bold uppercase tracking-wider">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="USER">Customer</SelectItem>
+                                                            <SelectItem value="STAFF">Staff</SelectItem>
+                                                            <SelectItem value="ADMIN">Admin</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

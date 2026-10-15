@@ -51,16 +51,17 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
             });
         }
         const [
-            totalUsers,
+            registeredUsers,
             deliveredOrders,
             totalRevenueAgg,
             recentOrders,
             lowStockProducts,
             ordersByStatus,
             topSellingItems,
-            allActiveProducts
+            allActiveProducts,
+            guestCustomers
         ] = await Promise.all([
-            prisma.user.count(),
+            prisma.user.count({ where: { isGuest: false } }),
             prisma.order.count({
                 where: {
                     status: 'DELIVERED',
@@ -114,8 +115,16 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
                     otherCosts: true,
                     price: true
                 }
+            }),
+            prisma.order.findMany({
+                where: { userId: null, guestEmail: { not: null } },
+                distinct: ['guestEmail'],
+                select: { guestEmail: true }
             })
         ]);
+
+        const guestUsers = guestCustomers.length;
+        const totalUsers = registeredUsers + guestUsers;
 
         // Calculate Average Order Value
         const totalRevenue = totalRevenueAgg._sum.total || 0;
@@ -257,6 +266,8 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 
         res.json({
             totalUsers,
+            registeredUsers,
+            guestUsers,
             totalOrders: deliveredOrders,
             totalRevenue,
             totalProfit,
@@ -307,6 +318,7 @@ router.get('/users', async (req: AuthRequest, res: Response) => {
                 phone: true,
                 role: true,
                 createdAt: true,
+                isGuest: true,
                 _count: {
                     select: { orders: true }
                 }
@@ -314,7 +326,44 @@ router.get('/users', async (req: AuthRequest, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        res.json(users);
+        // Also fetch guest checkout users so they are tracked and counted distinctly
+        const guestOrders = await prisma.order.findMany({
+            where: {
+                userId: null,
+                guestEmail: { not: null }
+            },
+            select: {
+                id: true,
+                guestEmail: true,
+                guestName: true,
+                guestPhone: true,
+                createdAt: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        const guestMap = new Map<string, any>();
+        guestOrders.forEach(o => {
+            if (!o.guestEmail) return;
+            const em = o.guestEmail.toLowerCase().trim();
+            if (!guestMap.has(em)) {
+                guestMap.set(em, {
+                    id: `guest_${em}`,
+                    email: o.guestEmail,
+                    name: o.guestName || 'Guest Customer',
+                    phone: o.guestPhone || '',
+                    role: 'GUEST',
+                    isGuest: true,
+                    createdAt: o.createdAt,
+                    _count: { orders: 1 }
+                });
+            } else {
+                guestMap.get(em)._count.orders += 1;
+            }
+        });
+
+        const allUsers = [...users, ...Array.from(guestMap.values())];
+        res.json(allUsers);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch users' });
     }
