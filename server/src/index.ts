@@ -211,6 +211,16 @@ app.listen(PORT, async () => {
         const count = await prisma.product.count();
         console.log(`📦 DATABASE VERIFIED: Total products = ${count}`);
 
+        // Ensure Coupon table columns exist
+        try {
+            await prisma.$executeRawUnsafe(`ALTER TABLE "Coupon" ADD COLUMN IF NOT EXISTS "isHidden" BOOLEAN NOT NULL DEFAULT false`);
+            await prisma.$executeRawUnsafe(`ALTER TABLE "Coupon" ADD COLUMN IF NOT EXISTS "appliesTo" TEXT NOT NULL DEFAULT 'ALL'`);
+            await prisma.$executeRawUnsafe(`ALTER TABLE "Coupon" ADD COLUMN IF NOT EXISTS "productIds" TEXT NOT NULL DEFAULT '[]'`);
+            console.log('✅ Coupon table schema verified.');
+        } catch (colErr: any) {
+            console.warn('⚠️ Coupon columns check notice:', colErr.message);
+        }
+
         const envs = ['SUPABASE_DATABASE_URL', 'PROD_DATABASE_URL', 'DATABASE_URL'];
         envs.forEach(key => {
             const secret = process.env[key];

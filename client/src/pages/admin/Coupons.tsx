@@ -61,7 +61,10 @@ const AdminCoupons = () => {
             setIsDialogOpen(false);
             setEditingCoupon(null);
         },
-        onError: (error: any) => toast.error(error.response?.data?.error || 'Failed to update coupon')
+        onError: (error: any) => {
+            const msg = error.response?.data?.details?.[0]?.message || error.response?.data?.error || 'Failed to update coupon';
+            toast.error(msg);
+        }
     });
 
     const deleteMutation = useMutation({

@@ -822,7 +822,8 @@ const CouponProductManagerDialog = ({
     };
 
     const handleSave = () => {
-        if (!activeCoupon) {
+        const targetId = activeCoupon?.id || selectedCouponId;
+        if (!targetId) {
             toast.error('Please select a coupon');
             return;
         }
@@ -832,7 +833,7 @@ const CouponProductManagerDialog = ({
             return;
         }
 
-        onSave(activeCoupon.id, {
+        onSave(targetId, {
             appliesTo,
             productIds: appliesTo === 'SPECIFIC' ? selectedProductIds : []
         });
@@ -1183,7 +1184,8 @@ const AdminProducts = () => {
             setIsCouponDialogOpen(false);
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.error || 'Failed to update coupon');
+            const msg = error.response?.data?.details?.[0]?.message || error.response?.data?.error || 'Failed to update coupon';
+            toast.error(msg);
         }
     });
 

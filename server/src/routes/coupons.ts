@@ -207,71 +207,132 @@ const couponUpdateSchema = z.object({
 
 router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const idParam = String(req.params.id || '').trim();
+        if (!idParam) {
+            return res.status(400).json({ error: 'Coupon identifier is required' });
+        }
+
         const data = couponUpdateSchema.parse(req.body);
 
-        const updateData: any = { ...data };
+        const updateData: any = {};
+        if (data.code !== undefined) updateData.code = data.code;
+        if (data.discountType !== undefined) updateData.discountType = data.discountType;
+        if (data.discountValue !== undefined) updateData.discountValue = data.discountValue;
+        if (data.minOrderValue !== undefined) updateData.minOrderValue = data.minOrderValue;
+        if (data.maxUses !== undefined) updateData.maxUses = data.maxUses;
+        if (data.isActive !== undefined) updateData.isActive = data.isActive;
+        if (data.isHidden !== undefined) updateData.isHidden = data.isHidden;
+        if (data.firstTimeOnly !== undefined) updateData.firstTimeOnly = data.firstTimeOnly;
+
         if (data.expiryDate !== undefined) {
             updateData.expiryDate = data.expiryDate ? new Date(data.expiryDate) : null;
         }
+
         if (data.appliesTo !== undefined) {
             updateData.appliesTo = data.appliesTo;
             if (data.appliesTo === 'ALL') {
                 updateData.productIds = '[]';
             }
         }
+
         if (data.productIds !== undefined && data.appliesTo !== 'ALL') {
             updateData.productIds = JSON.stringify(data.productIds);
         }
 
+        // Find coupon by id or by code
+        const existingCoupon = await prisma.coupon.findFirst({
+            where: {
+                OR: [
+                    { id: idParam },
+                    { code: idParam.toUpperCase() }
+                ]
+            }
+        });
+
+        if (!existingCoupon) {
+            return res.status(404).json({ error: 'Coupon not found' });
+        }
+
         const coupon = await prisma.coupon.update({
-            where: { id: req.params.id as string },
+            where: { id: existingCoupon.id },
             data: updateData
         });
 
-        // Create Audit Log
-        await prisma.auditLog.create({
-            data: {
-                action: 'UPDATE_COUPON',
-                entity: 'COUPON',
-                entityId: coupon.id,
-                details: `Coupon "${coupon.code}" updated`,
-                adminId: req.user!.id
-            }
-        });
+        // Create Audit Log (non-blocking)
+        try {
+            await prisma.auditLog.create({
+                data: {
+                    action: 'UPDATE_COUPON',
+                    entity: 'COUPON',
+                    entityId: coupon.id,
+                    details: `Coupon "${coupon.code}" updated`,
+                    adminId: req.user?.id
+                }
+            });
+        } catch (auditErr) {
+            console.warn('AuditLog creation warning (non-fatal):', auditErr);
+        }
 
         res.json({
             ...coupon,
             productIds: parseProductIds(coupon.productIds)
         });
-    } catch (error) {
+    } catch (error: any) {
+        console.error('Failed to update coupon error:', error);
         if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+            const firstMsg = error.errors?.[0]?.message || 'Validation failed';
+            return res.status(400).json({ error: firstMsg, details: error.errors });
         }
-        res.status(500).json({ error: 'Failed to update coupon' });
+        if (error.code === 'P2002') {
+            return res.status(400).json({ error: 'A coupon with this code already exists' });
+        }
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Coupon not found' });
+        }
+        res.status(500).json({ error: error.message || 'Failed to update coupon' });
     }
 });
 
 // Delete coupon (Admin only)
 router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        await prisma.coupon.delete({
-            where: { id: req.params.id as string }
-        });
-
-        // Create Audit Log
-        await prisma.auditLog.create({
-            data: {
-                action: 'DELETE_COUPON',
-                entity: 'COUPON',
-                entityId: req.params.id as string,
-                details: `Coupon deleted`,
-                adminId: req.user!.id
+        const idParam = String(req.params.id || '').trim();
+        const existing = await prisma.coupon.findFirst({
+            where: {
+                OR: [
+                    { id: idParam },
+                    { code: idParam.toUpperCase() }
+                ]
             }
         });
 
+        if (!existing) {
+            return res.status(404).json({ error: 'Coupon not found' });
+        }
+
+        await prisma.coupon.delete({
+            where: { id: existing.id }
+        });
+
+        // Create Audit Log (non-blocking)
+        try {
+            await prisma.auditLog.create({
+                data: {
+                    action: 'DELETE_COUPON',
+                    entity: 'COUPON',
+                    entityId: existing.id,
+                    details: `Coupon "${existing.code}" deleted`,
+                    adminId: req.user?.id
+                }
+            });
+        } catch (auditErr) {
+            console.warn('AuditLog creation warning:', auditErr);
+        }
+
         res.json({ message: 'Coupon deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to delete coupon' });
+    } catch (error: any) {
+        console.error('Delete coupon error:', error);
+        res.status(500).json({ error: error.message || 'Failed to delete coupon' });
     }
 });
 
